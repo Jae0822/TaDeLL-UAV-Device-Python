@@ -59,7 +59,7 @@ class TaDeLL(object):
         K = np.concatenate((self.L, self.Z), axis=0)  # (d+m, k)
 
         file_name = 'data.mat'
-        savemat(file_name, {'L': self.L, 'Z': self.Z, 'alpha': alpha, 'hessian': hessian, 'feature': task.feature})
+        savemat(file_name, {'L': self.L, 'Z': self.Z, 'theta': alpha, 'hessian': hessian, 'feature': task.feature})
 
         # Step1: Compute s
         h = np.mean(np.abs(hessian))  # (mean number)
