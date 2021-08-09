@@ -32,6 +32,8 @@ class Task(object):
 
         feature = [self.mean_packet_cycles, self.variance_packet_cycles, self.cpu_max, self.p, 1]
         self.feature = np.array(feature)
+        self.m = np.shape(self.feature)[0]
+        self.feature = np.reshape(self.feature, (self.m,1))
 
         # Device related:
         self.d = d  # dimension of L, and state and policy dimension.
