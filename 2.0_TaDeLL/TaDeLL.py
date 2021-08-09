@@ -67,7 +67,7 @@ class TaDeLL(object):
         H[0:self.d, 0:self.d] = hessian
 
         dsqrt = sqrtm(H)  # (d+m, d+m)
-        target = H @ beta  # (d + m, 1)
+        target = dsqrt @ beta  # (d + m, 1)
         dicttransformed = dsqrt @ K  # (d+m, k)
 
         ss = spams.lasso(np.asfortranarray(target, dtype=np.float64),
