@@ -58,6 +58,9 @@ class TaDeLL(object):
         beta = np.concatenate((alpha, task.feature), axis=0)  # (d + m, 1)
         K = np.concatenate((self.L, self.Z), axis=0)  # (d+m, k)
 
+        file_name = 'data.mat'
+        savemat(file_name, {'L': self.L, 'Z': self.Z, 'alpha': alpha, 'hessian': hessian, 'feature': task.feature})
+
         # Step1: Compute s
         h = np.mean(np.abs(hessian))  # (mean number)
         H = h * np.eye(self.m + self.d)  # (d+m, d+m)
@@ -84,9 +87,6 @@ class TaDeLL(object):
         self.Z = self.counter / (self.counter + 1) * self.Z + 1/(self.counter+1) * Z_step
 
         self.counter = self.counter + 1
-
-        file_name = 'data.mat'
-        savemat(file_name, {'L': self.L, 'Z': self.Z, 'alpha': alpha, 'hessian': hessian, 's': s})
 
         print("hello")
 
