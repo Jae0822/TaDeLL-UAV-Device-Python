@@ -131,14 +131,15 @@ def tasks_random(ntask):
     niter = 50
     lr = 0.08
     for i in range(ntask):
+        print("generating task @", i)
         task = Task(mean_packet_cycles=random.randint(15, 35), variance_packet_cycles=random.randint(3, 8),
-                    cpu_max=random.randint(30, 70), p=0.5, d=2, k=2)
+                    cpu_max=random.randint(30, 70), p=0.4 * np.random.random_sample() + 0.3, d=2, k=3)
         values_array = pg_rl(task, niter, lr)
         # init_value = values_array[0]
         gap = values_array[-1] - values_array[0]
         while gap < 60:
             task = Task(mean_packet_cycles=random.randint(15, 35), variance_packet_cycles=random.randint(3, 8),
-                        cpu_max=random.randint(30, 70), p=0.5, d=2, k=2)
+                        cpu_max=random.randint(30, 70), p=0.4 * np.random.random_sample() + 0.3, d=2, k=3)
             values_array = pg_rl(task, niter, lr)  # The policy is changed during learning.
             # init_value = values_array[0]
             gap = values_array[-1] - values_array[0]
@@ -151,6 +152,7 @@ def tasks_random(ntask):
     # Once a task index is removed from X, the index x will jump to the one after the next.
     # The remove process goes alternately. Until X becomes empty.
     X = list(range(0, np.shape(tasks)[0]))
+    print("starting to remove and replace")
     while X:
         for x in X:
             task = tasks[x]
@@ -160,11 +162,12 @@ def tasks_random(ntask):
                 X.remove(x)
             else:
                 task_replace(tasks, x)
+                print("replace a task")
 
     for task in tasks:
         task.policy = copy.deepcopy(task.init_policy)
 
-    with open('tasks_random.pkl', 'wb') as f:
+    with open('tasks_random_with_features.pkl', 'wb') as f:
         pickle.dump(tasks, f)
 
     return tasks
@@ -175,13 +178,13 @@ def task_replace(tasks, x):
     lr = 0.08
 
     task = Task(mean_packet_cycles=random.randint(15, 35), variance_packet_cycles=random.randint(3, 8),
-                cpu_max=random.randint(30, 70), p=0.5, d=2, k=2)
+                cpu_max=random.randint(30, 70), p=0.4 * np.random.random_sample() + 0.3, d=2, k=3)
     values_array = pg_rl(task, niter, lr)
     # init_value = values_array[0]
     gap = values_array[-1] - values_array[0]
     while gap < 60:
         task = Task(mean_packet_cycles=random.randint(15, 35), variance_packet_cycles=random.randint(3, 8),
-                    cpu_max=random.randint(30, 70), p=0.5, d=2, k=2)
+                    cpu_max=random.randint(30, 70), p=0.4 * np.random.random_sample() + 0.3, d=2, k=3)
         values_array = pg_rl(task, niter, lr)  # The policy is changed during learning.
         # init_value = values_array[0]
         gap = values_array[-1] - values_array[0]

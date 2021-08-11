@@ -30,10 +30,12 @@ class Task(object):
         self.cpu_max = cpu_max
         self.p = p  # np.random.rand() # The probability of Bernoulli distribution over each time slot
 
-        feature = [self.mean_packet_cycles, self.variance_packet_cycles, self.cpu_max, self.p, 1]
-        self.feature = np.array(feature)
-        self.m = np.shape(self.feature)[0]
-        self.feature = np.reshape(self.feature, (self.m,1))
+        plain_feature = [self.mean_packet_cycles, self.variance_packet_cycles, self.cpu_max, self.p, 1]
+        self.plain_feature = np.array(plain_feature)
+        self.m = np.shape(self.plain_feature)[0]
+        self.plain_feature = np.reshape(self.plain_feature, (self.m,1))
+        # self.m = 5
+        self.feature = copy.deepcopy(self.plain_feature)  # feature after normalization
 
         # Device related:
         self.d = d  # dimension of L, and state and policy dimension.
@@ -335,10 +337,21 @@ class Task(object):
         # self.hessian_matrix = hes  # (2,2) (self.d, self.d)
         return hes
 
-    def extract_feature(self):
-        feature = [self.mean_packet_cycles, self.variance_packet_cycles, self.cpu_max, self.p, 1]
-        # self.feature = np.array(feature)
-        return np.array(feature)
+    def extract_feature(self, mu=0, sig=1 ):
+        """
+        This function is used to normalize the plain features using mu and sig.
+        This is executed for each task (train or test)
+        :param mu: (m,1) Averaged feature value for each dimension of training tasks
+        :param sig: (m,1) variance for each  dimension of training tasks
+        :return:
+        """
+        # feature = [self.mean_packet_cycles, self.variance_packet_cycles, self.cpu_max, self.p, 1]
+        # self.feature = np.reshape(np.array(feature), (self.m,1))
+
+        # feature = self.plain_feature  # (m,1)
+
+        self.feature[:-1] = np.divide(self.plain_feature[:-1] - mu[:-1], sig[:-1])
+        return self.feature
 
 class Device(object):
     def __init__(self):
