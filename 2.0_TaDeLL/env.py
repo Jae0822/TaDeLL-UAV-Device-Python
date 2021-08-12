@@ -55,7 +55,7 @@ class Task(object):
         self.beta = 0.5  # AoI and energy consumption trade-off
 
         # Policy-Gradient initialization:
-        self.learning_rate = 5.0
+        # self.learning_rate = 5.0
         self.gamma = 0.9  # Fading/Decaying coefficient of the reward
         # FIXME: two different ways to initialize initial policy for policy gradient method
         # (1）zeros: as in matlab paper

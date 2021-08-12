@@ -34,6 +34,7 @@ def test_feature_function():
     #     tasks0 = pickle.load(f)
 
     tasks0 = []
+    feature = []
     for i in range(6):
         task = Task(mean_packet_cycles=random.randint(15, 35), variance_packet_cycles=random.randint(3, 8),
                     cpu_max=random.randint(30, 70), p=0.4 * np.random.random_sample() + 0.3, d=2, k=2)
@@ -61,20 +62,25 @@ def main():
     """
     # Prepare and initialization
     niter = 50
-    TaDeLL_Model = TaDeLL(2, 3, 5)  # initialize the TaDeLL Model (d, k, m)
+    TaDeLL_Model = TaDeLL(2, 2, 5)  # initialize the TaDeLL Model (d, k, m)
 
     # Step1: Generate 20 training and 10 testing tasks
-    # FIXME: regenerate using the associations.tasks_random().
-    # with open('tasks_random.pkl', 'rb') as f:
-    #     tasks0 = pickle.load(f)
-    tasks0 = []
-    for i in range(30):
-        task = Task(mean_packet_cycles=random.randint(15, 35), variance_packet_cycles=random.randint(3, 8),
-                    cpu_max=random.randint(30, 70), p=0.4 * np.random.random_sample() + 0.3, d=2, k=3)
-        tasks0.append(task)
+    # FIXME: regenerate
+    # FIXED: Regenerated with the function pg_task_generation
+    with open('TaDeLL_Tasks_lib_k_2.pkl', 'rb') as f:
+        tasks0 = pickle.load(f)  # The task.policy is already the optimal policy
+    for task in tasks0:
+        task.policy = copy.deepcopy(task.init_policy)
+
+    # tasks0 = []
+    # for i in range(30):
+    #     task = Task(mean_packet_cycles=random.randint(15, 35), variance_packet_cycles=random.randint(3, 8),
+    #                 cpu_max=random.randint(30, 70), p=0.4 * np.random.random_sample() + 0.3, d=2, k=2)
+    #     tasks0.append(task)
 
     # Extract and normalize features for all these tasks
     # FIXME: mu and sig obtained through training tasks or the whole set of tasks
+    # FIXED: use the whole set of tasks or training tasks doesn't affect the mu, sig a lot
     [mu, sig] = TaDeLL_Model.comp_mu_sig(tasks0)  # Only needs to execute once
     for i in range(0, len(tasks0)):
         task = tasks0[i]
@@ -118,8 +124,8 @@ def main():
     means_pg = np.mean(np.concatenate(rewards_pg), 0)
     means_tadell = np.mean(np.concatenate(rewards_TaDeLL), 0)
 
-    with open('TaDeLL_result.pkl', 'wb') as f:
-        pickle.dump([means_pg, means_tadell, niter, TaDeLL_Model, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL], f)
+    with open('TaDeLL_result_k_3.pkl', 'wb') as f:
+        pickle.dump([means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL], f)
 
     # Plotting procedure
     plt.ion()
@@ -135,11 +141,81 @@ def main():
     print("Hello Baby")
 
 
-def task_generation():
-    tasks_random(30)
+
+def pg_task_generation(nTasks):
+    """
+    This function is used to generate the tasks library
+    :return:
+    """
+    niter = 30
+    tasks0 = []
+    rewards_pg = []
+    values = []
+    for i in range(nTasks):
+        print("Generate and train task @", i)
+        X = False
+        while not X:
+            task = Task(mean_packet_cycles=random.randint(15, 35), variance_packet_cycles=random.randint(3, 8),
+                    cpu_max=random.randint(30, 70), p=0.4 * np.random.random_sample() + 0.3, d=2, k=2)
+            values = pg_rl(task, niter)
+
+            # plt.ion()
+            # fig, ax = plt.subplots()
+            # # ax.plot(np.arange(niter), rewards_pg[i][0], label='PG')
+            # ax.plot(np.arange(niter), values, label='PG')
+            # ax.legend()  # Add a legend.
+            # ax.set_xlabel('Iteration')  # Add an x-label to the axes.
+            # ax.set_ylabel('Averaged Reward')  # Add a y-label to the axes.
+            # ax.set_title("Policy Gradient Learning Curve")  # Add a title to the axes.
+            # fig.show()
+            # plt.ioff()
+
+            gap = values[-1] - values[0]
+            if gap >= 0.8:
+                X = True
+
+        task.policy = copy.deepcopy(task.init_policy)
+
+        # Re-evaluate the task
+        Y = False
+        while not Y:
+            values = pg_rl(task, niter)
+
+            # Plotting
+            # plt.ion()
+            # fig, ax = plt.subplots()
+            # # ax.plot(np.arange(niter), rewards_pg[i][0], label='PG')
+            # ax.plot(np.arange(niter), values, label='PG')
+            # ax.legend()  # Add a legend.
+            # ax.set_xlabel('Iteration')  # Add an x-label to the axes.
+            # ax.set_ylabel('Averaged Reward')  # Add a y-label to the axes.
+            # ax.set_title("Policy Gradient Learning Curve")  # Add a title to the axes.
+            # fig.show()
+            # plt.ioff()
+
+            gap = values[-1] - values[0]
+            if gap >= 0.8:
+                Y = True
+            else:
+                task = Task(mean_packet_cycles=random.randint(15, 35), variance_packet_cycles=random.randint(3, 8),
+                            cpu_max=random.randint(30, 70), p=0.4 * np.random.random_sample() + 0.3, d=2, k=2)
+
+        rewards_pg.append([])
+        rewards_pg[i].append(values)
+        tasks0.append(task)
+
+    # for task in tasks0:
+    #     task.policy = copy.deepcopy(task.init_policy)
+
+    with open('TaDeLL_Tasks_lib_k_3.pkl', 'wb') as f:
+        pickle.dump(tasks0, f)
+
+    print("Tasks generatioin is done")
+
+
 
 
 if __name__ == '__main__':
     main()
     # test_feature_function()
-    # task_generation()
+    # pg_task_generation(30)
