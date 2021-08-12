@@ -48,6 +48,8 @@
 
 可以用pkl文件，快速绘制结果图。
 
+(k=3的pkl文件同理)
+
 ```
 # Library generation function: main()-pg_task_generation(30)
 # 30 tasks with k=2
@@ -68,7 +70,11 @@ with open('TaDeLL_result_k_3.pkl', 'wb') as f:
 
 
 
-
+**k = 2**
 
 ![Screen Shot 2021-08-12 at 3.24.04 PM.png](https://i.loli.net/2021/08/12/KGFaAZl1L24qgiX.png)
+
+**k = 3**
+
+![Screen Shot 2021-08-12 at 4.47.39 PM.png](https://i.loli.net/2021/08/12/AOcHzBGWx3mQ1u9.png)
 
