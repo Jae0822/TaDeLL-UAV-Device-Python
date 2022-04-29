@@ -175,3 +175,10 @@ class TaDeLL(object):
             task.policy['theta'] = np.array(theta_hat)
 
         print("get dict policy")
+
+    def getDictPolicy_Single(self, task):
+        L = np.mat(self.L)
+        Z = np.mat(self.Z)
+        feature = np.mat(task.feature)
+        theta_hat = L * (Z.I * feature)
+        task.policy['theta'] = np.array(theta_hat)

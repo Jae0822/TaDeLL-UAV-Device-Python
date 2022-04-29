@@ -1,6 +1,6 @@
 # 1.2_PGELLA_Final~^_^~
 
-### :triangular_flag_on_post:PG-ELLA验证 成功！:gem:
+### :triangular_flag_on_post:PG-ELLA 验证 成功！:gem:
 
 在正式开始将matlab代码转移到python之前，需要先确认现有的python代码的正确性。
 
@@ -40,7 +40,7 @@
 
 ![Screen Shot 2021-08-11 at 6.22.39 PM.png](https://i.loli.net/2021/08/11/Z8k9IdpP7CgVqcM.png)
 
-### 2021.08.12 :gem:
+### 2021.08.12：验证 成功！ :gem:
 
 重新生成了新的tasks library
 
@@ -77,4 +77,27 @@ with open('TaDeLL_result_k_3.pkl', 'wb') as f:
 **k = 3**
 
 ![Screen Shot 2021-08-12 at 4.47.39 PM.png](https://i.loli.net/2021/08/12/AOcHzBGWx3mQ1u9.png)
+
+# 3.0_UAV_Device
+
+### 2021.09.10：随机访问程序完成！
+
+1. 利用2.0 TaDeLL中得到的模型（k = 2）
+2. 随机生成Devices（2个），及随机个任务（3个）
+3. UAV随机访问Devices（蓝色利用 TaDeLL模型产生WarmStart，橘色是假如UAV用同样的访问顺序，但是没有模型加持的结果（自然Policy Gradient的学习过程））
+
+
+
+**可以看到这有模型加持之后，可以明显提升效果。但是为什么橘色的没有逐渐上升呢？**
+
+
+
+![Screen Shot 2021-09-10 at 5.30.27 PM.png](https://i.loli.net/2021/09/10/rXbFpICtQfVs24A.png)
+
+# 4.1_UAV_AC
+
+```
+This is the folder to train UAV fly with actor-critic.
+The main files are reconstructured. (Not heritated from previous files)
+```
 
