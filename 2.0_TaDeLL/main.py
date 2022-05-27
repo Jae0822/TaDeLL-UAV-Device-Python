@@ -822,20 +822,28 @@ def pg_ella():
 
 def plotting():
 
-    with open('Final_Result.pkl', 'rb') as f:
-        tasks, tasks_pre, means_pg, means_pgella, niter = pickle.load(f)
+    # with open('Final_Result.pkl', 'rb') as f:
+    #     tasks, tasks_pre, means_pg, means_pgella, niter = pickle.load(f)
+
+    with open('TaDeLL_result_k_3.pkl', 'rb') as f:
+        [means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg,
+         testing_tasks_TaDeLL] = pickle.load(f)
 
     # Plotting procedure
     plt.ion()
     fig, ax = plt.subplots()
     ax.plot(np.arange(niter), means_pg, label='PG')
-    ax.plot(np.arange(niter), means_pgella, label='PG-ELLA')
+    # ax.plot(np.arange(niter), means_pgella, label='PG-ELLA')
+    ax.plot(np.arange(niter), means_tadell, label='ZSLL')
     ax.legend()  # Add a legend.
     ax.set_xlabel('Iteration')  # Add an x-label to the axes.
     ax.set_ylabel('Averaged Reward')  # Add a y-label to the axes.
-    ax.set_title("Comparison between PG and PG-ELLA")  # Add a title to the axes.
+    ax.set_title("Comparison between PG and ZSLL")  # Add a title to the axes.
+
+    plt.savefig('Figure_1.eps', format='eps')
+
     fig.show()
-    plt.ioff()
+    # plt.ioff()
     print("Hello Baby")
 
 
@@ -843,6 +851,6 @@ if __name__ == '__main__':
     # start_time = mainC1()
     # mainC2()
     # mainC3(start_time)
-    pg_ella()
-    # plotting()
+    # pg_ella()
+    plotting()
 

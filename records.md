@@ -92,6 +92,24 @@ with open('TaDeLL_result_k_3.pkl', 'wb') as f:
 
 
 
+```
+#      To draw the figure
+# with open('Multi Tasks Comp.pkl', 'rb') as f:
+#         [nTimeUnits, Rewards_Random, Rewards_Random_Natural, Devices_Random, UAV_Random] = pickle.load(f)
+# name = ['Case 1', 'Case 2']
+# plt.ion()
+# fig, ax = plt.subplots(num_Devices, 1, sharex=True)
+# # fig.suptitle('Learning Process')
+# for i in range(num_Devices):
+#     ax[i].plot(np.arange(nTimeUnits), Rewards_Random[i], label="ZSLL")
+#     ax[i].plot(np.arange(nTimeUnits), Rewards_Random_Natural[i], label="PG")
+#     ax[i].set_title(name[i])
+#     ax[i].legend()
+# plt.savefig('multi_tasks.eps', format='eps')
+```
+
+
+
 ![Screen Shot 2021-09-10 at 5.30.27 PM.png](https://i.loli.net/2021/09/10/rXbFpICtQfVs24A.png)
 
 # 4.1_UAV_AC

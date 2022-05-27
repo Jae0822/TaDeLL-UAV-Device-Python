@@ -41,7 +41,7 @@ def main():
     # dist = param['dist']
 
     UAV = UAV_Obj(V)  # One UAV and multiple Devices
-    Devices = gen_Devices(mu, sig, **param)
+    Devices = gen_Devices(mu, sig, **param)  # TODO: Generate randomly (Without filter)
 
     PolType = "Random"
     Devices_Random = copy.deepcopy(Devices)
@@ -66,8 +66,6 @@ def main():
         ax[0, i].plot(np.arange(nTimeUnits), Rewards_Random_Natural[i], label="Natural")
         # ax[i].set_title('device')
         ax[0, i].legend()
-    plt.savefig('multi_tasks.eps', format='eps')
-
     plt.show()
 
 
@@ -116,18 +114,3 @@ def gen_Devices(mu, sig, **param):
 
 if __name__ == '__main__':
     main()
-
-
-#      To draw the figure
-# with open('Multi Tasks Comp.pkl', 'rb') as f:
-#         [nTimeUnits, Rewards_Random, Rewards_Random_Natural, Devices_Random, UAV_Random] = pickle.load(f)
-# name = ['Case 1', 'Case 2']
-# plt.ion()
-# fig, ax = plt.subplots(num_Devices, 1, sharex=True)
-# # fig.suptitle('Learning Process')
-# for i in range(num_Devices):
-#     ax[i].plot(np.arange(nTimeUnits), Rewards_Random[i], label="ZSLL")
-#     ax[i].plot(np.arange(nTimeUnits), Rewards_Random_Natural[i], label="PG")
-#     ax[i].set_title(name[i])
-#     ax[i].legend()
-# plt.savefig('multi_tasks.eps', format='eps')
