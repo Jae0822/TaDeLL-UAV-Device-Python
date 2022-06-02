@@ -13,6 +13,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Categorical
+# import pdb
 
 from IoTEnv import Uav, Device, Env, Policy
 # Press ⌃R to execute it or replace it with your code.
@@ -42,18 +43,18 @@ torch.manual_seed(args.seed)
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-param = {'nTimeUnits': 200, 'num_Devices': 4, 'V': 72, 'field': 1, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+param = {'nTimeUnits': 40, 'num_Devices': 4, 'V': 72, 'field': 1, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 Devices = []
 # for i in range(param['num_Devices']):
 #     Devices.append(Device(random.randint(param['freq_low'], param['freq_high']), random.randint(30, 70), param['field']))
 # Devices.append(Device(28, random.randint(30, 70), param['field']))
 # Devices.append(Device(25, random.randint(30, 70), param['field']))
 # Devices.append(Device(23, random.randint(30, 70), param['field']))
-# Devices.append(Device(20, random.randint(30, 70), param['field']))
-Devices.append(Device(12, random.randint(30, 70), param['field']))
+Devices.append(Device(20, random.randint(30, 70), param['field']))
+# Devices.append(Device(12, random.randint(30, 70), param['field']))
 Devices.append(Device(9, random.randint(30, 70), param['field']))
-# Devices.append(Device(7, random.randint(30, 70), param['field']))
-Devices.append(Device(5, random.randint(30, 70), param['field']))
+Devices.append(Device(7, random.randint(30, 70), param['field']))
+# Devices.append(Device(5, random.randint(30, 70), param['field']))
 Devices.append(Device(4, random.randint(30, 70), param['field']))
 # Devices.append(Device(2, random.randint(30, 70), param['field']))
 
@@ -171,7 +172,17 @@ def main():
 
     rate1 = []
     rate2 = []
-
+    EP = 3
+    # logging for each episode
+    logging_timeline = []
+    for i in range(param['num_Devices']):
+        logging_timeline.append([])
+        for j in range(EP+1):
+            logging_timeline[i].append({'intervals': [], 'rewards': [], 'rewards_regular': [], 'timeline': [], 'plt_reward': []})
+        # logging_timeline.append([{'intervals': [], 'rewards': [], 'rewards_regular': []}, {'intervals': [], 'rewards': [], 'rewards_regular': []}])
+    # logging_timeline = [ device0, device1, device2....,  ,  ]
+    # device = [episode0, episode1, episode2, ...,  ]
+    # episode = {'intervals': [], 'rewards': []}
 
     for i_episode in count(1):
 
@@ -217,7 +228,8 @@ def main():
             # else:
             #     action = np.random.randint(param['num_Devices'])
 
-
+            logging_timeline[action][i_episode]['intervals'] = Devices[action].intervals
+            logging_timeline[action][i_episode]['rewards'] = Devices[action].rewards
 
             # print("the action          ", action)
             # print("the state:          ", state)
@@ -269,13 +281,37 @@ def main():
         #     print("Solved! Running reward is now {} and "
         #           "the last episode runs to {} time steps!".format(running_reward, t))
         #     break
-        if i_episode > 20:
+        if i_episode >= EP:
             break
 
 
     for k in range(len(rate1)):
         m1.append(mean(rate1[k]))
         m2.append(mean(rate2[k]))
+
+    for i in range(param['num_Devices']):
+        logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['intervals'][0])
+        for j in range(1, len(logging_timeline[i][EP]['intervals'])):
+            logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['timeline'][j-1] + logging_timeline[i][EP]['intervals'][j])
+    # pdb.set_trace()
+    # for i in range(param['num_Devices']):
+    #     u = 0
+    #     for t in range(param['nTimeUnits']):
+    #         if t < logging_timeline[i][EP]['timeline'][u]:
+    #             logging_timeline[i][EP]['plt_reward'].append(logging_timeline[i][EP]['rewards'][u])
+    #         else:
+    #             u += 1
+    #             if u > len(logging_timeline[i][EP]['timeline']) - 1:
+    #                 break
+    #             logging_timeline[i][EP]['plt_reward'].append(logging_timeline[i][EP]['rewards'][u])
+
+
+    # logging_timeline = [ device0, device1, device2....,  ,  ]
+    # device = [episode0, episode1, episode2, ...,  ]
+    # episode = {'intervals': [], 'rewards': []}
+
+    #  extend the x-axis into whole timeline
+
 
 
     # # Plotting Phase
@@ -297,6 +333,13 @@ def main():
     # ax[1].set_title("The Ave_Reward")  # Add a title to the axes.
     plt.legend()
     plt.show()
+
+    fig1, ax1 = plt.subplots(param['num_Devices'])
+    for i in range(param['num_Devices']):
+        ax1[i].step(logging_timeline[i][EP]['timeline'], logging_timeline[i][EP]['rewards'],'^-g', where='post')
+        # ax1[i].plot([10,16], [-7, -5], 'o')
+    plt.show()
+
 
 
 
