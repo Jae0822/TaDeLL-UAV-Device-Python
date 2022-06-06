@@ -244,7 +244,7 @@ class Env(object):
                     reward_rest += -5
                     # 在TIMEUNITS够(100)的情况下，这个数值从 -1 ～ -60 都不会影响reward_, reward_rest的比例, 太大的话就有风险了
                 else:                             # if this device has been visited by UAV
-                    reward_rest += device.rewards[-1]
+                    reward_rest += device.rewards[-1] * state[i]  # should decrease with time
                     # reward_rest += state[i] * device.rewards[-1]
 
         reward_rest = reward_rest / (self.num_Devices - 1)
@@ -265,8 +265,8 @@ class Env(object):
             reward_ += device.intervals[-1] * device.rewards[-1]
         # add other devices' reward into account
 
-        reward_ = reward_ / (device.KeyTime[index_end] - device.KeyTime[index_start])
-        reward_final = reward_ + reward_rest
+        reward_ = reward_ / (device.KeyTime[index_end] - device.KeyTime[index_start]) # not the same as  device.intervals[-1]
+        reward_final = (reward_ + reward_rest)/2
         # FIXME: Compute UAV's energy consumption when flies from previous point to next point
         # reward_Fly_energy = reward_ +
 

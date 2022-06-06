@@ -210,6 +210,9 @@ def main():
             # state, reward, reward_Regular, t = env.step(state, action, t)
             t = t + 1
             state, reward_, reward_rest, reward= env.step(state, action, t)
+            print(reward_)
+            print(reward_rest)
+            print(reward)
             n += 1
 
             rate1[-1].append(reward_ / reward)
@@ -256,7 +259,7 @@ def main():
         # running_reward = 0.05 * ep_reward + (1 - 0.05) * running_reward
 
         # perform backprop
-        # finish_episode()
+        finish_episode()
 
         Ep_reward.append(ep_reward)
         # Running_reward.append(running_reward)
@@ -289,10 +292,18 @@ def main():
         m1.append(mean(rate1[k]))
         m2.append(mean(rate2[k]))
 
+    # for i in range(param['num_Devices']):
+    #     logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['intervals'][0])
+    #     for j in range(1, len(logging_timeline[i][EP]['intervals'])):
+    #         logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['timeline'][j-1] + logging_timeline[i][EP]['intervals'][j])
     for i in range(param['num_Devices']):
-        logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['intervals'][0])
-        for j in range(1, len(logging_timeline[i][EP]['intervals'])):
-            logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['timeline'][j-1] + logging_timeline[i][EP]['intervals'][j])
+        if not logging_timeline[i][2]['intervals']:
+            break
+        logging_timeline[i][2]['timeline'].append(logging_timeline[i][2]['intervals'][0])
+        for j in range(1, len(logging_timeline[i][2]['intervals'])):
+            logging_timeline[i][2]['timeline'].append(
+                logging_timeline[i][2]['timeline'][j - 1] + logging_timeline[i][2]['intervals'][j])
+
     # pdb.set_trace()
     # for i in range(param['num_Devices']):
     #     u = 0
@@ -336,8 +347,9 @@ def main():
 
     fig1, ax1 = plt.subplots(param['num_Devices'])
     for i in range(param['num_Devices']):
-        ax1[i].step(logging_timeline[i][EP]['timeline'], logging_timeline[i][EP]['rewards'],'^-g', where='post')
+        ax1[i].step(logging_timeline[i][2]['timeline'], logging_timeline[i][2]['rewards'],'^-g', where='post')
         # ax1[i].plot([10,16], [-7, -5], 'o')
+        ax1[i].set_xlim([0, param['nTimeUnits']])
     plt.show()
 
 
