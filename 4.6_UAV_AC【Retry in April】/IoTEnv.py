@@ -100,12 +100,13 @@ class Env(object):
             Devices[i].KeyPol_Regular = copy.deepcopy(Devices[i].KeyPol)  # The Key points for Regular learning without warm start
             Devices[i].KeyTsk_Regular = copy.deepcopy(Devices[i].KeyTsk)
         # Reset state
-        state = np.concatenate((# [0 for x in range(self.num_Devices)],  # 1.当前节点总的已访问次数
+        state = np.concatenate((# [0 for x in range(self.num_Devices)],  # 1.当前节点总的已访问次数  不是已访问次数
                                 # [0 for x in range(self.num_Devices)],  # 2.当前节点、当前任务的已访问次数（新任务归1或者0，否则+1。其他节点不变
-                                [0 for x in range(self.num_Devices)],  # 3.距离上次访问每一个点的时间，初始都为0，当前节点归0，其他节点+1
+                                # [0 for x in range(self.num_Devices)],    # 3.距离上次访问每一个点的时间，初始都为0，当前节点归0，其他节点+1
                                 # [1 for x in range(self.num_Devices)],  # 4.UAV处得知的，每一个节点是否有新任务。当前节点信息最准确  # 上次访问的时候是否是新任务(因为不知道其他节点当前的情况)（boolean）
-                                np.concatenate(UAV.location)
-                                ))         # 5.UAV的初始位置
+                                [0 for x in range(self.num_Devices)],    # 5. 当前任务出现时间长短（需要考虑飞行时间，也存在估计可能），正常情况+1，遇到新任务归0
+                                np.concatenate(UAV.location)            # UAV的初始位置
+                                ))
         return state  # (1 * num_Devices,)
 
     def step(self, state_, action, t):
@@ -128,14 +129,17 @@ class Env(object):
         # 1.当前节点总的已访问次数
         # state[action] += 1
         # 3.距离上次访问每一个点的时间，初始都为0，当前节点归0，其他节点+1
-        for i in range(self.num_Devices):
-            # state[i + 2 * self.num_Devices] += 1
-            state[i] += 1
-        # state[action + 2 * self.num_Devices] = 0  # 当前节点被访问，距离当前节点的上次访问时间为0 or 1
-        state[action] = 0
+        # for i in range(self.num_Devices):
+        #     # state[i + 2 * self.num_Devices] += 1
+        #     state[i] += 1
+        # # state[action + 2 * self.num_Devices] = 0  # 当前节点被访问，距离当前节点的上次访问时间为0 or 1
+        # state[action] = 0
         # 4.UAV处得知的，每一个节点是否有新任务。当前节点信息最准确 # 每一个节点上次访问的时候是否是新任务(因为不知道其他节点当前的情况)，#当前节点当前任务被访问，故归0。其他节点不知道
         # state[action + self.num_Devices] = 0
-        # 5.UAV的初始位置
+        # 5. 当前任务出现时间长短（需要考虑飞行时间，也存在估计可能），正常情况+1，遇到新任务归0
+        for i in range(self.num_Devices):  # 对所有的device，包括当前。
+            state[i] += 1 # 当前flying time为1
+        # UAV的初始位置
         state[-2:] = np.concatenate(self.UAV.location)
 
 
@@ -183,6 +187,7 @@ class Env(object):
             ind = device.KeyTime[-1] + np.where(device.TimeList[device.KeyTime[-1]: t])[0][
                 0]  # Find the first index of time that has a new task arrival
             device.KeyTime.append(ind)
+            state[action] = t - device.KeyTime[-1]
 
             # 1: Warm Start
             device.KeyPol.append(device.task.init_policy)  # For the policy changes not from UAV's update
@@ -266,7 +271,7 @@ class Env(object):
         # add other devices' reward into account
 
         reward_ = reward_ / (device.KeyTime[index_end] - device.KeyTime[index_start]) # not the same as  device.intervals[-1]
-        reward_final = (reward_ + reward_rest)/2
+        reward_final = (reward_ + reward_rest)/2  # weighted average,  iteration :discounted reward, back discount
         # FIXME: Compute UAV's energy consumption when flies from previous point to next point
         # reward_Fly_energy = reward_ +
 
@@ -299,6 +304,7 @@ class Policy(nn.Module):
         self.affine1 = nn.Linear(input_size, 32)
         self.affine2 = nn.Linear(32, 64)
         self.affine3 = nn.Linear(64, 128)
+        self.pattern = [32, 64, 128]
 
 
         # actor's layer

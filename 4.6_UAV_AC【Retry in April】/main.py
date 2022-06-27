@@ -43,18 +43,23 @@ torch.manual_seed(args.seed)
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-param = {'nTimeUnits': 40, 'num_Devices': 4, 'V': 72, 'field': 1, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+param = {'nTimeUnits': 10, 'num_Devices': 5, 'V': 72, 'field': 1, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 Devices = []
 # for i in range(param['num_Devices']):
 #     Devices.append(Device(random.randint(param['freq_low'], param['freq_high']), random.randint(30, 70), param['field']))
-# Devices.append(Device(28, random.randint(30, 70), param['field']))
-# Devices.append(Device(25, random.randint(30, 70), param['field']))
-# Devices.append(Device(23, random.randint(30, 70), param['field']))
+# Devices.append(Device(35, 30, param['field']))
+# Devices.append(Device(35, 40, param['field']))
+# Devices.append(Device(35, 50, param['field']))
+# Devices.append(Device(35, 60, param['field']))
+# Devices.append(Device(35, 70, param['field']))
+# Devices.append(Device(50, random.randint(30, 70), param['field']))
+# Devices.append(Device(40, random.randint(30, 70), param['field']))
+# Devices.append(Device(30, random.randint(30, 70), param['field']))
 Devices.append(Device(20, random.randint(30, 70), param['field']))
-# Devices.append(Device(12, random.randint(30, 70), param['field']))
-Devices.append(Device(9, random.randint(30, 70), param['field']))
-Devices.append(Device(7, random.randint(30, 70), param['field']))
-# Devices.append(Device(5, random.randint(30, 70), param['field']))
+Devices.append(Device(12, random.randint(30, 70), param['field']))
+# Devices.append(Device(9, random.randint(30, 70), param['field']))
+Devices.append(Device(40, random.randint(30, 70), param['field']))
+Devices.append(Device(5, random.randint(30, 70), param['field']))
 Devices.append(Device(4, random.randint(30, 70), param['field']))
 # Devices.append(Device(2, random.randint(30, 70), param['field']))
 
@@ -178,7 +183,7 @@ def main():
     for i in range(param['num_Devices']):
         logging_timeline.append([])
         for j in range(EP+1):
-            logging_timeline[i].append({'intervals': [], 'rewards': [], 'rewards_regular': [], 'timeline': [], 'plt_reward': []})
+            logging_timeline[i].append({'intervals': [], 'rewards': [], 'rewards_regular': [], 'timeline': [], 'plt_reward': [], 'avg_reward': []})
         # logging_timeline.append([{'intervals': [], 'rewards': [], 'rewards_regular': []}, {'intervals': [], 'rewards': [], 'rewards_regular': []}])
     # logging_timeline = [ device0, device1, device2....,  ,  ]
     # device = [episode0, episode1, episode2, ...,  ]
@@ -205,6 +210,8 @@ def main():
 
             # select action from policy
             action = select_action(state)
+            # random action
+            # action = np.random.randint(param['num_Devices'])
 
             # take the action
             # state, reward, reward_Regular, t = env.step(state, action, t)
@@ -296,13 +303,19 @@ def main():
     #     logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['intervals'][0])
     #     for j in range(1, len(logging_timeline[i][EP]['intervals'])):
     #         logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['timeline'][j-1] + logging_timeline[i][EP]['intervals'][j])
+    # for x in range(1, EP):
+    x = 1
     for i in range(param['num_Devices']):
-        if not logging_timeline[i][2]['intervals']:
-            break
-        logging_timeline[i][2]['timeline'].append(logging_timeline[i][2]['intervals'][0])
-        for j in range(1, len(logging_timeline[i][2]['intervals'])):
-            logging_timeline[i][2]['timeline'].append(
-                logging_timeline[i][2]['timeline'][j - 1] + logging_timeline[i][2]['intervals'][j])
+        if not logging_timeline[i][x]['intervals']:
+            continue
+        logging_timeline[i][x]['timeline'].append(logging_timeline[i][x]['intervals'][0])
+        for j in range(1, len(logging_timeline[i][x]['intervals'])):
+            logging_timeline[i][x]['timeline'].append(
+                logging_timeline[i][x]['timeline'][j - 1] + logging_timeline[i][x]['intervals'][j])
+        ls1 = logging_timeline[i][x]['intervals']
+        ls2 = logging_timeline[i][x]['rewards']
+        logging_timeline[i][x]['avg_reward'] = sum([x*y for x,y in zip(ls1, ls2)])/logging_timeline[i][x]['timeline'][-1]
+
 
     # pdb.set_trace()
     # for i in range(param['num_Devices']):
@@ -336,22 +349,38 @@ def main():
     ax.set_xlabel('Episodes')  # Add an x-label to the axes.
     ax.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
     ax.set_title("The Ave_Reward")  # Add a title to the axes.
+    ax.axhline(y = max(Ave_Reward), color='r', linestyle='--', linewidth='0.9', label=max(Ave_Reward))
+    ax.legend(loc="best")
 
 
     # ax[1].plot(np.arange(i_episode), [ave_Reward_random]*i_episode, label='Random')
     # ax[1].set_xlabel('Episodes')  # Add an x-label to the axes.
     # ax[1].set_ylabel('Ave_Reward')  # Add a y-label to the axes.
     # ax[1].set_title("The Ave_Reward")  # Add a title to the axes.
-    plt.legend()
+    # plt.legend()
     plt.show()
+
+    x = 1
 
     fig1, ax1 = plt.subplots(param['num_Devices'])
+    fig1.supxlabel('Time Unites for one episode')
+    fig1.supylabel('The Ave Reward')
+    fig1.suptitle('The episode %.0f' %(x))
     for i in range(param['num_Devices']):
-        ax1[i].step(logging_timeline[i][2]['timeline'], logging_timeline[i][2]['rewards'],'^-g', where='post')
-        # ax1[i].plot([10,16], [-7, -5], 'o')
+        ax1[i].step(logging_timeline[i][x]['timeline'], logging_timeline[i][x]['rewards'],'^-g', where='post', label='device %.0f' %(i))
         ax1[i].set_xlim([0, param['nTimeUnits']])
+        ax1[i].axhline(y=logging_timeline[i][x]['avg_reward'], color='r', linestyle='--', linewidth='0.9', label=logging_timeline[i][x]['avg_reward'])
+        ax1[i].legend(loc="best")
+        # ax1[i].text(2, logging_timeline[i][x]['avg_reward'], logging_timeline[i][x]['avg_reward'], verticalalignment='bottom',horizontalalignment='left', rotation=360, color='r')
+        ax1[i].set_ylabel('device  %.0f' %(i))
+        # if i == 0:
+        #     ax1[i].set_title(model.pattern)
+        ax1[i].set_title('CPU Capacity: %.0f' %(Devices[i].cpu_capacity))
+        for vv in range(len(np.where(Devices[i].TimeList)[0])):
+            ax1[i].axvline(x=np.where(Devices[i].TimeList)[0][vv], linestyle='--', linewidth='0.9')
+            # ax1[i].plot([np.where(Devices[i].TimeList)],[logging_timeline[i][x]['rewards']], 'o')
     plt.show()
-
+#      https://matplotlib.org/stable/tutorials/text/text_intro.html
 
 
 
