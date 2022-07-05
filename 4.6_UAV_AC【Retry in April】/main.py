@@ -43,7 +43,7 @@ torch.manual_seed(args.seed)
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-param = {'nTimeUnits': 10, 'num_Devices': 5, 'V': 72, 'field': 1, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+param = {'episodes': 100,'nTimeUnits': 20, 'num_Devices': 5, 'V': 72, 'field': 1, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 Devices = []
 # for i in range(param['num_Devices']):
 #     Devices.append(Device(random.randint(param['freq_low'], param['freq_high']), random.randint(30, 70), param['field']))
@@ -66,6 +66,10 @@ Devices.append(Device(4, random.randint(30, 70), param['field']))
 
 UAV = Uav(param['V'])
 env = Env(Devices, UAV, param['nTimeUnits'])
+
+Devices_random = copy.deepcopy(Devices)
+UAV_random = copy.deepcopy(UAV)
+env_random = Env(Devices_random, UAV_random, param['nTimeUnits'])
 
 model = Policy(1 * param['num_Devices'] + 2, param['num_Devices'])
 optimizer = optim.Adam(model.parameters(), lr=3e-2)  # lr=3e-2
@@ -138,56 +142,12 @@ def finish_episode():
     del model.rewards[:]
     del model.saved_actions[:]
 
-
-
-Ep_reward = []
-Ave_Reward = []
-m1 = []
-m2 = []
-
-def main():
-
-    # log parameters
-    print(param)
-
-    # †††††††††††††††††††††††††††††††††††††††Random Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-    # print("Random teajectory: One Episode Only")
-    # Devices_random = copy.deepcopy(Devices)
-    # UAV_random = copy.deepcopy(UAV)
-    # env_random = Env(Devices_random, UAV_random, param['nTimeUnits'])
-    # state = env_random.reset(Devices_random, UAV_random)
-    # state_random = state
-    # ep_reward_random = 0
-    #
-    # t = 0
-    # n = 0  # logging fly behaviors
-    # while t < param['nTimeUnits']:
-    #     t = t + 1
-    #     n = n + 1
-    #     action_random = np.random.randint(param['num_Devices'])  # 纯粹随机选择
-    #     state_random, reward_, reward_rest, reward_random = env_random.step(state_random, action_random, t)
-    #     model.rewards_random.append(reward_random)
-    #     ep_reward_random += reward_random
-    #     model.actions_random.append(action_random)
-    #     model.states_random.append(state_random)
-    #     print("Random: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(1, n,t,action_random))
-    # ave_Reward_random = ep_reward_random / param['nTimeUnits']
-    # print('Random: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(1, ep_reward_random, ave_Reward_random))
-    # †††††††††††††††††††††††††††††††††††††††Random Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
+def learning():
 
     rate1 = []
     rate2 = []
-    EP = 3
-    # logging for each episode
-    logging_timeline = []
-    for i in range(param['num_Devices']):
-        logging_timeline.append([])
-        for j in range(EP+1):
-            logging_timeline[i].append({'intervals': [], 'rewards': [], 'rewards_regular': [], 'timeline': [], 'plt_reward': [], 'avg_reward': []})
-        # logging_timeline.append([{'intervals': [], 'rewards': [], 'rewards_regular': []}, {'intervals': [], 'rewards': [], 'rewards_regular': []}])
-    # logging_timeline = [ device0, device1, device2....,  ,  ]
-    # device = [episode0, episode1, episode2, ...,  ]
-    # episode = {'intervals': [], 'rewards': []}
+
+    env.initialization(Devices, UAV)
 
     for i_episode in count(1):
 
@@ -225,7 +185,7 @@ def main():
             rate1[-1].append(reward_ / reward)
             rate2[-1].append(reward_rest / reward)
 
-
+            # 强制action
             # 强制选择action
             # action_table = np.zeros(param['num_Devices'])  # 筛选出当前有新任务的设备
             # for i in range(param['num_Devices']):
@@ -238,8 +198,7 @@ def main():
             # else:
             #     action = np.random.randint(param['num_Devices'])
 
-            logging_timeline[action][i_episode]['intervals'] = Devices[action].intervals
-            logging_timeline[action][i_episode]['rewards'] = Devices[action].rewards
+
 
             # print("the action          ", action)
             # print("the state:          ", state)
@@ -272,6 +231,32 @@ def main():
         # Running_reward.append(running_reward)
         Ave_Reward.append(ave_Reward)
 
+        # for i in range(param['num_Devices']):
+        #     logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['intervals'][0])
+        #     for j in range(1, len(logging_timeline[i][EP]['intervals'])):
+        #         logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['timeline'][j-1] + logging_timeline[i][EP]['intervals'][j])
+        # for x in range(1, EP):
+        x = i_episode
+        logging_timeline[0][x]['UAV_PositionList'] = UAV.PositionList
+        logging_timeline[0][x]['UAV_PositionCor'] = UAV.PositionCor
+        for i in range(param['num_Devices']):
+            logging_timeline[i][x]['intervals'] = Devices[i].intervals
+            logging_timeline[i][x]['TimeList'] = Devices[i].TimeList
+            logging_timeline[i][x]['KeyRewards'] = Devices[i].KeyReward
+            logging_timeline[i][x]['KeyTime'] = Devices[i].KeyTime
+            # if not logging_timeline[i][x]['intervals']:
+            #     continue
+            # logging_timeline[i][x]['timeline'].append(logging_timeline[i][x]['intervals'][0])
+            # for j in range(1, len(logging_timeline[i][x]['intervals'])):
+            #     logging_timeline[i][x]['timeline'].append(
+            #         logging_timeline[i][x]['timeline'][j - 1] + logging_timeline[i][x]['intervals'][j])
+            ls1 = [0] + logging_timeline[i][x]['intervals']
+            ls2 = logging_timeline[i][x]['KeyRewards']
+            logging_timeline[i][x]['avg_reward'] = sum([x * y for x, y in zip(ls1, ls2)]) / logging_timeline[i][x]['KeyTime'][-1]
+
+        # pdb.set_trace()
+
+
         print("----------------------------------------------------------------------------")
         print("The percentage to all the devices:")
         for x in range(param['num_Devices']):
@@ -299,44 +284,58 @@ def main():
         m1.append(mean(rate1[k]))
         m2.append(mean(rate2[k]))
 
-    # for i in range(param['num_Devices']):
-    #     logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['intervals'][0])
-    #     for j in range(1, len(logging_timeline[i][EP]['intervals'])):
-    #         logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['timeline'][j-1] + logging_timeline[i][EP]['intervals'][j])
-    # for x in range(1, EP):
-    x = 1
-    for i in range(param['num_Devices']):
-        if not logging_timeline[i][x]['intervals']:
-            continue
-        logging_timeline[i][x]['timeline'].append(logging_timeline[i][x]['intervals'][0])
-        for j in range(1, len(logging_timeline[i][x]['intervals'])):
-            logging_timeline[i][x]['timeline'].append(
-                logging_timeline[i][x]['timeline'][j - 1] + logging_timeline[i][x]['intervals'][j])
-        ls1 = logging_timeline[i][x]['intervals']
-        ls2 = logging_timeline[i][x]['rewards']
-        logging_timeline[i][x]['avg_reward'] = sum([x*y for x,y in zip(ls1, ls2)])/logging_timeline[i][x]['timeline'][-1]
 
 
-    # pdb.set_trace()
-    # for i in range(param['num_Devices']):
-    #     u = 0
-    #     for t in range(param['nTimeUnits']):
-    #         if t < logging_timeline[i][EP]['timeline'][u]:
-    #             logging_timeline[i][EP]['plt_reward'].append(logging_timeline[i][EP]['rewards'][u])
-    #         else:
-    #             u += 1
-    #             if u > len(logging_timeline[i][EP]['timeline']) - 1:
-    #                 break
-    #             logging_timeline[i][EP]['plt_reward'].append(logging_timeline[i][EP]['rewards'][u])
+
+Ep_reward = []
+Ave_Reward = []
+m1 = []
+m2 = []
+EP = param['episodes']
+
+# logging for each episode
+# logging_timeline = [ device0, device1, device2....,  ,  ]
+# device = [episode0, episode1, episode2, ...,  ]
+# episode = {'intervals': [], 'rewards': []}
+logging_timeline = []
+for i in range(param['num_Devices']):
+    logging_timeline.append([])
+    for j in range(EP + 1):
+        logging_timeline[i].append(
+            {'intervals': [], 'rewards': [], 'rewards_regular': [], 'timeline': [], 'plt_reward': [], 'avg_reward': []})
+    # logging_timeline.append([{'intervals': [], 'rewards': [], 'rewards_regular': []}, {'intervals': [], 'rewards': [], 'rewards_regular': []}])
 
 
-    # logging_timeline = [ device0, device1, device2....,  ,  ]
-    # device = [episode0, episode1, episode2, ...,  ]
-    # episode = {'intervals': [], 'rewards': []}
+def main():
 
-    #  extend the x-axis into whole timeline
+    # log parameters
+    print(param)
 
 
+
+
+    # †††††††††††††††††††††††††††††††††††††††Random Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
+    print("Random teajectory: One Episode Only")
+    env_random.initialization(Devices_random, UAV_random)
+    state_random = env_random.reset(Devices_random, UAV_random)
+    ep_reward_random = 0
+    t = 0
+    n = 0  # logging fly behaviors
+    while t < param['nTimeUnits']:
+        t = t + 1
+        n = n + 1
+        action_random = np.random.randint(param['num_Devices'])  # 纯粹随机选择
+        state_random, reward_, reward_rest, reward_random = env_random.step(state_random, action_random, t)
+        model.rewards_random.append(reward_random)
+        ep_reward_random += reward_random
+        model.actions_random.append(action_random)
+        model.states_random.append(state_random)
+        print("Random: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(1, n,t,action_random))
+    ave_Reward_random = ep_reward_random / param['nTimeUnits']
+    print('Random: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(1, ep_reward_random, ave_Reward_random))
+    # †††††††††††††††††††††††††††††††††††††††Random Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
+
+    learning()
 
     # # Plotting Phase
     fig, ax = plt.subplots(1)
@@ -345,11 +344,12 @@ def main():
     # ax[0].set_ylabel('ep_reward')  # Add a y-label to the axes.
     # ax[0].set_title("The ep_reward")  # Add a title to the axes.
 
-    ax.plot(np.arange(1, i_episode+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], i_episode))
+    ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP))
     ax.set_xlabel('Episodes')  # Add an x-label to the axes.
     ax.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
     ax.set_title("The Ave_Reward")  # Add a title to the axes.
-    ax.axhline(y = max(Ave_Reward), color='r', linestyle='--', linewidth='0.9', label=max(Ave_Reward))
+    ax.axhline(y = max(Ave_Reward), color='r', linestyle='--', linewidth='0.9',   label='Smart: ' + str(max(Ave_Reward)))
+    ax.axhline(y = ave_Reward_random, color='b', linestyle='--', linewidth='0.9', label='Random:'+ str(ave_Reward_random))
     ax.legend(loc="best")
 
 
@@ -367,18 +367,23 @@ def main():
     fig1.supylabel('The Ave Reward')
     fig1.suptitle('The episode %.0f' %(x))
     for i in range(param['num_Devices']):
-        ax1[i].step(logging_timeline[i][x]['timeline'], logging_timeline[i][x]['rewards'],'^-g', where='post', label='device %.0f' %(i))
-        ax1[i].set_xlim([0, param['nTimeUnits']])
-        ax1[i].axhline(y=logging_timeline[i][x]['avg_reward'], color='r', linestyle='--', linewidth='0.9', label=logging_timeline[i][x]['avg_reward'])
-        ax1[i].legend(loc="best")
-        # ax1[i].text(2, logging_timeline[i][x]['avg_reward'], logging_timeline[i][x]['avg_reward'], verticalalignment='bottom',horizontalalignment='left', rotation=360, color='r')
-        ax1[i].set_ylabel('device  %.0f' %(i))
-        # if i == 0:
-        #     ax1[i].set_title(model.pattern)
-        ax1[i].set_title('CPU Capacity: %.0f' %(Devices[i].cpu_capacity))
-        for vv in range(len(np.where(Devices[i].TimeList)[0])):
-            ax1[i].axvline(x=np.where(Devices[i].TimeList)[0][vv], linestyle='--', linewidth='0.9')
-            # ax1[i].plot([np.where(Devices[i].TimeList)],[logging_timeline[i][x]['rewards']], 'o')
+        if len(logging_timeline[i][x]['intervals']) == 0:
+            ax1[i].text(0.4, 0.5, 'No Visit by UAV')
+        else:
+            ax1[i].step(logging_timeline[i][x]['KeyTime'], logging_timeline[i][x]['KeyRewards'], '^-g', where='post',
+                        label='device %.0f' % (i))
+            ax1[i].set_xlim([0, param['nTimeUnits']])
+            ax1[i].axhline(y=logging_timeline[i][x]['avg_reward'], color='r', linestyle='--', linewidth='0.9',
+                           label=logging_timeline[i][x]['avg_reward'])
+            ax1[i].legend(loc="best")
+            # ax1[i].text(2, logging_timeline[i][x]['avg_reward'], logging_timeline[i][x]['avg_reward'], verticalalignment='bottom',horizontalalignment='left', rotation=360, color='r')
+            ax1[i].set_ylabel('device  %.0f' % (i))
+            # if i == 0:
+            #     ax1[i].set_title(model.pattern)
+            ax1[i].set_title('CPU Capacity: %.0f' % (Devices[i].cpu_capacity))
+            for vv in range(len(np.where(logging_timeline[i][x]['TimeList'])[0])):
+                ax1[i].axvline(x=np.where(logging_timeline[i][x]['TimeList'])[0][vv], linestyle='--', linewidth='0.9')
+                # ax1[i].plot([np.where(Devices[i].TimeList)],[logging_timeline[i][x]['rewards']], 'o')
     plt.show()
 #      https://matplotlib.org/stable/tutorials/text/text_intro.html
 

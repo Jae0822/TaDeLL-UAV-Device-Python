@@ -20,6 +20,7 @@ class Task(object):
         """
         # A label of visit/learn by UAV/Agent
         self.label = False
+        self.nonvisitFlag = True
 
         # Environment related:
         # self.ArrivalRate = ArrivalRate
