@@ -24,6 +24,8 @@ from IoTEnv import Uav, Device, Env, Policy
 parser = argparse.ArgumentParser(description='PyTorch actor-critic example')
 parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
                     help='discount factor (default: 0.99)')
+parser.add_argument('--learning_rate', type=float, default=3e-1, metavar='lr',
+                    help='discount factor (default: 3e-1)')
 parser.add_argument('--seed', type=int, default=0, metavar='N',
                     help='random seed (default: 0)')
 parser.add_argument('--render', action='store_true',
@@ -43,7 +45,7 @@ torch.manual_seed(args.seed)
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-param = {'episodes': 100,'nTimeUnits': 20, 'num_Devices': 5, 'V': 72, 'field': 1, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+param = {'episodes': 2,'nTimeUnits': 2, 'num_Devices': 5, 'V': 72, 'field': 1, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 Devices = []
 # for i in range(param['num_Devices']):
 #     Devices.append(Device(random.randint(param['freq_low'], param['freq_high']), random.randint(30, 70), param['field']))
@@ -72,7 +74,7 @@ UAV_random = copy.deepcopy(UAV)
 env_random = Env(Devices_random, UAV_random, param['nTimeUnits'])
 
 model = Policy(1 * param['num_Devices'] + 2, param['num_Devices'])
-optimizer = optim.Adam(model.parameters(), lr=3e-2)  # lr=3e-2
+optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)  # lr=3e-2
 eps = np.finfo(np.float32).eps.item()
 
 
@@ -176,7 +178,7 @@ def learning():
             # take the action
             # state, reward, reward_Regular, t = env.step(state, action, t)
             t = t + 1
-            state, reward_, reward_rest, reward= env.step(state, action, t)
+            state, reward_, reward_rest, reward = env.step(state, action, t)
             print(reward_)
             print(reward_rest)
             print(reward)
@@ -208,6 +210,8 @@ def learning():
 
             model.actions.append(action)
             model.states.append(state)
+
+
             # model.reward_.append(reward_)
             # model.reward_rest.append(reward_rest)
             model.rewards.append(reward)
@@ -344,7 +348,8 @@ def main():
     # ax[0].set_ylabel('ep_reward')  # Add a y-label to the axes.
     # ax[0].set_title("The ep_reward")  # Add a title to the axes.
 
-    ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP))
+    # ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP, args.gamma, args.learning_rate))
+    ax.plot(np.arange(1, EP+1), Ave_Reward, label= str(param['num_Devices']) + ' Devices,' + str(EP) + ' episodes,' +  str(param['nTimeUnits']) + ' TimeUnits,' +  str(args.gamma) + ' gamma,' + str(args.learning_rate) + ' lr')
     ax.set_xlabel('Episodes')  # Add an x-label to the axes.
     ax.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
     ax.set_title("The Ave_Reward")  # Add a title to the axes.

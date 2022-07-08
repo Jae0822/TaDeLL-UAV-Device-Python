@@ -28,6 +28,7 @@ class Device(object):
         self.cpu_capacity = cpu_capacity
         self.field = field
         self.location = field * np.random.random_sample((2, 1))
+        self.TimeSinceLastVisit = 0
         # self.flag = False  # if the device is visited, then flag = True
 
 
@@ -86,7 +87,6 @@ class Env(object):
             Devices[i].nTasks = len(Devices[i].TaskList)
             Devices[i].NewTaskArrival = np.where(Devices[i].TimeList)[0]  # The list of New task arrival time
 
-
     def reset(self, Devices, UAV):
         # Reset Devices and UAV
         UAV.location = UAV.init_location
@@ -96,6 +96,7 @@ class Env(object):
             # Devices[i].TimeList, Devices[i].TaskList  = Devices[i].gen_TimeTaskList(self.nTimeUnits)   # The list of time that indicates the arrival of a new task
             # Devices[i].nTasks = len(Devices[i].TaskList)
             # Devices[i].NewTaskArrival = np.where(Devices[i].TimeList)[0]  # The list of New task arrival time
+            Devices[i].TimeSinceLastVisit = 0
             Devices[i].ta_dex = 0  # current task index
             Devices[i].task = Devices[i].TaskList[Devices[i].ta_dex]  # current task
             Devices[i].TaskList_Regular = copy.deepcopy(Devices[i].TaskList)  # For the comparison without warm start
@@ -140,7 +141,9 @@ class Env(object):
         # if not self.Devices[action].flag:
             # self.Devices[action].flag = True
 
-
+        for i in range(self.num_Devices):
+            self.Devices[i].TimeSinceLastVisit += 1
+        self.Devices[action].TimeSinceLastVisit = 0
 
         # 1.当前节点总的已访问次数
         # state[action] += 1
@@ -333,22 +336,29 @@ class Env(object):
 
 
 
+
+
+
         reward_rest = 0
+        # for i in range(self.num_Devices):
+        #     if i == action:
+        #         pass
+        #     else:
+        #         device = self.Devices[i]
+        #         if device.nonvisitFlag:                # if never been visited by UAV
+        #             # reward_rest += state[i] * (-5)  # FIXME: choose a proper constant
+        #             reward_rest += -5
+        #             # 在TIMEUNITS够(100)的情况下，这个数值从 -1 ～ -60 都不会影响reward_, reward_rest的比例, 太大的话就有风险了
+        #         else:                             # if this device has been visited by UAV
+        #             reward_rest += device.KeyReward[-1]  #  * self.Devices[i].TimeSinceLastVisit # should decrease with time
+        #             # reward_rest += state[i] * device.rewards[-1]
         for i in range(self.num_Devices):
-            if i == action:
-                pass
-            else:
-                device = self.Devices[i]
-                if device.nonvisitFlag:                # if never been visited by UAV
-                    # reward_rest += state[i] * (-5)  # FIXME: choose a proper constant
-                    reward_rest += -5
-                    # 在TIMEUNITS够(100)的情况下，这个数值从 -1 ～ -60 都不会影响reward_, reward_rest的比例, 太大的话就有风险了
-                else:                             # if this device has been visited by UAV
-                    reward_rest += device.KeyReward[-1] * state[i]  # should decrease with time
-                    # reward_rest += state[i] * device.rewards[-1]
-
+            if i != action:
+                if device.nonvisitFlag:
+                    reward_rest += -10
+                else:
+                    reward_rest += device.KeyReward[-1]   # should decrease with time
         reward_rest = reward_rest / (self.num_Devices - 1)
-
 
 
 
@@ -410,18 +420,19 @@ class Policy(nn.Module):
     def __init__(self, input_size, output_size):
         super(Policy, self).__init__()
         self.affine1 = nn.Linear(input_size, 32)
-        self.affine2 = nn.Linear(32, 64)
-        self.affine3 = nn.Linear(64, 128)
-        self.pattern = [32, 64, 128]
+        # self.affine2 = nn.Linear(32, 64)
+        # self.affine3 = nn.Linear(64, 128)
+        # self.pattern = [32, 64, 128]
+        self.pattern = [32]
 
 
         # actor's layer
         # self.action_affine1 = nn.Linear(32, 64)
-        self.action_head = nn.Linear(128, output_size)
+        self.action_head = nn.Linear(32, output_size)
 
         # critic's layer
         # self.value_affine1 = nn.Linear(32, 64)
-        self.value_head = nn.Linear(128, 1)
+        self.value_head = nn.Linear(32, 1)
 
         # action & reward buffer
         self.saved_actions = []
@@ -441,8 +452,8 @@ class Policy(nn.Module):
         forward of both actor and critic
         """
         x = F.relu(self.affine1(x))
-        x = F.relu(self.affine2(x))
-        x = F.relu(self.affine3(x))
+        # x = F.relu(self.affine2(x))
+        # x = F.relu(self.affine3(x))
 
         # actor: choses action to take from state s_t
         # by returning probability of each action
