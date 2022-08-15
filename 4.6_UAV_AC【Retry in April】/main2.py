@@ -16,7 +16,7 @@ import torch.optim as optim
 from torch.distributions import Categorical
 # import pdb
 
-from IoTEnv import Uav, Device, Env, Policy
+from IoTEnv3 import Uav, Device, Env, Policy
 # Press ⌃R to execute it or replace it with your code.
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 # Press ⌘F8 to toggle the breakpoint.
@@ -45,7 +45,7 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-param = {'episodes': 60, 'nTimeUnits': 600, 'nTimeUnits_random': 600, 'nTimeUnits_force': 600,
+param = {'episodes': 10, 'nTimeUnits': 300, 'nTimeUnits_random': 300, 'nTimeUnits_force': 300,
          'gamma': 0.99, 'learning_rate': 0.7, 'log_interval': 1, 'seed': 0,
          'num_Devices': 9, 'V': 72, 'field': 1, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
@@ -199,8 +199,10 @@ def learning():
 
             # take the action
             # state, reward, reward_Regular, t = env.step(state, action, t)
-            t = t + 3
+            t = t + 10
             state, reward_, reward_rest, reward = env.step(state, action, t)
+
+
             print(reward_)
             print(reward_rest)
             print(reward)
@@ -228,14 +230,14 @@ def learning():
             model.rewards.append(reward)
             ep_reward += reward
 
-            print("Forced: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(i_episode, n, t, action))
+            print("Learning: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(i_episode, n, t, action))
 
             print("----------------------------------------------------------------------------")
             print("       ")
 
         #  Average Reward
-        ave_Reward =ep_reward / param['nTimeUnits']
-
+        # ave_Reward =ep_reward / param['nTimeUnits']
+        ave_Reward = ep_reward / n
         # update cumulative reward
         # running_reward = 0.05 * ep_reward + (1 - 0.05) * running_reward
 
@@ -255,19 +257,20 @@ def learning():
         logging_timeline[0][x]['UAV_PositionList'] = UAV.PositionList
         logging_timeline[0][x]['UAV_PositionCor'] = UAV.PositionCor
         for i in range(param['num_Devices']):
-            logging_timeline[i][x]['intervals'] = Devices[i].intervals
+            # logging_timeline[i][x]['intervals'] = Devices[i].intervals
             logging_timeline[i][x]['TimeList'] = Devices[i].TimeList
             logging_timeline[i][x]['KeyRewards'] = Devices[i].KeyReward
             logging_timeline[i][x]['KeyTime'] = Devices[i].KeyTime
+            logging_timeline[i][x]['UAVVisitTime'] = Devices[i].UAVVisitTime
             # if not logging_timeline[i][x]['intervals']:
             #     continue
             # logging_timeline[i][x]['timeline'].append(logging_timeline[i][x]['intervals'][0])
             # for j in range(1, len(logging_timeline[i][x]['intervals'])):
             #     logging_timeline[i][x]['timeline'].append(
             #         logging_timeline[i][x]['timeline'][j - 1] + logging_timeline[i][x]['intervals'][j])
-            ls1 = [0] + logging_timeline[i][x]['intervals']
-            ls2 = logging_timeline[i][x]['KeyRewards']
-            logging_timeline[i][x]['avg_reward'] = sum([x * y for x, y in zip(ls1, ls2)]) / logging_timeline[i][x]['KeyTime'][-1]
+            # ls1 = [0] + logging_timeline[i][x]['intervals']
+            # ls2 = logging_timeline[i][x]['KeyRewards']
+            # logging_timeline[i][x]['avg_reward'] = sum([x * y for x, y in zip(ls1, ls2)]) / logging_timeline[i][x]['KeyTime'][-1]
 
         # pdb.set_trace()
 
@@ -337,7 +340,9 @@ def main():
     t = 0
     n = 0  # logging fly behaviors
     while t < param['nTimeUnits_random']:
-        t = t + 3
+        t = t + 10
+        if t >= param['nTimeUnits_random']:
+            break
         n = n + 1
         action_random = np.random.randint(param['num_Devices'])  # 纯粹随机选择
         state_random, reward_, reward_rest, reward_random = env_random.step(state_random, action_random, t)
@@ -359,7 +364,9 @@ def main():
     ep_reward_force = 0
     t = 0
     while t < param['nTimeUnits_random']:
-        t = t + 3
+        t = t + 10
+        if t >= param['nTimeUnits_force']:
+            break
         # 强制选择action
         action_table_force = np.zeros(param['num_Devices'])  # 筛选出当前有新任务的设备
         for i in range(param['num_Devices']):
@@ -425,23 +432,23 @@ def main():
     fig1.supylabel('The Ave Reward')
     fig1.suptitle('The episode %.0f' %(x))
     for i in range(param['num_Devices']):
-        if len(logging_timeline[i][x]['intervals']) == 0:
-            ax1[i].text(0.4, 0.5, 'No Visit by UAV')
-        else:
-            ax1[i].step(logging_timeline[i][x]['KeyTime'], logging_timeline[i][x]['KeyRewards'], '^-g', where='post',
-                        label='device %.0f' % (i))
-            ax1[i].set_xlim([0, param['nTimeUnits']])
-            ax1[i].axhline(y=logging_timeline[i][x]['avg_reward'], color='r', linestyle='--', linewidth='0.9',
-                           label=logging_timeline[i][x]['avg_reward'])
-            ax1[i].legend(loc="best")
-            # ax1[i].text(2, logging_timeline[i][x]['avg_reward'], logging_timeline[i][x]['avg_reward'], verticalalignment='bottom',horizontalalignment='left', rotation=360, color='r')
-            ax1[i].set_ylabel('device  %.0f' % (i))
-            # if i == 0:
-            #     ax1[i].set_title(model.pattern)
-            ax1[i].set_title('CPU Capacity: %.0f' % (Devices[i].cpu_capacity))
-            for vv in range(len(np.where(logging_timeline[i][x]['TimeList'])[0])):
-                ax1[i].axvline(x=np.where(logging_timeline[i][x]['TimeList'])[0][vv], linestyle='--', linewidth='0.9')
-                # ax1[i].plot([np.where(Devices[i].TimeList)],[logging_timeline[i][x]['rewards']], 'o')
+        ax1[i].step(logging_timeline[i][x]['KeyTime'], logging_timeline[i][x]['KeyRewards'], 'o-b', where='post',
+                    label='device %.0f' % (i))
+        ax1[i].set_xlim([0, param['nTimeUnits']])
+        ax1[i].axhline(y=logging_timeline[i][x]['avg_reward'], color='r', linestyle='--', linewidth='0.9',
+                       label=logging_timeline[i][x]['avg_reward'])
+        ax1[i].legend(loc="best")
+        # ax1[i].text(2, logging_timeline[i][x]['avg_reward'], logging_timeline[i][x]['avg_reward'], verticalalignment='bottom',horizontalalignment='left', rotation=360, color='r')
+        ax1[i].set_ylabel('device  %.0f' % (i))
+        # if i == 0:
+        #     ax1[i].set_title(model.pattern)
+        ax1[i].set_title('CPU Capacity: %.0f' % (Devices[i].cpu_capacity))
+        for vv in range(len(np.where(logging_timeline[i][x]['TimeList'])[0])):
+            ax1[i].axvline(x=np.where(logging_timeline[i][x]['TimeList'])[0][vv], linestyle='--', linewidth='0.9')
+            # ax1[i].plot([np.where(Devices[i].TimeList)],[logging_timeline[i][x]['rewards']], 'o')
+        for uu in range(len(logging_timeline[i][x]['UAVVisitTime'])):
+            a1 = logging_timeline[i][x]['KeyTime'].index(logging_timeline[i][x]['UAVVisitTime'][uu])
+            ax1[i].plot(logging_timeline[i][x]['UAVVisitTime'][uu], logging_timeline[i][x]['KeyRewards'][a1], 'or')
     plt.show()
 #      https://matplotlib.org/stable/tutorials/text/text_intro.html
 
