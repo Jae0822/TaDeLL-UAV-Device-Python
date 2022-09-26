@@ -9,11 +9,12 @@ uncomment对应文件，画相应的图
 """
 
 """
+用这个命令储存数据：
 with open('fig_temp.pkl', 'wb') as f:
     pickle.dump([model, env, param, avg, logging_timeline], f)
 
 1)model
-model = Policy(1 * param['num_Devices'] + 2, param['num_Devices'])
+model = Policy(1 * param['num_Devices'] + 2, param['num_Devices']) # 待定不一定有+2
 2)env
 env = Env(Devices, UAV, param['nTimeUnits'])
 3)param = {'episodes': 2, 'nTimeUnits': 5, 'nTimeUnits_random': 2, 'nTimeUnits_force': 2,
@@ -43,6 +44,24 @@ with open('fig_temp.pkl', 'rb') as f:
 
 # ---------------------------------------------------Fig2---------------------------------------------------------------
 # with open('fig2.pkl', 'rb') as f:
+#     model, param, avg, logging_timeline = pickle.load(f)
+
+
+# ---------------------------------------------------Fig3---------------------------------------------------------------
+# with open('fig3.pkl', 'rb') as f:
+#     model, param, avg, logging_timeline = pickle.load(f)
+
+# ---------------------------------------------------Fig4---------------------------------------------------------------
+# with open('fig4.pkl', 'rb') as f:
+#     model, param, avg, logging_timeline = pickle.load(f)
+
+# ---------------------------------------------------Fig5---------------------------------------------------------------
+# with open('fig5.pkl', 'rb') as f:
+#     model, param, avg, logging_timeline = pickle.load(f)
+
+
+# ---------------------------------------------------Fig6---------------------------------------------------------------
+# with open('fig6.pkl', 'rb') as f:
 #     model, param, avg, logging_timeline = pickle.load(f)
 
 

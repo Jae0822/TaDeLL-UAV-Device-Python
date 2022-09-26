@@ -46,8 +46,8 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-param = {'episodes': 10, 'nTimeUnits': 200, 'nTimeUnits_random': 200, 'nTimeUnits_force': 200,
-         'gamma': 0.99, 'learning_rate': 0.7, 'log_interval': 1, 'seed': 0, 'alpha': 2,
+param = {'episodes': 30, 'nTimeUnits': 200, 'nTimeUnits_random': 200, 'nTimeUnits_force': 200,
+         'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2,
          'num_Devices': 9, 'V': 36, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])

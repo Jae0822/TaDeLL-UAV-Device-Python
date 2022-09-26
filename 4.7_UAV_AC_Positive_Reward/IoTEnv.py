@@ -413,7 +413,7 @@ class Env(object):
         reward_fair = reward_final + 20
 
         if action == self.UAV.PositionList[-2]:  # 重复访问的penalty
-            reward_fair = reward_fair - 10
+            reward_fair = reward_fair - 100
 
 
         # print("done one step")
