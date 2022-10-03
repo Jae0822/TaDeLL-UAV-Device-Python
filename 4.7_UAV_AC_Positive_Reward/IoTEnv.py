@@ -9,7 +9,7 @@ import torch.nn.functional as F
 
 from associations import pg_rl
 from env import Task
-
+from UAVEnergy import UAV_Energy
 
 # Prepare the model and parameters
 with open('mu_sig.pkl', 'rb') as f:
@@ -125,7 +125,7 @@ class Env(object):
                                 ))
         return state  # (1 * num_Devices,)
 
-    def step(self, state_, action, t, param):
+    def step(self, state_, action, t, PV, param):
 
         state = copy.deepcopy(state_)
 
@@ -413,8 +413,11 @@ class Env(object):
         reward_fair = reward_final + 20
 
         if action == self.UAV.PositionList[-2]:  # 重复访问的penalty
-            reward_fair = reward_fair - 100
+            reward_fair = reward_fair - 200
 
+        mu = 0.5
+        reward_fair = (1 - mu) * reward_fair + mu * PV  # 添加飞行能量消耗
+        print(reward_fair, ', ', PV)
 
         # print("done one step")
         # return state, reward_, reward_Regular, t

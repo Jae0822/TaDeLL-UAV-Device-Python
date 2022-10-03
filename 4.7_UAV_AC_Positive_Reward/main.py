@@ -18,6 +18,8 @@ from torch.distributions import Categorical
 # import pdb
 
 from IoTEnv import Uav, Device, Env, Policy
+from UAVEnergy import UAV_Energy
+
 # Press ⌃R to execute it or replace it with your code.
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 # Press ⌘F8 to toggle the breakpoint.
@@ -195,12 +197,13 @@ def learning():
             distance = np.linalg.norm(CPoint - NPoint)  # Compute the distance of two points
             Fly_time = 1 if distance == 0 else math.ceil(distance / env.UAV.V)
             # t = t + Fly_time
-
+            print(Fly_time)
+            PV = UAV_Energy(param['V']) * Fly_time
 
             # take the action
             # state, reward, reward_Regular, t = env.step(state, action, t)
             t = t + Fly_time
-            state, reward_, reward_rest, reward = env.step(state, action, t, param)
+            state, reward_, reward_rest, reward = env.step(state, action, t, PV, param)
             print(reward_)
             print(reward_rest)
             print(reward)
@@ -345,11 +348,12 @@ def main():
         NPoint = env_random.Devices[action_random].location  # next location
         distance = np.linalg.norm(CPoint - NPoint)  # Compute the distance of two points
         Fly_time = 1 if distance == 0 else math.ceil(distance / env_random.UAV.V)
+        PV = UAV_Energy(param['V']) * Fly_time
         t = t + Fly_time
         if t > param['nTimeUnits_random']:
             break
         n = n + 1
-        state_random, reward_, reward_rest, reward_random = env_random.step(state_random, action_random, t, param)
+        state_random, reward_, reward_rest, reward_random = env_random.step(state_random, action_random, t, PV, param)
         # model.rewards_random.append(reward_random)
         ep_reward_random += reward_random
         # model.actions_random.append(action_random)
@@ -385,11 +389,12 @@ def main():
         NPoint = env_force.Devices[action_force].location  # next location
         distance = np.linalg.norm(CPoint - NPoint)  # Compute the distance of two points
         Fly_time = 1 if distance == 0 else math.ceil(distance / env_force.UAV.V)
+        PV = UAV_Energy(param['V']) * Fly_time
         t = t + Fly_time
         if t > param['nTimeUnits_force']:
             break
         n = n + 1
-        state_force, reward_, reward_rest, reward_force = env_force.step(state_force, action_force, t, param)
+        state_force, reward_, reward_rest, reward_force = env_force.step(state_force, action_force, t, PV, param)
         ep_reward_force += reward_force
         print("Force: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(1, n,t,action_force))
     ave_Reward_force = ep_reward_force / n

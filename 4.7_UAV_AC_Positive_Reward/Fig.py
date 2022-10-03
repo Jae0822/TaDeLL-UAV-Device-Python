@@ -64,7 +64,9 @@ with open('fig_temp.pkl', 'rb') as f:
 # with open('fig6.pkl', 'rb') as f:
 #     model, param, avg, logging_timeline = pickle.load(f)
 
-
+# ---------------------------------------------------Fig7---------------------------------------------------------------
+# with open('fig7.pkl', 'rb') as f:
+#     model, param, avg, logging_timeline = pickle.load(f)
 
 
 fig, ax = plt.subplots(1)
