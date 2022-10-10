@@ -11,7 +11,7 @@ uncomment对应文件，画相应的图
 """
 用这个命令储存数据：
 with open('fig_temp.pkl', 'wb') as f:
-    pickle.dump([model, env, param, avg, logging_timeline], f)
+    pickle.dump([model, env, env_random, env_force, param, avg, logging_timeline], f)
 
 
 
@@ -30,45 +30,30 @@ avg['ave_Reward_force'] = ave_Reward_force
 logging_timeline = [ device0, device1, device2....,  ,  ]
 device = [episode0, episode1, episode2, ...,  ]
 episode = {'intervals': [], 'rewards': []}
+logging_timeline[0] is empty. So used it for UAV's data such as:
+        logging_timeline[0][x]['UAV_PositionList'] = UAV.PositionList
+        logging_timeline[0][x]['UAV_PositionCor'] = UAV.PositionCor
+        logging_timeline[0][x]['UAV_Reward'] = UAV.Reward
+        logging_timeline[0][x]['UAV_Energy'] = UAV.Energy
 """
 
 
 # ---------------------------------------------------Fig_temp---------------------------------------------------------------
 with open('fig_temp.pkl', 'rb') as f:
-    model, env, param, avg, logging_timeline = pickle.load(f)
+    model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
 
-# ---------------------------------------------------Fig1---------------------------------------------------------------
-# with open('fig1.pkl', 'rb') as f:
-#     model, param, avg, logging_timeline = pickle.load(f)
-# avg['Ave_Reward'][1] = -4.700195220179078
-# avg['Ave_Reward'][4] = -4.588885932705906
-
-# ---------------------------------------------------Fig2---------------------------------------------------------------
-# with open('fig2.pkl', 'rb') as f:
-#     model, env, param, avg, logging_timeline = pickle.load(f)
+# ---------------------------------------------------Fig8---------------------------------------------------------------
+# with open('fig8.pkl', 'rb') as f:
+#     model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
 
-# ---------------------------------------------------Fig3---------------------------------------------------------------
-# with open('fig3.pkl', 'rb') as f:
-#     model, env, param, avg, logging_timeline = pickle.load(f)
-
-# ---------------------------------------------------Fig4---------------------------------------------------------------
-# with open('fig4.pkl', 'rb') as f:
-#     model, env, param, avg, logging_timeline = pickle.load(f)
-
-# ---------------------------------------------------Fig5---------------------------------------------------------------
-# with open('fig5.pkl', 'rb') as f:
-#     model, env, param, avg, logging_timeline = pickle.load(f)
+# ---------------------------------------------------Fig8---------------------------------------------------------------
+# with open('fig8.pkl', 'rb') as f:
+#     model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
 
-# ---------------------------------------------------Fig6---------------------------------------------------------------
-# with open('fig6.pkl', 'rb') as f:
-#     model, env, param, avg, logging_timeline = pickle.load(f)
 
-# ---------------------------------------------------Fig7---------------------------------------------------------------
-# with open('fig7.pkl', 'rb') as f:
-#     model, env, param, avg, logging_timeline = pickle.load(f)
 
 
 fig, ax = plt.subplots(1)
@@ -122,3 +107,24 @@ for i in range(param['num_Devices']):
 plt.show()
 #      https://matplotlib.org/stable/tutorials/text/text_intro.html
 
+
+
+
+fig2, ax2 = plt.subplots(1)
+type = ['Random', 'Force', 'Smart']
+# data1 = [np.mean([i for i in Reward_random if i >= -30]), np.mean([i for i in Reward_force if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+# data2 = [np.mean(PV_random), np.mean(PV_force), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+# ax2.bar(type, data1, label = 'reward')
+# ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
+data11 = [np.mean([i for i in env_random.UAV.Reward if i >= -30]), np.mean([i for i in env_force.UAV.Reward if i >= -30]),
+          np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
+          np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+ax2.bar(type, data11, label='reward')
+ax2.bar(type, data22, bottom=np.array(data11), label='energy')
+ax2.legend(loc="best")
+# ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
+ax2.set_ylabel('Total Cost')  # Add a y-label to the axes.
+plt.show()
+# https: // www.zhihu.com / question / 507977476 / answer / 2283372858  (画叠加柱状图)
+# https: // juejin.cn / post / 6844903664780328974

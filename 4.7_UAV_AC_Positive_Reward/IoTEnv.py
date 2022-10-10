@@ -68,6 +68,8 @@ class Uav(object):
         self.V = V   # m/s
         self.PositionCor = [self.init_location]  # list of sequent locations in an episode
         self.PositionList = [0]
+        self.Reward = []
+        self.Energy = []
 
 
 
@@ -93,6 +95,8 @@ class Env(object):
         UAV.location = UAV.init_location
         UAV.PositionCor = [UAV.init_location]
         UAV.PositionList = [0]
+        UAV.Reward = []
+        UAV.Energy = []
         for i in range(len(Devices)):
             # Devices[i].TimeList, Devices[i].TaskList  = Devices[i].gen_TimeTaskList(self.nTimeUnits)   # The list of time that indicates the arrival of a new task
             # Devices[i].nTasks = len(Devices[i].TaskList)
@@ -415,13 +419,17 @@ class Env(object):
         if action == self.UAV.PositionList[-2]:  # 重复访问的penalty
             reward_fair = reward_fair - 200
 
-        mu = 0.5
-        reward_fair = (1 - mu) * reward_fair + mu * PV  # 添加飞行能量消耗
-        print(reward_fair, ', ', PV)
+        mu = 0
+        reward_fair1 = (1 - mu) * reward_fair + mu * PV  # 添加飞行能量消耗
+        print('reward: ', reward_fair, ', Energy:', PV)
+
+        self.UAV.Reward.append(reward_fair)
+        self.UAV.Energy.append(PV)
+
 
         # print("done one step")
         # return state, reward_, reward_Regular, t
-        return state, reward_, reward_rest, reward_fair
+        return state, reward_, reward_rest, reward_fair1
 
     def update(self):
         pass

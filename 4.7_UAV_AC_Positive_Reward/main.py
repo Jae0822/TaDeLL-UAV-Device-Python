@@ -257,6 +257,8 @@ def learning():
         x = i_episode
         logging_timeline[0][x]['UAV_PositionList'] = UAV.PositionList
         logging_timeline[0][x]['UAV_PositionCor'] = UAV.PositionCor
+        logging_timeline[0][x]['UAV_Reward'] = UAV.Reward
+        logging_timeline[0][x]['UAV_Energy'] = UAV.Energy
         for i in range(param['num_Devices']):
             logging_timeline[i][x]['intervals'] = Devices[i].intervals
             logging_timeline[i][x]['TimeList'] = Devices[i].TimeList
@@ -274,6 +276,8 @@ def learning():
                 logging_timeline[i][x]['avg_reward'] = None
             else:
                 logging_timeline[i][x]['avg_reward'] = sum([x * y for x, y in zip(ls1, ls2)]) / logging_timeline[i][x]['KeyTime'][-1]
+
+
 
         # pdb.set_trace()
 
@@ -342,6 +346,8 @@ def main():
     ep_reward_random = 0
     t = 0
     n = 0  # logging fly behaviors
+    Reward_random = []
+    PV_random = []
     while t < param['nTimeUnits_random']:
         action_random = np.random.randint(param['num_Devices'])  # 纯粹随机选择
         CPoint = env_random.UAV.location  # current location
@@ -355,6 +361,8 @@ def main():
         n = n + 1
         state_random, reward_, reward_rest, reward_random = env_random.step(state_random, action_random, t, PV, param)
         # model.rewards_random.append(reward_random)
+        PV_random.append(PV)
+        Reward_random.append(reward_random)
         ep_reward_random += reward_random
         # model.actions_random.append(action_random)
         # model.states_random.append(state_random)
@@ -371,6 +379,8 @@ def main():
     state_force = env_force.reset(Devices_force, UAV_force)
     ep_reward_force = 0
     t = 0
+    Reward_force = []
+    PV_force = []
     while t < param['nTimeUnits_force']:
 
         # 强制选择action
@@ -395,6 +405,8 @@ def main():
             break
         n = n + 1
         state_force, reward_, reward_rest, reward_force = env_force.step(state_force, action_force, t, PV, param)
+        PV_force.append(PV)
+        Reward_force.append(reward_force)
         ep_reward_force += reward_force
         print("Force: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(1, n,t,action_force))
     ave_Reward_force = ep_reward_force / n
@@ -439,7 +451,8 @@ def main():
     # ax[1].set_ylabel('Ave_Reward')  # Add a y-label to the axes.
     # ax[1].set_title("The Ave_Reward")  # Add a title to the axes.
     # plt.legend()
-    plt.show()
+    # plt.grid(True)
+    # plt.show()
 
     x = 1
 
@@ -465,9 +478,25 @@ def main():
             for vv in range(len(np.where(logging_timeline[i][x]['TimeList'])[0])):
                 ax1[i].axvline(x=np.where(logging_timeline[i][x]['TimeList'])[0][vv], linestyle='--', linewidth='0.9')
                 # ax1[i].plot([np.where(Devices[i].TimeList)],[logging_timeline[i][x]['rewards']], 'o')
-    plt.show()
+    # plt.show()
 #      https://matplotlib.org/stable/tutorials/text/text_intro.html
 
+    fig2, ax2 = plt.subplots(1)
+    type = ['Random', 'Force', 'Smart']
+    # data1 = [np.mean([i for i in Reward_random if i >= -30]), np.mean([i for i in Reward_force if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    # data2 = [np.mean(PV_random), np.mean(PV_force), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+    # ax2.bar(type, data1, label = 'reward')
+    # ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
+    data11 = [np.mean([i for i in UAV_random.Reward if i >= -30]), np.mean([i for i in UAV_force.Reward if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    data22 = [np.mean(UAV_random.Energy), np.mean(UAV_force.Energy), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+    ax2.bar(type, data11, label = 'reward')
+    ax2.bar(type, data22, bottom=np.array(data11), label = 'energy')
+    ax2.legend(loc="best")
+    # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
+    ax2.set_ylabel('Total Cost')  # Add a y-label to the axes.
+    plt.show()
+    # https: // www.zhihu.com / question / 507977476 / answer / 2283372858  (画叠加柱状图)
+    # https: // juejin.cn / post / 6844903664780328974
 
 
 if __name__ == '__main__':
