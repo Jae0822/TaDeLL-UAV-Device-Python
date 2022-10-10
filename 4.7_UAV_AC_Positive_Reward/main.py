@@ -481,6 +481,7 @@ def main():
     # plt.show()
 #      https://matplotlib.org/stable/tutorials/text/text_intro.html
 
+
     fig2, ax2 = plt.subplots(1)
     type = ['Random', 'Force', 'Smart']
     # data1 = [np.mean([i for i in Reward_random if i >= -30]), np.mean([i for i in Reward_force if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
