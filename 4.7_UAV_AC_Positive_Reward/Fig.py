@@ -44,27 +44,38 @@ with open('fig_temp.pkl', 'rb') as f:
 
 # ---------------------------------------------------Fig2---------------------------------------------------------------
 # with open('fig2.pkl', 'rb') as f:
-#     model, param, avg, logging_timeline = pickle.load(f)
+#     model, env, param, avg, logging_timeline = pickle.load(f)
 
 
 # ---------------------------------------------------Fig3---------------------------------------------------------------
 # with open('fig3.pkl', 'rb') as f:
-#     model, param, avg, logging_timeline = pickle.load(f)
+#     model, env, param, avg, logging_timeline = pickle.load(f)
 
 # ---------------------------------------------------Fig4---------------------------------------------------------------
 # with open('fig4.pkl', 'rb') as f:
-#     model, param, avg, logging_timeline = pickle.load(f)
+#     model, env, param, avg, logging_timeline = pickle.load(f)
 
 # ---------------------------------------------------Fig5---------------------------------------------------------------
 # with open('fig5.pkl', 'rb') as f:
-#     model, param, avg, logging_timeline = pickle.load(f)
+#     model, emv, param, avg, logging_timeline = pickle.load(f)
 
 
 # ---------------------------------------------------Fig6---------------------------------------------------------------
 # with open('fig6.pkl', 'rb') as f:
-#     model, param, avg, logging_timeline = pickle.load(f)
+#     model, env, param, avg, logging_timeline = pickle.load(f)
 
 
+# ---------------------------------------------------Fig2_1---------------------------------------------------------------
+# with open('fig2_1.pkl', 'rb') as f:
+#     model, env, param, avg, logging_timeline = pickle.load(f)
+
+# ---------------------------------------------------Fig2_2---------------------------------------------------------------
+# with open('fig2_2.pkl', 'rb') as f:
+#     model, env, param, avg, logging_timeline = pickle.load(f)
+
+# ---------------------------------------------------Fig2_3---------------------------------------------------------------
+# with open('fig3_3.pkl', 'rb') as f:
+#     model, env, param, avg, logging_timeline = pickle.load(f)
 
 
 fig, ax = plt.subplots(1)
