@@ -39,13 +39,13 @@ logging_timeline[0] is empty. So used it for UAV's data such as:
 
 
 # ---------------------------------------------------Fig_temp---------------------------------------------------------------
-with open('fig_temp.pkl', 'rb') as f:
-    model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
+# with open('fig_temp.pkl', 'rb') as f:
+#     model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
 
 # ---------------------------------------------------Fig8---------------------------------------------------------------
-# with open('fig8.pkl', 'rb') as f:
-#     model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
+with open('fig8.pkl', 'rb') as f:
+    model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
 
 # ---------------------------------------------------Fig8---------------------------------------------------------------
@@ -78,7 +78,7 @@ ax.legend(loc="best")
 # ax[1].set_ylabel('Ave_Reward')  # Add a y-label to the axes.
 # ax[1].set_title("The Ave_Reward")  # Add a title to the axes.
 # plt.legend()
-plt.show()
+# plt.show()
 
 x = 1
 
@@ -104,7 +104,7 @@ for i in range(param['num_Devices']):
         for vv in range(len(np.where(logging_timeline[i][x]['TimeList'])[0])):
             ax1[i].axvline(x=np.where(logging_timeline[i][x]['TimeList'])[0][vv], linestyle='--', linewidth='0.9')
             # ax1[i].plot([np.where(Devices[i].TimeList)],[logging_timeline[i][x]['rewards']], 'o')
-plt.show()
+# plt.show()
 #      https://matplotlib.org/stable/tutorials/text/text_intro.html
 
 
@@ -125,6 +125,25 @@ ax2.bar(type, data22, bottom=np.array(data11), label='energy')
 ax2.legend(loc="best")
 # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
 ax2.set_ylabel('Total Cost')  # Add a y-label to the axes.
-plt.show()
+# plt.show()
 # https: // www.zhihu.com / question / 507977476 / answer / 2283372858  (画叠加柱状图)
 # https: // juejin.cn / post / 6844903664780328974
+
+
+fig3, ax3 = plt.subplots(1)
+type = ['Random', 'Force', 'Smart']
+# data1 = [np.mean([i for i in Reward_random if i >= -30]), np.mean([i for i in Reward_force if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+# data2 = [np.mean(PV_random), np.mean(PV_force), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+# ax2.bar(type, data1, label = 'reward')
+# ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
+data111 = [np.mean(env_random.UAV.Reward), np.mean(env_force.UAV.Reward),
+          np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+data222 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
+          np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+ax3.axhline(y = 0, color='k', linestyle='-', linewidth='0.6')
+ax3.bar(type, data111, label='reward')
+ax3.bar(type, data222, label='energy')
+ax3.legend(loc="best")
+# ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
+ax3.set_ylabel('Total Cost')  # Add a y-label to the axes.
+plt.show()
