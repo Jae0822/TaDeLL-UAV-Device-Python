@@ -70,6 +70,7 @@ class Uav(object):
         self.PositionList = [0]
         self.Reward = []
         self.Energy = []
+        self.Sum_R_E = []
 
 
 
@@ -419,12 +420,13 @@ class Env(object):
         if action == self.UAV.PositionList[-2]:  # 重复访问的penalty
             reward_fair = reward_fair - 200
 
-        mu = 0
+        mu = param['mu']
         reward_fair1 = (1 - mu) * reward_fair + mu * PV  # 添加飞行能量消耗
         print('reward: ', reward_fair, ', Energy:', PV)
 
         self.UAV.Reward.append(reward_fair)
         self.UAV.Energy.append(PV)
+        self.UAV.Sum_R_E.append(reward_fair1)
 
 
         # print("done one step")
@@ -461,8 +463,8 @@ class Policy(nn.Module):
         self.saved_actions = []
         self.actions = []  # To record the actions
         self.states = []  # To record the states
+        self.reward_rewards = []
         self.rewards = []
-        self.reward_ = []
         self.reward_rest = []
 
         self.actions_random = []  # To record the actions

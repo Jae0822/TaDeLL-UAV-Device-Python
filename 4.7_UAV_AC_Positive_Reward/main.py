@@ -7,6 +7,7 @@ import copy
 import matplotlib.pyplot as plt
 # import matplotlib
 from statistics import mean
+from sklearn import preprocessing
 import pickle
 import math
 
@@ -48,8 +49,8 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-param = {'episodes': 30, 'nTimeUnits': 200, 'nTimeUnits_random': 200, 'nTimeUnits_force': 200,
-         'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2,
+param = {'episodes': 20, 'nTimeUnits': 500, 'nTimeUnits_random': 500, 'nTimeUnits_force': 500,
+         'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5,
          'num_Devices': 9, 'V': 36, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])
@@ -157,6 +158,7 @@ def finish_episode():
 
     # reset rewards and action buffer
     del model.rewards[:]
+    # del model.reward_[:]
     del model.saved_actions[:]
 
 
@@ -228,6 +230,7 @@ def learning():
 
             # model.reward_.append(reward_)
             # model.reward_rest.append(reward_rest)
+            # model.reward_.append(reward)
             model.rewards.append(reward)
             ep_reward += reward
 
@@ -236,8 +239,15 @@ def learning():
             print("----------------------------------------------------------------------------")
             print("       ")
 
+
+        # 归一化
+        # model.rewards = preprocessing.normalize([model.reward_])[0]
+        # model.rewards = model.rewards.tolist()
+        # model.rewards = [np.float64(x) for x in model.rewards]
+
         #  Average Reward
-        ave_Reward =ep_reward / n
+        ave_Reward = ep_reward / n
+        # ave_Reward = sum(model.rewards) / n
 
         # update cumulative reward
         # running_reward = 0.05 * ep_reward + (1 - 0.05) * running_reward
@@ -259,6 +269,7 @@ def learning():
         logging_timeline[0][x]['UAV_PositionCor'] = UAV.PositionCor
         logging_timeline[0][x]['UAV_Reward'] = UAV.Reward
         logging_timeline[0][x]['UAV_Energy'] = UAV.Energy
+        logging_timeline[0][x]['UAV_R_E'] = UAV.Sum_R_E
         for i in range(param['num_Devices']):
             logging_timeline[i][x]['intervals'] = Devices[i].intervals
             logging_timeline[i][x]['TimeList'] = Devices[i].TimeList
@@ -359,7 +370,7 @@ def main():
         if t > param['nTimeUnits_random']:
             break
         n = n + 1
-        state_random, reward_, reward_rest, reward_random = env_random.step(state_random, action_random, t, PV, param)
+        state_random, reward_, reward_rest, reward_random  = env_random.step(state_random, action_random, t, PV, param)
         # model.rewards_random.append(reward_random)
         PV_random.append(PV)
         Reward_random.append(reward_random)
@@ -425,8 +436,8 @@ def main():
     avg['Ave_Reward'] = Ave_Reward
     avg['ave_Reward_random'] = ave_Reward_random
     avg['ave_Reward_force'] = ave_Reward_force
-    with open('fig_temp.pkl', 'wb') as f:
-        pickle.dump([model, env, param, avg, logging_timeline], f)
+    # with open('fig_temp.pkl', 'wb') as f:
+    #     pickle.dump([model, env, param, avg, logging_timeline], f)
 
     # †††††††††††††††††††††††††††††††††††††††Plotting Phase††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     fig, ax = plt.subplots(1)
@@ -436,13 +447,13 @@ def main():
     # ax[0].set_title("The ep_reward")  # Add a title to the axes.
 
     # ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP, args.gamma, args.learning_rate))
-    ax.plot(np.arange(1, EP+1), Ave_Reward, label= str(param['num_Devices']) + ' Devices,' + str(EP) + ' episodes,' +  str(param['nTimeUnits']) + ' TimeUnits,' +  str(param['gamma']) + ' gamma,' + str(param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha')
+    ax.plot(np.arange(1, EP+1), Ave_Reward, label= str(param['num_Devices']) + ' Devices,' + str(EP) + ' episodes,' +  str(param['nTimeUnits']) + ' TimeUnits,' +  str(param['gamma']) + ' gamma,' + str(param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
     ax.set_xlabel('Episodes')  # Add an x-label to the axes.
     ax.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
     ax.set_title("The Ave_Reward, NN:" + str(model.pattern))  # Add a title to the axes.
     ax.axhline(y = max(Ave_Reward), color='r', linestyle='--', linewidth='0.9',   label='Smart: ' + str(max(Ave_Reward)))
-    ax.axhline(y = ave_Reward_random, color='b', linestyle='--', linewidth='0.9', label='Random:'+ str(ave_Reward_random))
-    ax.axhline(y = ave_Reward_force, color='g', linestyle='--', linewidth='0.9', label='Forced:'+ str(ave_Reward_force))
+    # ax.axhline(y = ave_Reward_random, color='b', linestyle='--', linewidth='0.9', label='Random:'+ str(ave_Reward_random))
+    # ax.axhline(y = ave_Reward_force, color='g', linestyle='--', linewidth='0.9', label='Forced:'+ str(ave_Reward_force))
     ax.legend(loc="best")
 
 
@@ -492,12 +503,17 @@ def main():
     data22 = [np.mean(UAV_random.Energy), np.mean(UAV_force.Energy), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
     ax2.bar(type, data11, label = 'reward')
     ax2.bar(type, data22, bottom=np.array(data11), label = 'energy')
+    ax2.axhline(y = 0, color='k', linestyle='-', linewidth='0.6')
     ax2.legend(loc="best")
     # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
     ax2.set_ylabel('Total Cost')  # Add a y-label to the axes.
     plt.show()
     # https: // www.zhihu.com / question / 507977476 / answer / 2283372858  (画叠加柱状图)
     # https: // juejin.cn / post / 6844903664780328974
+    dff = [1]
+
+    with open('fig_temp.pkl', 'wb') as f:
+        pickle.dump([model, env, env_random, env_force, param, avg, logging_timeline], f)
 
 
 if __name__ == '__main__':

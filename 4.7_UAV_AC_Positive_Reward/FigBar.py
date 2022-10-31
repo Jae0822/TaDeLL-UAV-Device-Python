@@ -39,13 +39,16 @@ logging_timeline[0] is empty. So used it for UAV's data such as:
 
 
 # ---------------------------------------------------Fig_temp---------------------------------------------------------------
-# with open('fig_temp.pkl', 'rb') as f:
-#     model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
+with open('fig_temp.pkl', 'rb') as f:
+    model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
+
+with open('fig3_5.pkl', 'rb') as f:
+    model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
 # ---------------------------------------------------Fig8---------------------------------------------------------------
-with open('fig8.pkl', 'rb') as f:
-    model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
+# with open('fig8.pkl', 'rb') as f:
+#     model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
 
 # ---------------------------------------------------Fig8---------------------------------------------------------------
@@ -63,7 +66,7 @@ fig, ax = plt.subplots(1)
 # ax[0].set_title("The ep_reward")  # Add a title to the axes.
 
 # ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP, args.gamma, args.learning_rate))
-ax.plot(np.arange(1, param['episodes']+1), avg['Ave_Reward'], label= str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' +  str(param['nTimeUnits']) + ' TimeUnits,' +  str(param['gamma']) + ' gamma,' + str(param['learning_rate']) + ' lr')
+ax.plot(np.arange(1, param['episodes']+1), avg['Ave_Reward'], label= str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' +  str(param['nTimeUnits']) + ' TimeUnits,' +  str(param['gamma']) + ' gamma,' + str(param['learning_rate']) + ' lr,' + str(param['mu']) + ' mu')
 ax.set_xlabel('Episodes')  # Add an x-label to the axes.
 ax.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
 ax.set_title("The Ave_Reward, NN:" + str(model.pattern))  # Add a title to the axes.
@@ -126,7 +129,7 @@ ax2.legend(loc="best")
 # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
 ax2.set_ylabel('Total Cost')  # Add a y-label to the axes.
 # plt.show()
-# https: // www.zhihu.com / question / 507977476 / answer / 2283372858  (画叠加柱状图)
+# https: // www.zhihu.com / question / 507977476 / answer / 2283372858
 # https: // juejin.cn / post / 6844903664780328974
 
 
@@ -142,7 +145,7 @@ data222 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
           np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
 ax3.axhline(y = 0, color='k', linestyle='-', linewidth='0.6')
 ax3.bar(type, data111, label='reward')
-ax3.bar(type, data222, label='energy')
+ax3.bar(type, data222, bottom = data11, label='energy')
 ax3.legend(loc="best")
 # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
 ax3.set_ylabel('Total Cost')  # Add a y-label to the axes.
