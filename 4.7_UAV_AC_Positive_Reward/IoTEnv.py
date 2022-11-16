@@ -415,7 +415,7 @@ class Env(object):
         alpha = param['alpha']
         # reward_fair = 100 * pow(reward_final, 1-alpha) / (1 - alpha)
         # reward_fair = math.log(reward_final)
-        reward_fair = reward_final + 50
+        reward_fair = reward_final + 20
 
         if action == self.UAV.PositionList[-2]:  # 重复访问的penalty
             reward_fair = reward_fair - 200
