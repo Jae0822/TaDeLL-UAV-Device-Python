@@ -18,6 +18,8 @@ with open('mu_sig.pkl', 'rb') as f:
 with open('TaDeLL_result_k_2.pkl', 'rb') as f:
     means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
 
+with open('SourceTask_temp.pkl', 'rb') as f:
+    TaskList_set, Values_array_set = pickle.load(f)
 
 
 class Device(object):
@@ -57,7 +59,18 @@ class Device(object):
 
         return TimeList, TaskList
 
-
+    def gen_TimeTaskList_set(self, nTimeUnits):
+        TimeList = np.zeros(nTimeUnits)
+        TaskList = []
+        TaskList.append(TaskList_set[1])
+        mean = self.frequency
+        t = int(np.random.normal(mean, mean / 10))
+        while t < nTimeUnits:
+            TimeList[t] = 1
+            TaskList.append(TaskList_set[1])
+            # t = t + int(np.random.normal(mean, mean / 10))
+            t = t + mean
+        return TimeList, TaskList
 
 class Uav(object):
     def __init__(self, V, Devices):
@@ -87,7 +100,7 @@ class Env(object):
     def initialization(self, Devices, UAV):
         # initialize for each device
         for i in range(len(Devices)):
-            Devices[i].TimeList, Devices[i].TaskList  = Devices[i].gen_TimeTaskList(self.nTimeUnits)   # The list of time that indicates the arrival of a new task
+            Devices[i].TimeList, Devices[i].TaskList  = Devices[i].gen_TimeTaskList_set(self.nTimeUnits)   # The list of time that indicates the arrival of a new task
             Devices[i].nTasks = len(Devices[i].TaskList)
             Devices[i].NewTaskArrival = np.where(Devices[i].TimeList)[0]  # The list of New task arrival time
 

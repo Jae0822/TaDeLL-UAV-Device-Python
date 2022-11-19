@@ -49,7 +49,7 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-param = {'episodes': 30, 'nTimeUnits': 2000, 'nTimeUnits_random': 2000, 'nTimeUnits_force': 2000,
+param = {'episodes': 20, 'nTimeUnits': 2000, 'nTimeUnits_random': 2000, 'nTimeUnits_force': 2000,
          'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5,
          'num_Devices': 9, 'V': 36, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
@@ -63,15 +63,15 @@ Devices = []
 # Devices.append(Device(35, 50, param['field']))
 # Devices.append(Device(35, 60, param['field']))
 # Devices.append(Device(35, 70, param['field']))
-Devices.append(Device(50, random.randint(30, 70), param['field']))
-Devices.append(Device(45, random.randint(30, 70), param['field']))
-Devices.append(Device(40, random.randint(30, 70), param['field']))
-Devices.append(Device(35, random.randint(30, 70), param['field']))
-Devices.append(Device(30, random.randint(30, 70), param['field']))
-Devices.append(Device(25, random.randint(30, 70), param['field']))
-Devices.append(Device(20, random.randint(30, 70), param['field']))
-Devices.append(Device(15, random.randint(30, 70), param['field']))
-Devices.append(Device(10, random.randint(30, 70), param['field']))
+Devices.append(Device(50, 50, param['field']))
+Devices.append(Device(45, 50, param['field']))
+Devices.append(Device(40, 50, param['field']))
+Devices.append(Device(35, 50, param['field']))
+Devices.append(Device(30, 50, param['field']))
+Devices.append(Device(25, 50, param['field']))
+Devices.append(Device(20, 50, param['field']))
+Devices.append(Device(15, 50, param['field']))
+Devices.append(Device(10, 50, param['field']))
 # Devices.append(Device(5, random.randint(30, 70), param['field']))
 # Devices.append(Device(4, random.randint(30, 70), param['field']))
 # Devices.append(Device(2, random.randint(30, 70), param['field']))
@@ -79,6 +79,7 @@ Devices.append(Device(10, random.randint(30, 70), param['field']))
 
 UAV = Uav(param['V'], Devices)
 env = Env(Devices, UAV, param['nTimeUnits'])
+env.initialization(Devices, UAV)
 
 Devices_random = copy.deepcopy(Devices)
 UAV_random = copy.deepcopy(UAV)
@@ -167,7 +168,7 @@ def learning():
     rate1 = []
     rate2 = []
 
-    env.initialization(Devices, UAV)
+    # env.initialization(Devices, UAV)
 
     for i_episode in count(1):
 
@@ -352,7 +353,7 @@ def main():
 
     # †††††††††††††††††††††††††††††††††††††††Random Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     print("Random trajectory: One Episode Only")
-    env_random.initialization(Devices_random, UAV_random)
+    # env_random.initialization(Devices_random, UAV_random)
     state_random = env_random.reset(Devices_random, UAV_random)
     ep_reward_random = 0
     t = 0
@@ -386,7 +387,7 @@ def main():
 
     # †††††††††††††††††††††††††††††††††††††††Forced Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     print("Forced trajectory: One Episode Only")
-    env_force.initialization(Devices_force, UAV_force)
+    # env_force.initialization(Devices_force, UAV_force)
     state_force = env_force.reset(Devices_force, UAV_force)
     ep_reward_force = 0
     t = 0
