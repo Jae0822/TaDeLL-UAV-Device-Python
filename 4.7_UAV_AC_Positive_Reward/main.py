@@ -49,7 +49,7 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-param = {'episodes': 20, 'nTimeUnits': 2000, 'nTimeUnits_random': 2000, 'nTimeUnits_force': 2000,
+param = {'episodes': 25, 'nTimeUnits': 2000, 'nTimeUnits_random': 2000, 'nTimeUnits_force': 2000,
          'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5,
          'num_Devices': 9, 'V': 36, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
@@ -247,7 +247,13 @@ def learning():
         # model.rewards = [np.float64(x) for x in model.rewards]
 
         #  Average Reward
-        ave_Reward = ep_reward / n
+        # FIXME: 为什么要除以N呀？UAV飞行的次数每次都不一样咋办？直接不除以N不就好了？或者除以设备数量？
+        """
+        FX3
+        不除以N，凸起变高
+        """
+        # ave_Reward = ep_reward / n
+        ave_Reward = ep_reward
         # ave_Reward = sum(model.rewards) / n
 
         # update cumulative reward
@@ -274,6 +280,7 @@ def learning():
         for i in range(param['num_Devices']):
             logging_timeline[i][x]['intervals'] = Devices[i].intervals
             logging_timeline[i][x]['TimeList'] = Devices[i].TimeList
+            # FIXME: 这里的KEYREWARD只包含了AOI+CPU，没有包含UAV的能耗PV
             logging_timeline[i][x]['KeyRewards'] = Devices[i].KeyReward
             logging_timeline[i][x]['KeyTime'] = Devices[i].KeyTime
             # if not logging_timeline[i][x]['intervals']:
@@ -453,8 +460,8 @@ def main():
     ax.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
     ax.set_title("The Ave_Reward, NN:" + str(model.pattern))  # Add a title to the axes.
     ax.axhline(y = max(Ave_Reward), color='r', linestyle='--', linewidth='0.9',   label='Smart: ' + str(max(Ave_Reward)))
-    # ax.axhline(y = ave_Reward_random, color='b', linestyle='--', linewidth='0.9', label='Random:'+ str(ave_Reward_random))
-    # ax.axhline(y = ave_Reward_force, color='g', linestyle='--', linewidth='0.9', label='Forced:'+ str(ave_Reward_force))
+    ax.axhline(y = ave_Reward_random, color='b', linestyle='--', linewidth='0.9', label='Random:'+ str(ave_Reward_random))
+    ax.axhline(y = ave_Reward_force, color='g', linestyle='--', linewidth='0.9', label='Forced:'+ str(ave_Reward_force))
     ax.legend(loc="best")
 
 
@@ -501,6 +508,8 @@ def main():
     # ax2.bar(type, data1, label = 'reward')
     # ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
     data11 = [np.mean([i for i in UAV_random.Reward if i >= -30]), np.mean([i for i in UAV_force.Reward if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    data111 = [np.mean(env_random.UAV.Reward), np.mean(env_force.UAV.Reward),
+               np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
     data22 = [np.mean(UAV_random.Energy), np.mean(UAV_force.Energy), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
     ax2.bar(type, data11, label = 'reward')
     ax2.bar(type, data22, bottom=np.array(data11), label = 'energy')
@@ -516,6 +525,8 @@ def main():
     with open('fig_temp.pkl', 'wb') as f:
         pickle.dump([model, env, env_random, env_force, param, avg, logging_timeline], f)
 
+    dff = [1]
+    luck = [1,2,]
 
 if __name__ == '__main__':
     main()

@@ -428,13 +428,25 @@ class Env(object):
         alpha = param['alpha']
         # reward_fair = 100 * pow(reward_final, 1-alpha) / (1 - alpha)
         # reward_fair = math.log(reward_final)
-        reward_fair = reward_final + 50
+        """
+        FX1
+        reward_fair = reward_final + 20
+        不需要为了收敛加一个正数，不加也可以照样收敛
+        在收敛前，第10个EPISODE的时候，会有一个凸起，不知道与什么有关？
+        """
+        reward_fair = reward_final
 
         if action == self.UAV.PositionList[-2]:  # 重复访问的penalty
             reward_fair = reward_fair - 200
 
         mu = param['mu']
-        reward_fair1 = (1 - mu) * reward_fair + mu * PV  # 添加飞行能量消耗
+        """
+        FX2
+        这里的reward_fair本来就是要maximize的（在单个TASK里面，我已经翻转过一次了：我要minimize AOI + CPU，相当于maximize和的负）
+        所以reward_fair可以直接给到神经网络去maximize
+        但是，PV是要minimize的，所以相当于maximize PV的负
+        """
+        reward_fair1 = (1 - mu) * reward_fair - mu * PV  # 添加飞行能量消耗
         print('reward: ', reward_fair, ', Energy:', PV)
 
         self.UAV.Reward.append(reward_fair)
