@@ -507,11 +507,11 @@ def main():
     # data2 = [np.mean(PV_random), np.mean(PV_force), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
     # ax2.bar(type, data1, label = 'reward')
     # ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
-    data11 = [np.mean([i for i in UAV_random.Reward if i >= -30]), np.mean([i for i in UAV_force.Reward if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    data111 = [np.mean(env_random.UAV.Reward), np.mean(env_force.UAV.Reward),
-               np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    data1111 = [np.sum(env_random.UAV.Reward), np.sum(env_force.UAV.Reward),
-               np.sum(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    data11 = [- np.mean([i for i in UAV_random.Reward if i >= -30]), -np.mean([i for i in UAV_force.Reward if i >= -30]), -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward),
+               -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    data1111 = [-np.sum(env_random.UAV.Reward), -np.sum(env_force.UAV.Reward),
+               -np.sum(logging_timeline[0][param['episodes']]['UAV_Reward'])]
     data22 = [np.mean(UAV_random.Energy), np.mean(UAV_force.Energy), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
     ax2.bar(type, data11, label = 'reward')
     ax2.bar(type, data22, bottom=np.array(data11), label = 'energy')
