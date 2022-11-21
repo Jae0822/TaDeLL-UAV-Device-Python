@@ -436,6 +436,7 @@ class Env(object):
         """
         reward_fair = reward_final
 
+        # FIXME: 不加这个PENALTY这个会收敛吗？
         if action == self.UAV.PositionList[-2]:  # 重复访问的penalty
             reward_fair = reward_fair - 200
 
