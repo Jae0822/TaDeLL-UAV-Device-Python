@@ -355,12 +355,7 @@ class Env(object):
 
 
 
-
-
-
-
-
-
+        # FIXME: 不加这个REWARD_REST会不会收敛
         reward_rest = 0
         # for i in range(self.num_Devices):
         #     if i == action:
@@ -381,7 +376,6 @@ class Env(object):
                 else:
                     reward_rest += device.KeyReward[-1]   # should decrease with time
         reward_rest = reward_rest / (self.num_Devices - 1)
-
 
 
 
