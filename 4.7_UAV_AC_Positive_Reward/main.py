@@ -59,15 +59,15 @@ Devices = []
 # for i in range(param['num_Devices']):
 #     Devices.append(Device(random.randint(param['freq_low'], param['freq_high']), random.randint(30, 70), param['field']))
 
+Devices.append(Device(450, 50, param['field']))
+Devices.append(Device(400, 50, param['field']))
+Devices.append(Device(350, 50, param['field']))
+Devices.append(Device(300, 50, param['field']))
+Devices.append(Device(250,  50, param['field']))
+Devices.append(Device(200, 50, param['field']))
+Devices.append(Device(150, 50, param['field']))
+Devices.append(Device(100, 50, param['field']))
 Devices.append(Device(50, 50, param['field']))
-Devices.append(Device(45, 50, param['field']))
-Devices.append(Device(40, 50, param['field']))
-Devices.append(Device(35, 50, param['field']))
-Devices.append(Device(30,  50, param['field']))
-Devices.append(Device(25, 50, param['field']))
-Devices.append(Device(20, 50, param['field']))
-Devices.append(Device(15, 50, param['field']))
-Devices.append(Device(10, 50, param['field']))
 
 
 
@@ -344,8 +344,8 @@ def painting(avg):
     ax.set_title("The Ave_Reward, NN:" + str(model.pattern))  # Add a title to the axes.
     ax.axhline(y=max(avg['Ave_Reward']), color='r', linestyle='--', linewidth='0.9', label='Smart: ' + str(max(avg['Ave_Reward'])))
     ax.axhline(y=avg['ave_Reward_random'] * len(env_random.UAV.Reward), color='b', linestyle='--', linewidth='0.9',
-               label='Random:' + str(avg['ave_Reward_random']))
-    ax.axhline(y=avg['ave_Reward_force'] * len(env_force.UAV.Reward), color='g', linestyle='--', linewidth='0.9', label='Forced:' + str(avg['ave_Reward_force']))
+               label='Random:' + str(avg['ave_Reward_random']*len(env_random.UAV.Reward)))
+    ax.axhline(y=avg['ave_Reward_force'] * len(env_force.UAV.Reward), color='g', linestyle='--', linewidth='0.9', label='Forced:' + str(avg['ave_Reward_force']* len(env_force.UAV.Reward)))
     ax.legend(loc="best")
 
     # ax[1].plot(np.arange(i_episode), [ave_Reward_random]*i_episode, label='Random')
@@ -455,8 +455,8 @@ def painting(avg):
               np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
     data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
                np.sum(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-    ax2.bar(type, data1111, label='reward')
-    ax2.bar(type, data222, bottom=np.array(data1111), label='energy')
+    ax2.bar(type, data111, label='reward')
+    ax2.bar(type, data22, bottom=np.array(data111), label='energy')
     ax2.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
     ax2.legend(loc="best")
     # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
