@@ -405,7 +405,8 @@ class Env(object):
 
         # add other devices' reward into account
         reward_ = reward_ / (device.KeyTime[index_end] - device.KeyTime[index_start]) # not the same as  device.intervals[-1]
-        reward_final = (reward_ + reward_rest)/2  # weighted average,  iteration :discounted reward, back discount
+        # reward_final = (reward_ + reward_rest)/2  # weighted average,  iteration :discounted reward, back discount
+        reward_final = reward_  # weighted average,  iteration :discounted reward, back discount
         # FIXME: Compute UAV's energy consumption when flies from previous point to next point
         # reward_Fly_energy = reward_ +
 
@@ -431,8 +432,9 @@ class Env(object):
         reward_fair = reward_final
 
         # FIXME: 不加这个PENALTY这个会收敛吗？
-        if action == self.UAV.PositionList[-2]:  # 重复访问的penalty
-            reward_fair = reward_fair - 200
+        # 会的！
+        # if action == self.UAV.PositionList[-2]:  # 重复访问的penalty
+        #     reward_fair = reward_fair - 200
 
         mu = param['mu']
         """

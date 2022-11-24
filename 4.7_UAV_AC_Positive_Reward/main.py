@@ -49,7 +49,7 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-param = {'episodes': 2, 'nTimeUnits': 100, 'nTimeUnits_random': 100, 'nTimeUnits_force': 100,
+param = {'episodes': 25, 'nTimeUnits': 2000, 'nTimeUnits_random': 2000, 'nTimeUnits_force': 2000,
          'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5,
          'num_Devices': 9, 'V': 36, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
@@ -58,23 +58,17 @@ torch.manual_seed(param['seed'])
 Devices = []
 # for i in range(param['num_Devices']):
 #     Devices.append(Device(random.randint(param['freq_low'], param['freq_high']), random.randint(30, 70), param['field']))
-# Devices.append(Device(35, 30, param['field']))
-# Devices.append(Device(35, 40, param['field']))
-# Devices.append(Device(35, 50, param['field']))
-# Devices.append(Device(35, 60, param['field']))
-# Devices.append(Device(35, 70, param['field']))
+
 Devices.append(Device(50, 50, param['field']))
 Devices.append(Device(45, 50, param['field']))
 Devices.append(Device(40, 50, param['field']))
 Devices.append(Device(35, 50, param['field']))
-Devices.append(Device(30, 50, param['field']))
+Devices.append(Device(30,  50, param['field']))
 Devices.append(Device(25, 50, param['field']))
 Devices.append(Device(20, 50, param['field']))
 Devices.append(Device(15, 50, param['field']))
 Devices.append(Device(10, 50, param['field']))
-# Devices.append(Device(5, random.randint(30, 70), param['field']))
-# Devices.append(Device(4, random.randint(30, 70), param['field']))
-# Devices.append(Device(2, random.randint(30, 70), param['field']))
+
 
 
 UAV = Uav(param['V'], Devices)
@@ -341,17 +335,17 @@ def painting(avg):
     # ax[0].set_title("The ep_reward")  # Add a title to the axes.
 
     # ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP, args.gamma, args.learning_rate))
-    ax.plot(np.arange(1, EP + 1), Ave_Reward,
-            label=str(param['num_Devices']) + ' Devices,' + str(EP) + ' episodes,' + str(
+    ax.plot(np.arange(1, param['episodes'] + 1), avg['Ave_Reward'],
+            label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
                 param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
                 param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
     ax.set_xlabel('Episodes')  # Add an x-label to the axes.
     ax.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
     ax.set_title("The Ave_Reward, NN:" + str(model.pattern))  # Add a title to the axes.
-    ax.axhline(y=max(Ave_Reward), color='r', linestyle='--', linewidth='0.9', label='Smart: ' + str(max(Ave_Reward)))
-    ax.axhline(y=avg['ave_Reward_random'], color='b', linestyle='--', linewidth='0.9',
+    ax.axhline(y=max(avg['Ave_Reward']), color='r', linestyle='--', linewidth='0.9', label='Smart: ' + str(max(avg['Ave_Reward'])))
+    ax.axhline(y=avg['ave_Reward_random'] * len(env_random.UAV.Reward), color='b', linestyle='--', linewidth='0.9',
                label='Random:' + str(avg['ave_Reward_random']))
-    ax.axhline(y=avg['ave_Reward_force'], color='g', linestyle='--', linewidth='0.9', label='Forced:' + str(avg['ave_Reward_force']))
+    ax.axhline(y=avg['ave_Reward_force'] * len(env_force.UAV.Reward), color='g', linestyle='--', linewidth='0.9', label='Forced:' + str(avg['ave_Reward_force']))
     ax.legend(loc="best")
 
     # ax[1].plot(np.arange(i_episode), [ave_Reward_random]*i_episode, label='Random')
@@ -382,39 +376,12 @@ def painting(avg):
             ax1[i].set_ylabel('device  %.0f' % (i))
             # if i == 0:
             #     ax1[i].set_title(model.pattern)
-            ax1[i].set_title('CPU Capacity: %.0f' % (Devices[i].cpu_capacity))
+            # ax1[i].set_title('CPU Capacity: %.0f' % (env.Devices[i].cpu_capacity))
             for vv in range(len(np.where(logging_timeline[i][x]['TimeList'])[0])):
                 ax1[i].axvline(x=np.where(logging_timeline[i][x]['TimeList'])[0][vv], linestyle='--', linewidth='0.9')
                 # ax1[i].plot([np.where(Devices[i].TimeList)],[logging_timeline[i][x]['rewards']], 'o')
     # plt.show()
     #      https://matplotlib.org/stable/tutorials/text/text_intro.html
-
-    # †††††††††††††††††††††††††††††††††††††††RANDOM††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-    fig3, ax3 = plt.subplots(param['num_Devices'])
-    fig3.supxlabel('Time Unites for one episode')
-    fig3.supylabel('The Ave Reward')
-    fig3.suptitle('The Smart')
-    for i in range(param['num_Devices']):
-        if len(logging_timeline[i][0]['Random_intervals']) == 0:
-            ax3[i].text(0.4, 0.5, 'No Visit by UAV')
-        else:
-            ax3[i].step(logging_timeline[i][0]['Random_KeyTime'], logging_timeline[i][0]['Random_KeyRewards'], '^-g',
-                        where='post',
-                        label='device %.0f' % (i))
-            ax3[i].set_xlim([0, param['nTimeUnits']])
-            ax3[i].axhline(y=logging_timeline[i][0]['Random_avg_reward'], color='r', linestyle='--', linewidth='0.9',
-                           label=logging_timeline[i][0]['Random_avg_reward'])
-            ax3[i].legend(loc="best")
-            # ax1[i].text(2, logging_timeline[i][x]['avg_reward'], logging_timeline[i][x]['avg_reward'], verticalalignment='bottom',horizontalalignment='left', rotation=360, color='r')
-            ax3[i].set_ylabel('device  %.0f' % (i))
-            # if i == 0:
-            #     ax1[i].set_title(model.pattern)
-            ax3[i].set_title('CPU Capacity: %.0f' % (Devices[i].cpu_capacity))
-            for vv in range(len(np.where(logging_timeline[i][0]['Random_TimeList'])[0])):
-                ax3[i].axvline(x=np.where(logging_timeline[i][0]['Random_TimeList'])[0][vv], linestyle='--',
-                               linewidth='0.9')
-                # ax1[i].plot([np.where(Devices[i].TimeList)],[logging_timeline[i][x]['rewards']], 'o')
-    # plt.show()
 
     # †††††††††††††††††††††††††††††††††††††††RANDOM††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     fig3, ax3 = plt.subplots(param['num_Devices'])
@@ -436,12 +403,12 @@ def painting(avg):
             ax3[i].set_ylabel('device  %.0f' % (i))
             # if i == 0:
             #     ax1[i].set_title(model.pattern)
-            ax3[i].set_title('CPU Capacity: %.0f' % (Devices[i].cpu_capacity))
+            ax3[i].set_title('CPU Capacity: %.0f' % (env_random.Devices[i].cpu_capacity))
             for vv in range(len(np.where(logging_timeline[i][0]['Random_TimeList'])[0])):
                 ax3[i].axvline(x=np.where(logging_timeline[i][0]['Random_TimeList'])[0][vv], linestyle='--',
                                linewidth='0.9')
                 # ax1[i].plot([np.where(Devices[i].TimeList)],[logging_timeline[i][x]['rewards']], 'o')
-    # plt.show()
+
 
     # †††††††††††††††††††††††††††††††††††††††Force††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     fig4, ax4 = plt.subplots(param['num_Devices'])
@@ -463,7 +430,7 @@ def painting(avg):
             ax4[i].set_ylabel('device  %.0f' % (i))
             # if i == 0:
             #     ax1[i].set_title(model.pattern)
-            ax4[i].set_title('CPU Capacity: %.0f' % (Devices[i].cpu_capacity))
+            ax4[i].set_title('CPU Capacity: %.0f' % (env_force.Devices[i].cpu_capacity))
             for vv in range(len(np.where(logging_timeline[i][0]['Force_TimeList'])[0])):
                 ax4[i].axvline(x=np.where(logging_timeline[i][0]['Force_TimeList'])[0][vv], linestyle='--',
                                linewidth='0.9')
@@ -477,17 +444,19 @@ def painting(avg):
     # data2 = [np.mean(PV_random), np.mean(PV_force), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
     # ax2.bar(type, data1, label = 'reward')
     # ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
-    data11 = [- np.mean([i for i in UAV_random.Reward if i >= -30]),
-              -np.mean([i for i in UAV_force.Reward if i >= -30]),
-              -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    # data11 = [- np.mean([i for i in env_random.UAV.Reward if i >= -30]),
+    #           -np.mean([i for i in env_force.UAV.Reward if i >= -30]),
+    #           -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
     data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward),
                -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
     data1111 = [-np.sum(env_random.UAV.Reward), -np.sum(env_force.UAV.Reward),
                 -np.sum(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    data22 = [np.mean(UAV_random.Energy), np.mean(UAV_force.Energy),
+    data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
               np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-    ax2.bar(type, data11, label='reward')
-    ax2.bar(type, data22, bottom=np.array(data11), label='energy')
+    data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
+               np.sum(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+    ax2.bar(type, data1111, label='reward')
+    ax2.bar(type, data222, bottom=np.array(data1111), label='energy')
     ax2.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
     ax2.legend(loc="best")
     # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
@@ -637,13 +606,13 @@ def main():
     # with open('fig_temp.pkl', 'wb') as f:
     #     pickle.dump([model, env, param, avg, logging_timeline], f)
 
+    with open('fig_temp.pkl', 'wb') as f:
+        pickle.dump([model, env, env_random, env_force, param, avg, logging_timeline], f)
+
     # †††††††††††††††††††††††††††††††††††††††Painting††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     painting(avg)
     # †††††††††††††††††††††††††††††††††††††††Painting††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
 
-
-    with open('fig_temp.pkl', 'wb') as f:
-        pickle.dump([model, env, env_random, env_force, param, avg, logging_timeline], f)
 
     dff = [1]
     luck = [1,2,]
