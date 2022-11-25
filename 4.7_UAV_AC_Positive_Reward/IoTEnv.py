@@ -111,6 +111,7 @@ class Env(object):
         UAV.PositionList = [0]
         UAV.Reward = []
         UAV.Energy = []
+        UAV.Sum_R_E = []
         for i in range(len(Devices)):
             # Devices[i].TimeList, Devices[i].TaskList  = Devices[i].gen_TimeTaskList(self.nTimeUnits)   # The list of time that indicates the arrival of a new task
             # Devices[i].nTasks = len(Devices[i].TaskList)

@@ -146,3 +146,51 @@ ax2.set_ylabel('Total Cost')  # Add a y-label to the axes.
 plt.show()
 # https: // www.zhihu.com / question / 507977476 / answer / 2283372858  (画叠加柱状图)
 # https: // juejin.cn / post / 6844903664780328974
+
+
+fig2, ax2 = plt.subplots(1)
+type = ['Random', 'Force', 'Smart']
+# data1 = [np.mean([i for i in Reward_random if i >= -30]), np.mean([i for i in Reward_force if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+# data2 = [np.mean(PV_random), np.mean(PV_force), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+# ax2.bar(type, data1, label = 'reward')
+# ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
+# data11 = [- np.mean([i for i in env_random.UAV.Reward if i >= -30]),
+#           -np.mean([i for i in env_force.UAV.Reward if i >= -30]),
+#           -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward),
+           -np.mean(env.UAV.Reward)]
+data1111 = [-np.sum(env_random.UAV.Reward), -np.sum(env_force.UAV.Reward),
+            -np.sum(env.UAV.Reward)]
+data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
+          np.mean(env.UAV.Energy)]
+data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
+           np.sum(env.UAV.Energy)]
+ax2.bar(type, data1111, label='reward')
+ax2.bar(type, data222, bottom=np.array(data1111), label='energy')
+ax2.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+ax2.legend(loc="best")
+# ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
+ax2.set_ylabel('Total Cost')  # Add a y-label to the axes.
+plt.show()
+
+fig, ax = plt.subplots(1)
+# ax[0].plot(np.arange(i_episode), Ep_reward, label='Actor-Critic')
+# ax[0].set_xlabel('Episodes')  # Add an x-label to the axes.
+# ax[0].set_ylabel('ep_reward')  # Add a y-label to the axes.
+# ax[0].set_title("The ep_reward")  # Add a title to the axes.
+
+# ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP, args.gamma, args.learning_rate))
+ax.plot(np.arange(1, param['episodes'] + 1), avg['Ave_Reward'],
+        label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
+            param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
+            param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
+ax.set_xlabel('Episodes')  # Add an x-label to the axes.
+ax.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
+ax.set_title("The Ave_Reward, NN:" + str(model.pattern))  # Add a title to the axes.
+ax.axhline(y=max(avg['Ave_Reward']), color='r', linestyle='--', linewidth='0.9',
+           label='Smart: ' + str(max(avg['Ave_Reward'])))
+ax.axhline(y=avg['ave_Reward_random'] * len(env_random.UAV.Reward), color='b', linestyle='--', linewidth='0.9',
+           label='Random:' + str(avg['ave_Reward_random'] * len(env_random.UAV.Reward)))
+ax.axhline(y=avg['ave_Reward_force'] * len(env_force.UAV.Reward), color='g', linestyle='--', linewidth='0.9',
+           label='Forced:' + str(avg['ave_Reward_force'] * len(env_force.UAV.Reward)))
+ax.legend(loc="best")

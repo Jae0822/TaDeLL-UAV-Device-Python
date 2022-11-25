@@ -246,7 +246,7 @@ def learning():
         FX3
         不除以N，凸起变高
         """
-        # ave_Reward = ep_reward / n
+
         ave_Reward = ep_reward
         # ave_Reward = sum(model.rewards) / n
 
@@ -256,9 +256,9 @@ def learning():
         # perform backprop
         finish_episode()
 
-        Ep_reward.append(ep_reward)
+        Ep_reward.append(ep_reward / n)
         # Running_reward.append(running_reward)
-        Ave_Reward.append(ave_Reward)
+        Ave_Reward.append(ep_reward)
 
         # for i in range(param['num_Devices']):
         #     logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['intervals'][0])
@@ -455,8 +455,8 @@ def painting(avg):
               np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
     data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
                np.sum(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-    ax2.bar(type, data1111, label='reward')
-    ax2.bar(type, data222, bottom=np.array(data1111), label='energy')
+    ax2.bar(type, [k * param['mu'] for k in data1111], label='reward')
+    ax2.bar(type, [k * param['mu'] for k in data222], bottom=np.array(data1111) * param['mu'], label='energy')
     ax2.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
     ax2.legend(loc="best")
     # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
@@ -521,6 +521,7 @@ def main():
         ep_reward_random += reward_random
         # model.actions_random.append(action_random)
         # model.states_random.append(state_random)
+        logging_timeline[0][0]['Reward_random'] = Reward_random
         for i in range(param['num_Devices']):
             logging_timeline[i][0]['Random_intervals'] = Devices_random[i].intervals
             logging_timeline[i][0]['Random_TimeList'] = Devices_random[i].TimeList
@@ -546,6 +547,7 @@ def main():
     state_force = env_force.reset(Devices_force, UAV_force)
     ep_reward_force = 0
     t = 0
+    n = 0
     Reward_force = []
     PV_force = []
     while t < param['nTimeUnits_force']:
@@ -575,6 +577,7 @@ def main():
         PV_force.append(PV)
         Reward_force.append(reward_force)
         ep_reward_force += reward_force
+        logging_timeline[0][0]['Reward_force'] = Reward_force
         for i in range(param['num_Devices']):
             logging_timeline[i][0]['Force_intervals'] = Devices_force[i].intervals
             logging_timeline[i][0]['Force_TimeList'] = Devices_force[i].TimeList
@@ -601,6 +604,7 @@ def main():
 
     avg = {}
     avg['Ave_Reward'] = Ave_Reward
+    avg['Ep_reward'] = Ep_reward
     avg['ave_Reward_random'] = ave_Reward_random
     avg['ave_Reward_force'] = ave_Reward_force
     # with open('fig_temp.pkl', 'wb') as f:
