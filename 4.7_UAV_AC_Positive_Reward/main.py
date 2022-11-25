@@ -64,10 +64,10 @@ Devices.append(Device(400, 50, param['field']))
 Devices.append(Device(350, 50, param['field']))
 Devices.append(Device(300, 50, param['field']))
 Devices.append(Device(250,  50, param['field']))
+Devices.append(Device(230, 50, param['field']))
 Devices.append(Device(200, 50, param['field']))
+Devices.append(Device(180, 50, param['field']))
 Devices.append(Device(150, 50, param['field']))
-Devices.append(Device(100, 50, param['field']))
-Devices.append(Device(50, 50, param['field']))
 
 
 
@@ -455,8 +455,8 @@ def painting(avg):
               np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
     data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
                np.sum(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-    ax2.bar(type, data111, label='reward')
-    ax2.bar(type, data22, bottom=np.array(data111), label='energy')
+    ax2.bar(type, data1111, label='reward')
+    ax2.bar(type, data222, bottom=np.array(data1111), label='energy')
     ax2.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
     ax2.legend(loc="best")
     # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
