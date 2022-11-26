@@ -68,6 +68,15 @@ Devices.append(Device(230, 50, param['field']))
 Devices.append(Device(200, 50, param['field']))
 Devices.append(Device(180, 50, param['field']))
 Devices.append(Device(150, 50, param['field']))
+# Devices.append(Device(250, 50, param['field']))
+# Devices.append(Device(230, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(180, 50, param['field']))
+# Devices.append(Device(150,  50, param['field']))
+# Devices.append(Device(130, 50, param['field']))
+# Devices.append(Device(100, 50, param['field']))
+# Devices.append(Device(80, 50, param['field']))
+# Devices.append(Device(50, 50, param['field']))
 
 
 
