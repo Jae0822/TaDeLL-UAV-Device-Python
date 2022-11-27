@@ -51,7 +51,7 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 #  dist:
 param = {'episodes': 25, 'nTimeUnits': 2000, 'nTimeUnits_random': 2000, 'nTimeUnits_force': 2000,
          'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5,
-         'num_Devices': 9, 'V': 36, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+         'num_Devices': 4, 'V': 36, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])
 
@@ -59,11 +59,11 @@ Devices = []
 # for i in range(param['num_Devices']):
 #     Devices.append(Device(random.randint(param['freq_low'], param['freq_high']), random.randint(30, 70), param['field']))
 
-Devices.append(Device(450, 50, param['field']))
-Devices.append(Device(400, 50, param['field']))
-Devices.append(Device(350, 50, param['field']))
-Devices.append(Device(300, 50, param['field']))
-Devices.append(Device(250,  50, param['field']))
+# Devices.append(Device(450, 50, param['field']))
+# Devices.append(Device(400, 50, param['field']))
+# Devices.append(Device(350, 50, param['field']))
+# Devices.append(Device(300, 50, param['field']))
+# Devices.append(Device(250, 50, param['field']))
 Devices.append(Device(230, 50, param['field']))
 Devices.append(Device(200, 50, param['field']))
 Devices.append(Device(180, 50, param['field']))
@@ -366,7 +366,7 @@ def painting(avg):
     # plt.show()
 
     # †††††††††††††††††††††††††††††††††††††††Smart††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-    x = 1
+    x = param['episodes']
     fig1, ax1 = plt.subplots(param['num_Devices'])
     fig1.supxlabel('Time Unites for one episode')
     fig1.supylabel('The Ave Reward')
@@ -468,11 +468,39 @@ def painting(avg):
     ax2.bar(type, [k * param['mu'] for k in data222], bottom=np.array(data1111) * param['mu'], label='energy')
     ax2.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
     ax2.legend(loc="best")
+    fig2.suptitle('The Sum')
     # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
     ax2.set_ylabel('Total Cost')  # Add a y-label to the axes.
     plt.show()
     # https: // www.zhihu.com / question / 507977476 / answer / 2283372858  (画叠加柱状图)
     # https: // juejin.cn / post / 6844903664780328974
+
+    fig5, ax5 = plt.subplots(1)
+    type = ['Random', 'Force', 'Smart']
+    # data1 = [np.mean([i for i in Reward_random if i >= -30]), np.mean([i for i in Reward_force if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    # data2 = [np.mean(PV_random), np.mean(PV_force), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+    # ax2.bar(type, data1, label = 'reward')
+    # ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
+    # data11 = [- np.mean([i for i in env_random.UAV.Reward if i >= -30]),
+    #           -np.mean([i for i in env_force.UAV.Reward if i >= -30]),
+    #           -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward),
+               -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    data1111 = [-np.sum(env_random.UAV.Reward), -np.sum(env_force.UAV.Reward),
+                -np.sum(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
+              np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+    data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
+               np.sum(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+    ax5.bar(type, [k * param['mu'] for k in data111], label='reward')
+    ax5.bar(type, [k * param['mu'] for k in data22], bottom=np.array(data111) * param['mu'], label='energy')
+    ax5.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+    ax5.legend(loc="best")
+    fig5.suptitle('The Mean')
+    # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
+    ax5.set_ylabel('Total Cost')  # Add a y-label to the axes.
+    plt.show()
+
 
 
 
