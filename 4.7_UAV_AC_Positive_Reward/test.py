@@ -10,48 +10,49 @@ with open('fig_A6.pkl', 'rb') as f:
 
 
 
+
 Devices = env.Devices
 
-
-fig, ax = plt.subplots(1)
-# for D in Devices:
-#     plt.scatter(D.location[0], D.location[1])
-[plt.scatter(D.location[0], D.location[1]) for D in Devices]
-ax.set_xlim(0, 1000)
-ax.set_ylim(0, 1000)
-ax.grid(True)
-
+dis = []
+for i in range(len(Devices)):
+    d = []
+    for j in range(len(Devices)):
+        distance = np.linalg.norm(Devices[i].location - Devices[j].location)  # Compute the distance of two points
+        d.append(distance)
+    dis.append(d)
 
 
-fig, ax = plt.subplots(1)
+
+
+
+# †††††††††††††††††††††††††††††††††††††††EP_REWARD††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
+fig_ep, ax_ep = plt.subplots(1)
 # ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP, args.gamma, args.learning_rate))
-ax.plot(np.arange(1, param['episodes'] + 1), avg['Ep_reward'],
+ax_ep.plot(np.arange(1, param['episodes'] + 1), avg['Ep_reward'],
         label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
             param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
             param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
-ax.set_xlabel('Episodes')  # Add an x-label to the axes.
-ax.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
-ax.set_title("The Ave_Reward, NN:" + str(model.pattern))  # Add a title to the axes.
+ax_ep.set_xlabel('Episodes')  # Add an x-label to the axes.
+ax_ep.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
+ax_ep.set_title("The Ave_Reward, NN:" + str(model.pattern))  # Add a title to the axes.
 # ax.axhline(y=max(avg['Ave_Reward']), color='r', linestyle='--', linewidth='0.9',
 #            label='Smart: ' + str(max(avg['Ave_Reward'])))
-# ax.axhline(y=avg['ave_Reward_random'] * len(env_random.UAV.Reward), color='b', linestyle='--', linewidth='0.9',
-#            label='Random:' + str(avg['ave_Reward_random'] * len(env_random.UAV.Reward)))
-# ax.axhline(y=avg['ave_Reward_force'] * len(env_force.UAV.Reward), color='g', linestyle='--', linewidth='0.9',
-#            label='Forced:' + str(avg['ave_Reward_force'] * len(env_force.UAV.Reward)))
-ax.legend(loc="best")
+ax_ep.axhline(y=avg['ave_Reward_random'], color='b', linestyle='--', linewidth='0.9',
+           label='Random:' + str(avg['ave_Reward_random']))
+ax_ep.axhline(y=avg['ave_Reward_force'], color='g', linestyle='--', linewidth='0.9',
+           label='Forced:' + str(avg['ave_Reward_force']))
+ax_ep.legend(loc="best")
 
 
 
-
-
+# EP_reward复现SUMMATION
 a = []
 for x in range(1, param['episodes'] + 1):
-    print(x)
+    # print(x)
     a.append(len(logging_timeline[0][x]['UAV_Reward']))
-dd = [x*y for x, y in zip(a, avg['Ep_reward'])]
 fig, ax = plt.subplots(1)
 # ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP, args.gamma, args.learning_rate))
-ax.plot(np.arange(1, param['episodes'] + 1), dd,
+ax.plot(np.arange(1, param['episodes'] + 1), [x*y for x, y in zip(a, avg['Ep_reward'])],
         label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
             param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
             param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
@@ -60,8 +61,8 @@ ax.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
 ax.set_title("The Ave_Reward, NN:" + str(model.pattern))  # Add a title to the axes.
 # ax.axhline(y=max(avg['Ave_Reward']), color='r', linestyle='--', linewidth='0.9',
 #            label='Smart: ' + str(max(avg['Ave_Reward'])))
-# ax.axhline(y=avg['ave_Reward_random'], color='b', linestyle='--', linewidth='0.9',
-#            label='Random:' + str(avg['ave_Reward_random']))
-# ax.axhline(y=avg['ave_Reward_force'], color='g', linestyle='--', linewidth='0.9',
-#            label='Forced:' + str(avg['ave_Reward_force']))
+ax.axhline(y=avg['ave_Reward_random'] * len(env_random.UAV.Reward), color='b', linestyle='--', linewidth='0.9',
+           label='Random:' + str(avg['ave_Reward_random'] * len(env_random.UAV.Reward)))
+ax.axhline(y=avg['ave_Reward_force'] * len(env_force.UAV.Reward), color='g', linestyle='--', linewidth='0.9',
+           label='Forced:' + str(avg['ave_Reward_force'] * len(env_force.UAV.Reward)))
 ax.legend(loc="best")

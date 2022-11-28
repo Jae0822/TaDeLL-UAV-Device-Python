@@ -49,9 +49,9 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-param = {'episodes': 25, 'nTimeUnits': 2000, 'nTimeUnits_random': 2000, 'nTimeUnits_force': 2000,
+param = {'episodes': 30, 'nTimeUnits': 2000, 'nTimeUnits_random': 2000, 'nTimeUnits_force': 2000,
          'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5,
-         'num_Devices': 4, 'V': 36, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+         'num_Devices': 15, 'V': 36, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])
 
@@ -59,15 +59,24 @@ Devices = []
 # for i in range(param['num_Devices']):
 #     Devices.append(Device(random.randint(param['freq_low'], param['freq_high']), random.randint(30, 70), param['field']))
 
-# Devices.append(Device(450, 50, param['field']))
-# Devices.append(Device(400, 50, param['field']))
-# Devices.append(Device(350, 50, param['field']))
-# Devices.append(Device(300, 50, param['field']))
-# Devices.append(Device(250, 50, param['field']))
+Devices.append(Device(450, 50, param['field']))
+Devices.append(Device(430, 50, param['field']))
+Devices.append(Device(400, 50, param['field']))
+Devices.append(Device(380, 50, param['field']))
+Devices.append(Device(350, 50, param['field']))
+Devices.append(Device(330, 50, param['field']))
+Devices.append(Device(300, 50, param['field']))
+Devices.append(Device(250, 50, param['field']))
 Devices.append(Device(230, 50, param['field']))
 Devices.append(Device(200, 50, param['field']))
 Devices.append(Device(180, 50, param['field']))
 Devices.append(Device(150, 50, param['field']))
+Devices.append(Device(130, 50, param['field']))
+Devices.append(Device(115, 50, param['field']))
+Devices.append(Device(100, 50, param['field']))
+
+
+
 # Devices.append(Device(250, 50, param['field']))
 # Devices.append(Device(230, 50, param['field']))
 # Devices.append(Device(200, 50, param['field']))
@@ -336,6 +345,19 @@ def learning():
 
 
 def painting(avg):
+    fig0, ax0 = plt.subplots(1)
+    [plt.scatter(D.location[0], D.location[1]) for D in Devices]
+    x = [D.location[0] for D in Devices]
+    y = [D.location[1] for D in Devices]
+    No = list(range(len(Devices)))
+    # ax.scatter(x, y)
+    for i, txt in enumerate(No):
+        ax0.annotate(txt, (x[i], y[i]))
+    ax0.set_xlim(0, 1000)
+    ax0.set_ylim(0, 1000)
+    ax0.grid(True)
+
+
     # †††††††††††††††††††††††††††††††††††††††Plotting Phase††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     fig, ax = plt.subplots(1)
     # ax[0].plot(np.arange(i_episode), Ep_reward, label='Actor-Critic')
@@ -364,6 +386,8 @@ def painting(avg):
     # plt.legend()
     # plt.grid(True)
     # plt.show()
+
+
 
     # †††††††††††††††††††††††††††††††††††††††Smart††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     x = param['episodes']
