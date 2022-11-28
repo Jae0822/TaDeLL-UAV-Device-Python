@@ -49,9 +49,9 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-param = {'episodes': 30, 'nTimeUnits': 2000, 'nTimeUnits_random': 2000, 'nTimeUnits_force': 2000,
+param = {'episodes': 35, 'nTimeUnits': 2000, 'nTimeUnits_random': 2000, 'nTimeUnits_force': 2000,
          'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5,
-         'num_Devices': 15, 'V': 36, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+         'num_Devices': 25, 'V': 36, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])
 
@@ -59,6 +59,11 @@ Devices = []
 # for i in range(param['num_Devices']):
 #     Devices.append(Device(random.randint(param['freq_low'], param['freq_high']), random.randint(30, 70), param['field']))
 
+Devices.append(Device(530, 50, param['field']))
+Devices.append(Device(510, 50, param['field']))
+Devices.append(Device(500, 50, param['field']))
+Devices.append(Device(485, 50, param['field']))
+Devices.append(Device(470, 50, param['field']))
 Devices.append(Device(450, 50, param['field']))
 Devices.append(Device(430, 50, param['field']))
 Devices.append(Device(400, 50, param['field']))
@@ -495,6 +500,8 @@ def painting(avg):
               np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
     data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
                np.sum(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+    # [a + b for (a, b) in zip(data111, data22)]
+    # [a + b for (a, b) in zip(data1111, data222)]
     ax2.bar(type, [k * param['mu'] for k in data1111], label='reward')
     ax2.bar(type, [k * param['mu'] for k in data222], bottom=np.array(data1111) * param['mu'], label='energy')
     ax2.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
