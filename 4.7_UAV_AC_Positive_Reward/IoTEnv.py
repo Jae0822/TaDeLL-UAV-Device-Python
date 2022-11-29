@@ -439,8 +439,8 @@ class Env(object):
         """
         FX4: 取消访问同一个DEVICE的penalty
         """
-        # if action == self.UAV.PositionList[-2]:  # 重复访问的penalty
-        #     reward_fair = reward_fair - 200
+        if action == self.UAV.PositionList[-2]:  # 重复访问的penalty
+            reward_fair = reward_fair - 200
 
         mu = param['mu']
         """
