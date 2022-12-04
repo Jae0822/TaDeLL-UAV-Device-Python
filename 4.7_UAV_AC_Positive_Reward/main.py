@@ -21,6 +21,12 @@ from torch.distributions import Categorical
 from IoTEnv import Uav, Device, Env, Policy
 from UAVEnergy import UAV_Energy
 
+
+with open('SourceTask_temp.pkl', 'rb') as f:
+    TaskList_set, Values_array_set = pickle.load(f)
+
+
+
 # Press ⌃R to execute it or replace it with your code.
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 # Press ⌘F8 to toggle the breakpoint.
@@ -49,8 +55,8 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-param = {'episodes': 35, 'nTimeUnits': 2000, 'nTimeUnits_random': 2000, 'nTimeUnits_force': 2000,
-         'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5,
+param = {'episodes': 25, 'nTimeUnits': 2000, 'nTimeUnits_random': 2000, 'nTimeUnits_force': 2000,
+         'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
          'num_Devices': 25, 'V': 36, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])
@@ -301,6 +307,8 @@ def learning():
         logging_timeline[0][x]['UAV_Reward'] = UAV.Reward
         logging_timeline[0][x]['UAV_Energy'] = UAV.Energy
         logging_timeline[0][x]['UAV_R_E'] = UAV.Sum_R_E
+        logging_timeline[0][x]['UAV_AoI'] = UAV.AoI
+        logging_timeline[0][x]['UAV_CPU'] = UAV.CPU
         for i in range(param['num_Devices']):
             logging_timeline[i][x]['intervals'] = Devices[i].intervals
             logging_timeline[i][x]['TimeList'] = Devices[i].TimeList
@@ -308,6 +316,8 @@ def learning():
             # 这里每一个DEVICE只能这样啊，DEVICE不像UAV一样一下一下飞，DEVICE是每一个时隙的
             # 这里的KEYREWARD是上面step输出reward的一部分，不包括UAV的PV，减200的penalty，不包括reward_rest
             logging_timeline[i][x]['KeyRewards'] = Devices[i].KeyReward
+            logging_timeline[i][x]['KeyAoI'] = Devices[i].KeyAoI
+            logging_timeline[i][x]['KeyCPU'] = Devices[i].KeyCPU
             logging_timeline[i][x]['KeyTime'] = Devices[i].KeyTime
             # if not logging_timeline[i][x]['intervals']:
             #     continue
@@ -399,7 +409,45 @@ def painting(avg):
     # plt.grid(True)
     # plt.show()
 
+    # †††††††††††††††††††††††††††††††††††††††EP_REWARD††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
+    fig_ep, ax_ep = plt.subplots(1)
+    # ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP, args.gamma, args.learning_rate))
+    ax_ep.plot(np.arange(1, param['episodes'] + 1), avg['Ep_reward'],
+               label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
+                   param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
+                   param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
+    ax_ep.set_xlabel('Episodes')  # Add an x-label to the axes.
+    ax_ep.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
+    ax_ep.set_title("The reward divided by number of flights, NN:" + str(model.pattern))  # Add a title to the axes.
+    # ax.axhline(y=max(avg['Ave_Reward']), color='r', linestyle='--', linewidth='0.9',
+    #            label='Smart: ' + str(max(avg['Ave_Reward'])))
+    ax_ep.axhline(y=avg['ave_Reward_random'], color='b', linestyle='--', linewidth='0.9',
+                  label='Random:' + str(avg['ave_Reward_random']))
+    ax_ep.axhline(y=avg['ave_Reward_force'], color='g', linestyle='--', linewidth='0.9',
+                  label='Forced:' + str(avg['ave_Reward_force']))
+    ax_ep.legend(loc="best")
 
+    # EP_reward复现SUMMATION
+    # a = []
+    # for x in range(1, param['episodes'] + 1):
+    #     # print(x)
+    #     a.append(len(logging_timeline[0][x]['UAV_Reward']))
+    # fig_re, ax_re = plt.subplots(1)
+    # # ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP, args.gamma, args.learning_rate))
+    # ax_re.plot(np.arange(1, param['episodes'] + 1), [x * y for x, y in zip(a, avg['Ep_reward'])],
+    #         label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
+    #             param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
+    #             param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
+    # ax_re.set_xlabel('Episodes')  # Add an x-label to the axes.
+    # ax_re.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
+    # ax_re.set_title("The Ave_Reward, NN:" + str(model.pattern))  # Add a title to the axes.
+    # # ax.axhline(y=max(avg['Ave_Reward']), color='r', linestyle='--', linewidth='0.9',
+    # #            label='Smart: ' + str(max(avg['Ave_Reward'])))
+    # ax_re.axhline(y=avg['ave_Reward_random'] * len(env_random.UAV.Reward), color='b', linestyle='--', linewidth='0.9',
+    #            label='Random:' + str(avg['ave_Reward_random'] * len(env_random.UAV.Reward)))
+    # ax_re.axhline(y=avg['ave_Reward_force'] * len(env_force.UAV.Reward), color='g', linestyle='--', linewidth='0.9',
+    #            label='Forced:' + str(avg['ave_Reward_force'] * len(env_force.UAV.Reward)))
+    # ax_re.legend(loc="best")
 
     # †††††††††††††††††††††††††††††††††††††††Smart††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     x = param['episodes']
@@ -477,51 +525,73 @@ def painting(avg):
             #     ax1[i].set_title(model.pattern)
             ax4[i].set_title('CPU Capacity: %.0f' % (env_force.Devices[i].cpu_capacity))
             for vv in range(len(np.where(logging_timeline[i][0]['Force_TimeList'])[0])):
+                # ax1[i].plot([np.where(Devices[i].TimeList)],[logging_timeline[i][x]['rewards']], 'o')
                 ax4[i].axvline(x=np.where(logging_timeline[i][0]['Force_TimeList'])[0][vv], linestyle='--',
                                linewidth='0.9')
-                # ax1[i].plot([np.where(Devices[i].TimeList)],[logging_timeline[i][x]['rewards']], 'o')
-    # plt.show()
 
-    # †††††††††††††††††††††††††††††††††††††††柱状图††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-    fig2, ax2 = plt.subplots(1)
-    type = ['Random', 'Force', 'Smart']
-    # data1 = [np.mean([i for i in Reward_random if i >= -30]), np.mean([i for i in Reward_force if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    # data2 = [np.mean(PV_random), np.mean(PV_force), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-    # ax2.bar(type, data1, label = 'reward')
-    # ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
-    # data11 = [- np.mean([i for i in env_random.UAV.Reward if i >= -30]),
-    #           -np.mean([i for i in env_force.UAV.Reward if i >= -30]),
-    #           -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward),
-               -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    data1111 = [-np.sum(env_random.UAV.Reward), -np.sum(env_force.UAV.Reward),
-                -np.sum(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
-              np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-    data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
-               np.sum(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-    # [a + b for (a, b) in zip(data111, data22)]
-    # [a + b for (a, b) in zip(data1111, data222)]
-    ax2.bar(type, [k * param['mu'] for k in data1111], label='reward')
-    ax2.bar(type, [k * param['mu'] for k in data222], bottom=np.array(data1111) * param['mu'], label='energy')
-    ax2.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
-    ax2.legend(loc="best")
-    fig2.suptitle('The Sum')
-    # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
-    ax2.set_ylabel('Total Cost')  # Add a y-label to the axes.
-    plt.show()
+
+    # fig2, ax2 = plt.subplots(1)
+    # type = ['Random', 'Force', 'Smart']
+    # # data1 = [np.mean([i for i in Reward_random if i >= -30]), np.mean([i for i in Reward_force if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    # # data2 = [np.mean(PV_random), np.mean(PV_force), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+    # # ax2.bar(type, data1, label = 'reward')
+    # # ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
+    # # data11 = [- np.mean([i for i in env_random.UAV.Reward if i >= -30]),
+    # #           -np.mean([i for i in env_force.UAV.Reward if i >= -30]),
+    # #           -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    # data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward),
+    #            -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    # data1111 = [-np.sum(env_random.UAV.Reward), -np.sum(env_force.UAV.Reward),
+    #             -np.sum(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    # data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
+    #           np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+    # data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
+    #            np.sum(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+    # # [a + b for (a, b) in zip(data111, data22)]
+    # # [a + b for (a, b) in zip(data1111, data222)]
+    # ax2.bar(type, [k * param['mu'] for k in data1111], label='reward')
+    # ax2.bar(type, [k * param['mu'] for k in data222], bottom=np.array(data1111) * param['mu'], label='energy')
+    # ax2.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+    # ax2.legend(loc="best")
+    # fig2.suptitle('The Sum')
+    # # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
+    # ax2.set_ylabel('Total Cost')  # Add a y-label to the axes.
+    # plt.show()
     # https: // www.zhihu.com / question / 507977476 / answer / 2283372858  (画叠加柱状图)
     # https: // juejin.cn / post / 6844903664780328974
 
-    fig5, ax5 = plt.subplots(1)
+    # fig5, ax5 = plt.subplots(1)
+    # type = ['Random', 'Force', 'Smart']
+    # # data1 = [np.mean([i for i in Reward_random if i >= -30]), np.mean([i for i in Reward_force if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    # # data2 = [np.mean(PV_random), np.mean(PV_force), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+    # # ax2.bar(type, data1, label = 'reward')
+    # # ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
+    # # data11 = [- np.mean([i for i in env_random.UAV.Reward if i >= -30]),
+    # #           -np.mean([i for i in env_force.UAV.Reward if i >= -30]),
+    # #           -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    # data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward),
+    #            -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    # data1111 = [-np.sum(env_random.UAV.Reward), -np.sum(env_force.UAV.Reward),
+    #             -np.sum(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+    # data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
+    #           np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+    # data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
+    #            np.sum(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+    # ax5.bar(type, [k * param['mu'] for k in data111], label='reward')
+    # ax5.bar(type, [k * param['mu'] for k in data22], bottom=np.array(data111) * param['mu'], label='energy')
+    # ax5.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+    # ax5.legend(loc="best")
+    # fig5.suptitle('The Mean')
+    # # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
+    # ax5.set_ylabel('Total Cost')  # Add a y-label to the axes.
+    # plt.show()
+
+
+    d = 1
+    # †††††††††††††††††††††††††††††††††††††††柱状图††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
+    fig7, ax7 = plt.subplots(2, sharex=True)
+    fig7.suptitle('Devcie and UAV cost')
     type = ['Random', 'Force', 'Smart']
-    # data1 = [np.mean([i for i in Reward_random if i >= -30]), np.mean([i for i in Reward_force if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    # data2 = [np.mean(PV_random), np.mean(PV_force), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-    # ax2.bar(type, data1, label = 'reward')
-    # ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
-    # data11 = [- np.mean([i for i in env_random.UAV.Reward if i >= -30]),
-    #           -np.mean([i for i in env_force.UAV.Reward if i >= -30]),
-    #           -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
     data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward),
                -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
     data1111 = [-np.sum(env_random.UAV.Reward), -np.sum(env_force.UAV.Reward),
@@ -530,13 +600,80 @@ def painting(avg):
               np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
     data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
                np.sum(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-    ax5.bar(type, [k * param['mu'] for k in data111], label='reward')
-    ax5.bar(type, [k * param['mu'] for k in data22], bottom=np.array(data111) * param['mu'], label='energy')
-    ax5.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
-    ax5.legend(loc="best")
-    fig5.suptitle('The Mean')
-    # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
-    ax5.set_ylabel('Total Cost')  # Add a y-label to the axes.
+    ax7[0].bar(type, [k * param['mu'] for k in data111], label='reward')
+    ax7[0].bar(type, [k * param['mu'] for k in data22], bottom=np.array(data111) * param['mu'], label='energy')
+    ax7[0].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+    ax7[0].legend(loc="best")
+    ax7[0].set_ylabel('Total Cost')  # Add a y-label to the axes.
+    ax7[0].set_title('The Mean')
+    ax7[1].bar(type, [k * param['mu'] for k in data1111], label='reward')
+    ax7[1].bar(type, [k * param['mu'] for k in data222], bottom=np.array(data1111) * param['mu'], label='energy')
+    ax7[1].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+    ax7[1].legend(loc="best")
+    ax7[1].set_ylabel('Total Cost')  # Add a y-label to the axes.
+    ax7[1].set_title('The Sum')
+    plt.show()
+
+
+    # fig6, ax6 = plt.subplots(1)
+    # type = ['Random', 'Force', 'Smart']
+    # dataAoImean = [np.mean(env_random.UAV.AoI), np.mean(env_force.UAV.AoI),
+    #            np.mean(logging_timeline[0][param['episodes']]['UAV_AoI'])]
+    # dataAoIsum = [np.sum(env_random.UAV.AoI), np.sum(env_force.UAV.AoI),
+    #             np.sum(logging_timeline[0][param['episodes']]['UAV_AoI'])]
+    # dataCPUmean = [np.mean(env_random.UAV.CPU), np.mean(env_force.UAV.CPU),
+    #           np.mean(logging_timeline[0][param['episodes']]['UAV_CPU'])]
+    # dataCPUsum = [np.sum(env_random.UAV.CPU), np.sum(env_force.UAV.CPU),
+    #            np.sum(logging_timeline[0][param['episodes']]['UAV_CPU'])]
+    # ax6.bar(type, [k * param['beta'] for k in dataAoImean], label='AoI')
+    # ax6.bar(type, [k * param['beta'] for k in dataCPUmean], bottom=np.array(dataAoImean) * param['beta'], label='CPU')
+    # ax6.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+    # ax6.legend(loc="best")
+    # fig6.suptitle('The Mean')
+    # ax6.set_ylabel('Total Cost')  # Add a y-label to the axes.
+    # plt.show()
+
+    # fig7, ax7 = plt.subplots(1)
+    # type = ['Random', 'Force', 'Smart']
+    # dataAoImean = [np.mean(env_random.UAV.AoI), np.mean(env_force.UAV.AoI),
+    #            np.mean(logging_timeline[0][param['episodes']]['UAV_AoI'])]
+    # dataAoIsum = [np.sum(env_random.UAV.AoI), np.sum(env_force.UAV.AoI),
+    #             np.sum(logging_timeline[0][param['episodes']]['UAV_AoI'])]
+    # dataCPUmean = [np.mean(env_random.UAV.CPU), np.mean(env_force.UAV.CPU),
+    #           np.mean(logging_timeline[0][param['episodes']]['UAV_CPU'])]
+    # dataCPUsum = [np.sum(env_random.UAV.CPU), np.sum(env_force.UAV.CPU),
+    #            np.sum(logging_timeline[0][param['episodes']]['UAV_CPU'])]
+    # ax7.bar(type, [k * param['beta'] for k in dataAoIsum], label='AoI')
+    # ax7.bar(type, [k * param['beta'] for k in dataCPUsum], bottom=np.array(dataAoIsum) * param['beta'], label='CPU')
+    # ax7.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+    # ax7.legend(loc="best")
+    # fig7.suptitle('The Sum')
+    # ax7.set_ylabel('Total Cost')  # Add a y-label to the axes.
+    # plt.show()
+
+    fig8, ax8 = plt.subplots(2, sharex=True)
+    fig8.suptitle('AoI and CPU cost')
+    type = ['Random', 'Force', 'Smart']
+    dataAoImean = [np.mean(env_random.UAV.AoI), np.mean(env_force.UAV.AoI),
+               np.mean(logging_timeline[0][param['episodes']]['UAV_AoI'])]
+    dataAoIsum = [np.sum(env_random.UAV.AoI), np.sum(env_force.UAV.AoI),
+                np.sum(logging_timeline[0][param['episodes']]['UAV_AoI'])]
+    dataCPUmean = [np.mean(env_random.UAV.CPU), np.mean(env_force.UAV.CPU),
+              np.mean(logging_timeline[0][param['episodes']]['UAV_CPU'])]
+    dataCPUsum = [np.sum(env_random.UAV.CPU), np.sum(env_force.UAV.CPU),
+               np.sum(logging_timeline[0][param['episodes']]['UAV_CPU'])]
+    ax8[0].bar(type, [k * param['beta'] for k in dataAoImean], label='AoI')
+    ax8[0].bar(type, [k * param['beta'] for k in dataCPUmean], bottom=np.array(dataAoImean) * param['beta'], label='CPU')
+    ax8[0].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+    ax8[0].legend(loc="best")
+    ax8[0].set_title('The Mean')
+    ax8[0].set_ylabel('Total Cost')  # Add a y-label to the axes.
+    ax8[1].bar(type, [k * param['beta'] for k in dataAoIsum], label='AoI')
+    ax8[1].bar(type, [k * param['beta'] for k in dataCPUsum], bottom=np.array(dataAoIsum) * param['beta'], label='CPU')
+    ax8[1].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+    ax8[1].legend(loc="best")
+    ax8[1].set_title('The Sum')
+    ax8[1].set_ylabel('Total Cost')  # Add a y-label to the axes.
     plt.show()
 
 
@@ -601,6 +738,8 @@ def main():
             logging_timeline[i][0]['Random_intervals'] = Devices_random[i].intervals
             logging_timeline[i][0]['Random_TimeList'] = Devices_random[i].TimeList
             logging_timeline[i][0]['Random_KeyRewards'] = Devices_random[i].KeyReward
+            logging_timeline[i][0]['Random_KeyAoI'] = Devices_random[i].KeyAoI
+            logging_timeline[i][0]['Random_KeyCPU'] = Devices_random[i].KeyCPU
             logging_timeline[i][0]['Random_KeyTime'] = Devices_random[i].KeyTime
             ls1 = [0] + logging_timeline[i][0]['Random_intervals']
             ls2 = logging_timeline[i][0]['Random_KeyRewards']
@@ -657,6 +796,8 @@ def main():
             logging_timeline[i][0]['Force_intervals'] = Devices_force[i].intervals
             logging_timeline[i][0]['Force_TimeList'] = Devices_force[i].TimeList
             logging_timeline[i][0]['Force_KeyRewards'] = Devices_force[i].KeyReward
+            logging_timeline[i][0]['Force_KeyAoI'] = Devices_force[i].KeyAoI
+            logging_timeline[i][0]['Force_KeyCPU'] = Devices_force[i].KeyCPU
             logging_timeline[i][0]['Force_KeyTime'] = Devices_force[i].KeyTime
             ls1 = [0] + logging_timeline[i][0]['Force_intervals']
             ls2 = logging_timeline[i][0]['Force_KeyRewards']

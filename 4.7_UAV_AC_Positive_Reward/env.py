@@ -246,6 +246,27 @@ class Task(object):
         value = value / len(path)
         return value
 
+
+    def get_AoI_CPU(self, alpha):
+        # 记录详细的AOI 和 CPU Energy的值
+        path = self.collect_path(alpha)
+        AoI = 0
+        b = 0
+        CPUcost = 0
+        rew = 0  # 复现的value，用于与get_value进行比较，结果表明，误差在0.1，无妨。
+        for i in range(len(path)):
+            AoI = AoI + np.mean([x[0] for x in list(path[i]['states'])])
+            b = b + np.mean([x[1] for x in list(path[i]['states'])])
+            CPUcost  = CPUcost + np.mean([self.alpha_CPU * x[0] **3 for x in path[i]['actions']])
+            rew = rew + np.mean([self.beta * x[0] + (1 - self.beta) * self.alpha_CPU * y[0] **3 for x, y in zip(list(path[i]['states']), list(path[i]['actions']))])
+        AoI = AoI / len(path)
+        CPUcost = CPUcost / len(path)
+        b = b / len(path)
+        rew = rew / len(path)
+        return AoI, CPUcost, b,  -rew
+
+
+
     def djd_nac(self, path):
         # """
         # Programmed by gabrieledcjr: https://github.com/IRLL/Vertical_ARDrone/blob/63a6cc455cb8092f6ab88cc68dbd71feff361b51/src/vertical_control/scripts/pg_ella/episodicNaturalActorCritic.py

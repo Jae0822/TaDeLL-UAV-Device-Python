@@ -84,6 +84,8 @@ class Uav(object):
         self.Reward = []
         self.Energy = []
         self.Sum_R_E = []
+        self.AoI = []
+        self.CPU = []
 
 
 
@@ -112,6 +114,8 @@ class Env(object):
         UAV.Reward = []
         UAV.Energy = []
         UAV.Sum_R_E = []
+        UAV.AoI = []
+        UAV.CPU = []
         for i in range(len(Devices)):
             # Devices[i].TimeList, Devices[i].TaskList  = Devices[i].gen_TimeTaskList(self.nTimeUnits)   # The list of time that indicates the arrival of a new task
             # Devices[i].nTasks = len(Devices[i].TaskList)
@@ -127,13 +131,17 @@ class Env(object):
             tsk0 = copy.deepcopy(Devices[i].TaskList[0])
             Devices[i].KeyTsk = [tsk0]
             Devices[i].KeyReward = [tsk0.get_value(tsk0.init_policy['theta'])]  # Didn't use pg_rl() cause it has one step of update which I don't need here
+            Devices[i].KeyAoI = [tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[0]]
+            Devices[i].KeyCPU = [tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[1]]
             Devices[i].nonvisitFlag = True  # To indicate the first visit. This device hasn't been visited.
             Devices[i].rewards = []
             Devices[i].intervals = []
             Devices[i].rewards_Regular = []
             Devices[i].KeyPol_Regular = copy.deepcopy(Devices[i].KeyPol)  # The Key points for Regular learning without warm start
             Devices[i].KeyTsk_Regular = copy.deepcopy(Devices[i].KeyTsk)
-            Devices[i].KeyReward_Regular = copy.deepcopy(Devices[i].KeyTsk)
+            Devices[i].KeyReward_Regular = copy.deepcopy(Devices[i].KeyReward)
+            Devices[i].KeyAoI_Regular = copy.deepcopy(Devices[i].KeyAoI)
+            Devices[i].KeyCPU_Regular = copy.deepcopy(Devices[i].KeyCPU)
         # Reset state
         state = np.concatenate((# [0 for x in range(self.num_Devices)],  # 1.当前节点总的已访问次数  不是已访问次数
                                 # [0 for x in range(self.num_Devices)],  # 2.当前节点、当前任务的已访问次数（新任务归1或者0，否则+1。其他节点不变
@@ -311,12 +319,16 @@ class Env(object):
             tsk0 = copy.deepcopy(device.task)
             device.KeyTsk.append(tsk0)  # tsk0 with the improved policy
             device.KeyReward.append(tsk0.get_value(tsk0.policy['theta']))
+            device.KeyAoI.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[0])
+            device.KeyCPU.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[1])
             # 2: Regular (Without Warm Start)
             pg_rl(device.task_Regular, 1)  # update the PG policy for one step
             device.KeyPol_Regular.append(device.task_Regular.policy)
             tsk0_Regular = copy.deepcopy(device.task_Regular)
             device.KeyTsk_Regular.append(tsk0_Regular)
             device.KeyReward_Regular.append(tsk0_Regular.get_value(tsk0_Regular.policy['theta']))
+            device.KeyAoI_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[0])
+            device.KeyCPU_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[1])
         else:
             "访问间隔里有1出现"
             for i in np.nonzero(VisitTime)[0]:
@@ -332,12 +344,16 @@ class Env(object):
                 tsk0 = copy.deepcopy(device.task)
                 device.KeyTsk.append(tsk0)  # tsk0 with initial policy
                 device.KeyReward.append(tsk0.get_value(tsk0.init_policy['theta']))
+                device.KeyAoI.append(tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[0])
+                device.KeyCPU.append(tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[1])
                 # 2: Regular (Without Warm Start)
                 device.task_Regular = device.TaskList_Regular[device.ta_dex]
                 device.KeyPol_Regular.append(device.task_Regular.init_policy)
                 tsk0_Regular = copy.deepcopy(device.task_Regular)
                 device.KeyTsk_Regular.append(tsk0_Regular)
                 device.KeyReward_Regular.append(tsk0_Regular.get_value(tsk0_Regular.init_policy['theta']))
+                device.KeyAoI_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.init_policy['theta'])[0])
+                device.KeyCPU_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.init_policy['theta'])[1])
                 state[action] = t - device.KeyTime[-1]
             if VisitTime[-1] == 0:    # 需要再对t做一个TaDeLL的更新
                 device.KeyTime.append(t)
@@ -347,12 +363,16 @@ class Env(object):
                 tsk0 = copy.deepcopy(device.task)
                 device.KeyTsk.append(tsk0)  # tsk0 with the improved policy
                 device.KeyReward.append(tsk0.get_value(tsk0.policy['theta']))
+                device.KeyAoI.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[0])
+                device.KeyCPU.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[1])
                 # 2: Regular (Without Warm Start)
                 pg_rl(device.task_Regular, 1)  # update the PG policy for one step
                 device.KeyPol_Regular.append(device.task_Regular.policy)
                 tsk0_Regular = copy.deepcopy(device.task_Regular)
                 device.KeyTsk_Regular.append(tsk0_Regular)
                 device.KeyReward_Regular.append(tsk0_Regular.get_value(tsk0_Regular.policy['theta']))
+                device.KeyAoI_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[0])
+                device.KeyCPU_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[1])
 
 
 
@@ -394,6 +414,8 @@ class Env(object):
         if len(device.KeyTime) == 0:
             print('Error captured!')
         reward_ = 0
+        AoI_ = 0
+        CPU_ = 0
         for index in range(index_start, index_end):
             if index + 1 > len(device.KeyTime)-1:
                 print('Error captured!')
@@ -402,10 +424,22 @@ class Env(object):
             if index > len(device.KeyReward)-1:
                 print('Error captured!')
             reward_ += device.KeyReward[index] * interval
+            """
+            FX8: 利用KeyAoI KeyCPU，计算加权均值
+            """
+            AoI_ += device.KeyAoI[index] * interval
+            CPU_ += device.KeyCPU[index] * interval
 
+
+
+        """
+        FX6:取消这个除的过程，会怎么样呢？还没尝试
+        """
+        reward_ = reward_ / (device.KeyTime[index_end] - device.KeyTime[index_start]) # not the same as  device.intervals[-1]
+        AoI_ = AoI_ / (device.KeyTime[index_end] - device.KeyTime[index_start])
+        CPU_ = CPU_ / (device.KeyTime[index_end] - device.KeyTime[index_start])
 
         # add other devices' reward into account
-        reward_ = reward_ / (device.KeyTime[index_end] - device.KeyTime[index_start]) # not the same as  device.intervals[-1]
         """
         FX5: 取消REWARD_REST
         """
@@ -455,6 +489,8 @@ class Env(object):
         self.UAV.Reward.append(reward_fair)
         self.UAV.Energy.append(PV)
         self.UAV.Sum_R_E.append(reward_fair1)
+        self.UAV.AoI.append(AoI_)
+        self.UAV.CPU.append(CPU_)
 
 
         # print("done one step")

@@ -4,6 +4,34 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import make_interp_spline, BSpline
 from scipy.ndimage.filters import gaussian_filter1d
 
+
+
+
+
+
+
+
+def get(a,b):
+    return a, b, a+b
+
+a = []
+a.append(get(1,2))
+a.append(get(1,2))
+a.append(get(1,2))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 with open('fig_A6.pkl', 'rb') as f:
     model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
@@ -69,57 +97,5 @@ ax.legend(loc="best")
 
 
 
-x = 15
-fig5, ax5 = plt.subplots(1)
-type = ['Random', 'Force', 'Smart']
-# data1 = [np.mean([i for i in Reward_random if i >= -30]), np.mean([i for i in Reward_force if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-# data2 = [np.mean(PV_random), np.mean(PV_force), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-# ax2.bar(type, data1, label = 'reward')
-# ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
-# data11 = [- np.mean([i for i in env_random.UAV.Reward if i >= -30]),
-#           -np.mean([i for i in env_force.UAV.Reward if i >= -30]),
-#           -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward),
-           -np.mean(logging_timeline[0][x]['UAV_Reward'])]
-data1111 = [-np.sum(env_random.UAV.Reward), -np.sum(env_force.UAV.Reward),
-            -np.sum(logging_timeline[0][x]['UAV_Reward'])]
-data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
-          np.mean(logging_timeline[0][x]['UAV_Energy'])]
-data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
-           np.sum(logging_timeline[0][x]['UAV_Energy'])]
-ax5.bar(type, [k * param['mu'] for k in data111], label='reward')
-ax5.bar(type, [k * param['mu'] for k in data22], bottom=np.array(data111) * param['mu'], label='energy')
-ax5.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
-ax5.legend(loc="best")
-fig5.suptitle('The Mean')
-# ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
-ax5.set_ylabel('Total Cost')  # Add a y-label to the axes.
-plt.show()
 
-fig2, ax2 = plt.subplots(1)
-type = ['Random', 'Force', 'Smart']
-# data1 = [np.mean([i for i in Reward_random if i >= -30]), np.mean([i for i in Reward_force if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-# data2 = [np.mean(PV_random), np.mean(PV_force), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-# ax2.bar(type, data1, label = 'reward')
-# ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
-# data11 = [- np.mean([i for i in env_random.UAV.Reward if i >= -30]),
-#           -np.mean([i for i in env_force.UAV.Reward if i >= -30]),
-#           -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward),
-           -np.mean(logging_timeline[0][x]['UAV_Reward'])]
-data1111 = [-np.sum(env_random.UAV.Reward), -np.sum(env_force.UAV.Reward),
-            -np.sum(logging_timeline[0][x]['UAV_Reward'])]
-data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
-          np.mean(logging_timeline[0][x]['UAV_Energy'])]
-data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
-           np.sum(logging_timeline[0][x]['UAV_Energy'])]
-# [a + b for (a, b) in zip(data111, data22)]
-# [a + b for (a, b) in zip(data1111, data222)]
-ax2.bar(type, [k * param['mu'] for k in data1111], label='reward')
-ax2.bar(type, [k * param['mu'] for k in data222], bottom=np.array(data1111) * param['mu'], label='energy')
-ax2.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
-ax2.legend(loc="best")
-fig2.suptitle('The Sum')
-# ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
-ax2.set_ylabel('Total Cost')  # Add a y-label to the axes.
-plt.show()
+
