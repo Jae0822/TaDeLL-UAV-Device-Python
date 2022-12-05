@@ -45,7 +45,7 @@ with open('SourceTask_temp.pkl', 'rb') as f:
 #                     help='interval between training status logs (default: 10)')
 # args = parser.parse_args()
 
-SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
+SavedAction = namedtuple('SavedAction', ['log_prob', 'value', 'velocity'])
 
 
 
@@ -119,7 +119,7 @@ Devices_force = copy.deepcopy(Devices)
 UAV_force = copy.deepcopy(UAV)
 env_force = Env(Devices_force, UAV_force, param['nTimeUnits_force'])
 
-model = Policy(1 * param['num_Devices'], param['num_Devices'])
+model = Policy(1 * param['num_Devices'], param['num_Devices'] + 1, 30)
 optimizer = optim.Adam(model.parameters(), lr=param['learning_rate'])  # lr=3e-2
 eps = np.finfo(np.float32).eps.item()
 
@@ -127,7 +127,7 @@ eps = np.finfo(np.float32).eps.item()
 def select_action(state):
     # state = torch.from_numpy(state).float()
     state = torch.from_numpy(state).double()
-    probs, state_value = model(state)
+    probs, state_value, velocity = model(state)
 
     # create a categorical distribution over the list of probabilities of actions
     m = Categorical(probs)
@@ -143,10 +143,10 @@ def select_action(state):
     # print("---", action, "is chosen")
 
     # save to action buffer
-    model.saved_actions.append(SavedAction(m.log_prob(action), state_value))
+    model.saved_actions.append(SavedAction(m.log_prob(action), state_value, velocity))
 
     # the action to take
-    return action.item()
+    return action.item(), velocity.item()
 
 
 def finish_episode():
@@ -168,11 +168,11 @@ def finish_episode():
     returns = torch.tensor(returns)
     returns = (returns - returns.mean()) / (returns.std() + eps)
 
-    for (log_prob, value), R in zip(saved_actions, returns):
+    for (log_prob, value, velocity), R in zip(saved_actions, returns):
         advantage = R - value.item()
 
         # calculate actor (policy) loss
-        policy_losses.append(-log_prob * advantage)
+        policy_losses.append(-log_prob * advantage - velocity * advantage)
 
         # calculate critic (value) loss using L1 smooth loss
         value_losses.append(F.smooth_l1_loss(value, torch.tensor([R])))
@@ -220,7 +220,7 @@ def learning():
         # for t in range(0, param['nTimeUnits']):
 
             # select action from policy
-            action = select_action(state)
+            action, velocity = select_action(state)
             # random action
             # action = np.random.randint(param['num_Devices'])
 
@@ -228,10 +228,10 @@ def learning():
             CPoint = env.UAV.location  # current location
             NPoint = env.Devices[action].location  # next location
             distance = np.linalg.norm(CPoint - NPoint)  # Compute the distance of two points
-            Fly_time = 1 if distance == 0 else math.ceil(distance / env.UAV.V)
+            Fly_time = 1 if distance == 0 else math.ceil(distance / velocity)
             # t = t + Fly_time
             print(Fly_time)
-            PV = UAV_Energy(param['V']) * Fly_time
+            PV = UAV_Energy(velocity) * Fly_time
 
             # take the action
             # state, reward, reward_Regular, t = env.step(state, action, t)
@@ -810,6 +810,7 @@ def main():
     ave_Reward_force = ep_reward_force / n
     print('Force: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(1, ep_reward_force, ave_Reward_force))
     # †††††††††††††††††††††††††††††††††††††††Forced Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
+
 
 
 

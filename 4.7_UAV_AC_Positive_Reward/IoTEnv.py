@@ -4,6 +4,7 @@ import pickle
 import random
 import math
 
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -506,7 +507,10 @@ class Policy(nn.Module):
     """
     implements both actor and critic in one model
     """
-    def __init__(self, input_size, output_size):
+    def __init__(self, input_size, output_size, velocity_lim):
+
+        self.velocity_lim = velocity_lim
+
         super(Policy, self).__init__()
         self.affine1 = nn.Linear(input_size, 32)
         self.affine2 = nn.Linear(32, 64)
@@ -517,7 +521,8 @@ class Policy(nn.Module):
 
         # actor's layer
         # self.action_affine1 = nn.Linear(32, 64)
-        self.action_head = nn.Linear(64, output_size)
+        self.action_head = nn.Linear(64, output_size - 1)
+        self.velocity_head = nn.Linear(64, 1)
 
         # critic's layer
         # self.value_affine1 = nn.Linear(32, 64)
@@ -548,6 +553,8 @@ class Policy(nn.Module):
         # by returning probability of each action
         # a = F.relu(self.action_affine1(x))
         action_prob = F.softmax(self.action_head(x), dim=-1)
+        velocity = torch.sigmoid(self.velocity_head(x))
+        velocity = velocity * self.velocity_lim
 
         # critic: evaluates being in the state s_t
         # v = F.relu(self.value_affine1(x))
@@ -556,7 +563,7 @@ class Policy(nn.Module):
         # return values for both actor and critic as a tuple of 2 values:
         # 1. a list with the probability of each action over the action space
         # 2. the value from state s_t
-        return action_prob, state_values
+        return action_prob, state_values, velocity
 
 
 

@@ -42,19 +42,59 @@ ax9[1,1].plot(range(10), 'k')
 fig9.suptitle('9')
 
 
-tsk = Task(mean_packet_cycles=random.randint(15, 35), variance_packet_cycles=random.randint(3, 8),
-            cpu_max=50, p=0.4 * np.random.random_sample() + 0.3, d=2, k=2)
 
-values = tsk.get_value(tsk.policy['theta'])
-aoi, cpu, b, rew = tsk.get_AoI_CPU(tsk.policy['theta'])
+class Policy(nn.Module):
+    """
+    implements both actor and critic in one model
+    """
+    def __init__(self, input_size, output_size):
+        super(Policy, self).__init__()
+        self.affine1 = nn.Linear(input_size, 32)
+        self.affine2 = nn.Linear(32, 64)
+        self.pattern = [32, 64]
 
-a = []
+        # actor's layer
+        self.action_head = nn.Linear(64, output_size)
+        # critic's layer
+        self.value_head = nn.Linear(64, 1)
 
-a.append(tsk.get_AoI_CPU(tsk.policy['theta']))
-a.append(tsk.get_AoI_CPU(tsk.policy['theta']))
-a.append(tsk.get_AoI_CPU(tsk.policy['theta']))
-a.append(tsk.get_AoI_CPU(tsk.policy['theta']))
-a.append(tsk.get_AoI_CPU(tsk.policy['theta']))
-a.append(tsk.get_AoI_CPU(tsk.policy['theta']))
+    def forward(self, x):
+        """
+        forward of both actor and critic
+        """
+        x = F.relu(self.affine1(x))
+        x = F.relu(self.affine2(x))
+        action_prob = F.softmax(self.action_head(x), dim=-1)
+        state_values = self.value_head(x)
+        return action_prob, state_values
 
-de = 1
+
+
+
+
+
+
+
+    for (log_prob, value, velocity), R in zip(saved_actions, returns):
+        advantage = R - value.item()
+
+        # calculate actor (policy) loss
+        policy_losses.append(-log_prob * advantage)
+
+        # calculate critic (value) loss using L1 smooth loss
+        value_losses.append(F.smooth_l1_loss(value, torch.tensor([R])))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
