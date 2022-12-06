@@ -11,23 +11,6 @@ from env import Task
 fig, ax = plt.subplots(1)
 fig.suptitle('1')
 
-fig2, ax2 = plt.subplots(1)
-fig2.suptitle('2')
-
-fig3, ax3 = plt.subplots(1)
-fig3.suptitle('3')
-
-fig4, ax4 = plt.subplots(1)
-fig4.suptitle('4')
-
-fig5, ax5 = plt.subplots(1)
-fig5.suptitle('5')
-
-fig6, ax6 = plt.subplots(1)
-fig6.suptitle('6')
-
-fig7, ax7 = plt.subplots(1)
-fig7.suptitle('7')
 
 fig8, ax8 = plt.subplots(2)
 ax8[0].plot(range(10), 'r')
@@ -42,53 +25,62 @@ ax9[1,1].plot(range(10), 'k')
 fig9.suptitle('9')
 
 
+V_avg = []
+for x in range(1, param['episodes']):
+    V_avg.append(mean(logging_timeline[0][x]['UAV_VelocityList']))
+fig_v, ax_v = plt.subplots(1)
+ax_v.plot(np.arange(1, param['episodes']), V_avg)
+fig_v.suptitle('Velocity trend')
 
-class Policy(nn.Module):
-    """
-    implements both actor and critic in one model
-    """
-    def __init__(self, input_size, output_size):
-        super(Policy, self).__init__()
-        self.affine1 = nn.Linear(input_size, 32)
-        self.affine2 = nn.Linear(32, 64)
-        self.pattern = [32, 64]
+fig7, ax7 = plt.subplots(2, sharex=True)
+fig7.suptitle('Devcie and UAV cost')
+type = ['Random', 'Force', 'Smart']
+data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward),
+           -np.mean(logging_timeline[0][10]['UAV_Reward'])]
+data1111 = [-np.sum(env_random.UAV.Reward), -np.sum(env_force.UAV.Reward),
+            -np.sum(logging_timeline[0][10]['UAV_Reward'])]
+data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
+          np.mean(logging_timeline[0][10]['UAV_Energy'])]
+data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
+           np.sum(logging_timeline[0][10]['UAV_Energy'])]
+ax7[0].bar(type, [k * param['mu'] for k in data111], label='reward')
+ax7[0].bar(type, [k * param['mu'] for k in data22], bottom=np.array(data111) * param['mu'], label='energy')
+ax7[0].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+ax7[0].legend(loc="best")
+ax7[0].set_ylabel('Total Cost')  # Add a y-label to the axes.
+ax7[0].set_title('The Mean')
+ax7[1].bar(type, [k * param['mu'] for k in data1111], label='reward')
+ax7[1].bar(type, [k * param['mu'] for k in data222], bottom=np.array(data1111) * param['mu'], label='energy')
+ax7[1].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+ax7[1].legend(loc="best")
+ax7[1].set_ylabel('Total Cost')  # Add a y-label to the axes.
+ax7[1].set_title('The Sum')
+plt.show()
 
-        # actor's layer
-        self.action_head = nn.Linear(64, output_size)
-        # critic's layer
-        self.value_head = nn.Linear(64, 1)
-
-    def forward(self, x):
-        """
-        forward of both actor and critic
-        """
-        x = F.relu(self.affine1(x))
-        x = F.relu(self.affine2(x))
-        action_prob = F.softmax(self.action_head(x), dim=-1)
-        state_values = self.value_head(x)
-        return action_prob, state_values
-
-
-
-
-
-
-
-
-    for (log_prob, value, velocity), R in zip(saved_actions, returns):
-        advantage = R - value.item()
-
-        # calculate actor (policy) loss
-        policy_losses.append(-log_prob * advantage)
-
-        # calculate critic (value) loss using L1 smooth loss
-        value_losses.append(F.smooth_l1_loss(value, torch.tensor([R])))
-
-
-
-
-
-
+fig8, ax8 = plt.subplots(2, sharex=True)
+fig8.suptitle('AoI and CPU cost')
+type = ['Random', 'Force', 'Smart']
+dataAoImean = [np.mean(env_random.UAV.AoI), np.mean(env_force.UAV.AoI),
+               np.mean(logging_timeline[0][10]['UAV_AoI'])]
+dataAoIsum = [np.sum(env_random.UAV.AoI), np.sum(env_force.UAV.AoI),
+              np.sum(logging_timeline[0][10]['UAV_AoI'])]
+dataCPUmean = [np.mean(env_random.UAV.CPU), np.mean(env_force.UAV.CPU),
+               np.mean(logging_timeline[0][10]['UAV_CPU'])]
+dataCPUsum = [np.sum(env_random.UAV.CPU), np.sum(env_force.UAV.CPU),
+              np.sum(logging_timeline[0][10]['UAV_CPU'])]
+ax8[0].bar(type, [k * param['beta'] for k in dataAoImean], label='AoI')
+ax8[0].bar(type, [k * param['beta'] for k in dataCPUmean], bottom=np.array(dataAoImean) * param['beta'], label='CPU')
+ax8[0].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+ax8[0].legend(loc="best")
+ax8[0].set_title('The Mean')
+ax8[0].set_ylabel('The mean cost')  # Add a y-label to the axes.
+ax8[1].bar(type, [k * param['beta'] for k in dataAoIsum], label='AoI')
+ax8[1].bar(type, [k * param['beta'] for k in dataCPUsum], bottom=np.array(dataAoIsum) * param['beta'], label='CPU')
+ax8[1].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+ax8[1].legend(loc="best")
+ax8[1].set_title('The Sum')
+ax8[1].set_ylabel('The sum Cost')  # Add a y-label to the axes.
+plt.show()
 
 
 

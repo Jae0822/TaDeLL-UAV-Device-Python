@@ -82,6 +82,7 @@ class Uav(object):
         self.V = V   # m/s
         self.PositionCor = [self.init_location]  # list of sequent locations in an episode
         self.PositionList = [0]
+        self.VelocityList = []
         self.Reward = []
         self.Energy = []
         self.Sum_R_E = []
@@ -112,6 +113,7 @@ class Env(object):
         UAV.location = UAV.init_location
         UAV.PositionCor = [UAV.init_location]
         UAV.PositionList = [0]
+        UAV.VelocityList = []
         UAV.Reward = []
         UAV.Energy = []
         UAV.Sum_R_E = []
@@ -153,7 +155,7 @@ class Env(object):
                                 ))
         return state  # (1 * num_Devices,)
 
-    def step(self, state_, action, t, PV, param):
+    def step(self, state_, action, velocity, t, PV, param):
 
         state = copy.deepcopy(state_)
 
@@ -170,6 +172,7 @@ class Env(object):
         self.UAV.location = self.Devices[action].location
         self.UAV.PositionCor.append(self.Devices[action].location)
         self.UAV.PositionList.append(action)
+        self.UAV.VelocityList.append(velocity)
         # if not self.Devices[action].flag:
             # self.Devices[action].flag = True
 

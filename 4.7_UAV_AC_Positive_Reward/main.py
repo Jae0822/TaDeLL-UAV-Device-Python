@@ -55,9 +55,9 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value', 'velocity'])
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-param = {'episodes': 25, 'nTimeUnits': 2000, 'nTimeUnits_random': 2000, 'nTimeUnits_force': 2000,
+param = {'episodes': 20, 'nTimeUnits': 2000, 'nTimeUnits_random': 2000, 'nTimeUnits_force': 2000,
          'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
-         'num_Devices': 25, 'V': 36, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+         'num_Devices': 25, 'V': 24, 'V_Lim': 30, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])
 
@@ -119,7 +119,7 @@ Devices_force = copy.deepcopy(Devices)
 UAV_force = copy.deepcopy(UAV)
 env_force = Env(Devices_force, UAV_force, param['nTimeUnits_force'])
 
-model = Policy(1 * param['num_Devices'], param['num_Devices'] + 1, 30)
+model = Policy(1 * param['num_Devices'], param['num_Devices'] + 1, param['V_Lim'])
 optimizer = optim.Adam(model.parameters(), lr=param['learning_rate'])  # lr=3e-2
 eps = np.finfo(np.float32).eps.item()
 
@@ -236,7 +236,7 @@ def learning():
             # take the action
             # state, reward, reward_Regular, t = env.step(state, action, t)
             t = t + Fly_time
-            state, reward_, reward_rest, reward = env.step(state, action, t, PV, param)
+            state, reward_, reward_rest, reward = env.step(state, action, velocity, t, PV, param)
             print(reward_)
             print(reward_rest)
             print(reward)
@@ -304,6 +304,7 @@ def learning():
         x = i_episode
         logging_timeline[0][x]['UAV_PositionList'] = UAV.PositionList
         logging_timeline[0][x]['UAV_PositionCor'] = UAV.PositionCor
+        logging_timeline[0][x]['UAV_VelocityList'] = UAV.VelocityList
         logging_timeline[0][x]['UAV_Reward'] = UAV.Reward
         logging_timeline[0][x]['UAV_Energy'] = UAV.Energy
         logging_timeline[0][x]['UAV_R_E'] = UAV.Sum_R_E
@@ -375,8 +376,10 @@ def painting(avg):
     # ax.scatter(x, y)
     for i, txt in enumerate(No):
         ax0.annotate(txt, (x[i], y[i]))
+    ax0.plot([0],[0], label = 'V_Lim:' + str(param['V_Lim']) + ',  V:' + str(param['V']))
     ax0.set_xlim(0, 1000)
     ax0.set_ylim(0, 1000)
+    ax0.legend(loc="best")
     ax0.grid(True)
 
 
@@ -726,7 +729,7 @@ def main():
         if t > param['nTimeUnits_random']:
             break
         n = n + 1
-        state_random, reward_, reward_rest, reward_random  = env_random.step(state_random, action_random, t, PV, param)
+        state_random, reward_, reward_rest, reward_random  = env_random.step(state_random, action_random, param['V'], t, PV, param)
         # model.rewards_random.append(reward_random)
         PV_random.append(PV)
         Reward_random.append(reward_random)
@@ -787,7 +790,7 @@ def main():
         if t > param['nTimeUnits_force']:
             break
         n = n + 1
-        state_force, reward_, reward_rest, reward_force = env_force.step(state_force, action_force, t, PV, param)
+        state_force, reward_, reward_rest, reward_force = env_force.step(state_force, action_force, param['V'], t, PV, param)
         PV_force.append(PV)
         Reward_force.append(reward_force)
         ep_reward_force += reward_force
