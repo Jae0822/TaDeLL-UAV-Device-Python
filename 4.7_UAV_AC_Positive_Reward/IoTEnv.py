@@ -30,7 +30,7 @@ class Device(object):
         self.frequency = frequency
         self.cpu_capacity = cpu_capacity
         self.field = field
-        self.location = field * np.random.random_sample((2, 1))
+        self.location = field * np.random.random_sample((2, 1))  # results are from the “continuous uniform” distribution over the stated interval.
         self.TimeSinceLastVisit = 0
         # self.flag = False  # if the device is visited, then flag = True
 

@@ -61,13 +61,13 @@ fig8, ax8 = plt.subplots(2, sharex=True)
 fig8.suptitle('AoI and CPU cost')
 type = ['Random', 'Force', 'Smart']
 dataAoImean = [np.mean(env_random.UAV.AoI), np.mean(env_force.UAV.AoI),
-               np.mean(logging_timeline[0][10]['UAV_AoI'])]
+               np.mean(logging_timeline[0][x]['UAV_AoI'])]
 dataAoIsum = [np.sum(env_random.UAV.AoI), np.sum(env_force.UAV.AoI),
-              np.sum(logging_timeline[0][10]['UAV_AoI'])]
+              np.sum(logging_timeline[0][x]['UAV_AoI'])]
 dataCPUmean = [np.mean(env_random.UAV.CPU), np.mean(env_force.UAV.CPU),
-               np.mean(logging_timeline[0][10]['UAV_CPU'])]
+               np.mean(logging_timeline[0][x]['UAV_CPU'])]
 dataCPUsum = [np.sum(env_random.UAV.CPU), np.sum(env_force.UAV.CPU),
-              np.sum(logging_timeline[0][10]['UAV_CPU'])]
+              np.sum(logging_timeline[0][x]['UAV_CPU'])]
 ax8[0].bar(type, [k * param['beta'] for k in dataAoImean], label='AoI')
 ax8[0].bar(type, [k * param['beta'] for k in dataCPUmean], bottom=np.array(dataAoImean) * param['beta'], label='CPU')
 ax8[0].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
@@ -85,6 +85,11 @@ plt.show()
 
 
 
+fig0, ax0 = plt.subplots(1)
+s = np.random.uniform(0,1000,(2,25))
+ax0.scatter(s[0], s[1])
+ax0.set_xlim(0, 1000)
+ax0.set_ylim(0, 1000)
 
 
 

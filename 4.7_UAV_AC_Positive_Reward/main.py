@@ -55,9 +55,10 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value', 'velocity'])
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-param = {'episodes': 20, 'nTimeUnits': 2000, 'nTimeUnits_random': 2000, 'nTimeUnits_force': 2000,
+length = 2000
+param = {'episodes': 25, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
          'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
-         'num_Devices': 25, 'V': 24, 'V_Lim': 30, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+         'num_Devices': 25, 'V': 20, 'V_Lim': 20, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])
 
@@ -592,17 +593,18 @@ def painting(avg):
 
     d = 1
     # †††††††††††††††††††††††††††††††††††††††柱状图††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
+    x = param['episodes']
     fig7, ax7 = plt.subplots(2, sharex=True)
     fig7.suptitle('Devcie and UAV cost')
     type = ['Random', 'Force', 'Smart']
     data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward),
-               -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+               -np.mean(logging_timeline[0][x]['UAV_Reward'])]
     data1111 = [-np.sum(env_random.UAV.Reward), -np.sum(env_force.UAV.Reward),
-                -np.sum(logging_timeline[0][param['episodes']]['UAV_Reward'])]
+                -np.sum(logging_timeline[0][x]['UAV_Reward'])]
     data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
-              np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+              np.mean(logging_timeline[0][x]['UAV_Energy'])]
     data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
-               np.sum(logging_timeline[0][param['episodes']]['UAV_Energy'])]
+               np.sum(logging_timeline[0][x]['UAV_Energy'])]
     ax7[0].bar(type, [k * param['mu'] for k in data111], label='reward')
     ax7[0].bar(type, [k * param['mu'] for k in data22], bottom=np.array(data111) * param['mu'], label='energy')
     ax7[0].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
@@ -653,18 +655,18 @@ def painting(avg):
     # fig7.suptitle('The Sum')
     # ax7.set_ylabel('Total Cost')  # Add a y-label to the axes.
     # plt.show()
-
+    x = param['episodes']
     fig8, ax8 = plt.subplots(2, sharex=True)
     fig8.suptitle('AoI and CPU cost')
     type = ['Random', 'Force', 'Smart']
     dataAoImean = [np.mean(env_random.UAV.AoI), np.mean(env_force.UAV.AoI),
-               np.mean(logging_timeline[0][param['episodes']]['UAV_AoI'])]
+               np.mean(logging_timeline[0][x]['UAV_AoI'])]
     dataAoIsum = [np.sum(env_random.UAV.AoI), np.sum(env_force.UAV.AoI),
-                np.sum(logging_timeline[0][param['episodes']]['UAV_AoI'])]
+                np.sum(logging_timeline[0][x]['UAV_AoI'])]
     dataCPUmean = [np.mean(env_random.UAV.CPU), np.mean(env_force.UAV.CPU),
-              np.mean(logging_timeline[0][param['episodes']]['UAV_CPU'])]
+              np.mean(logging_timeline[0][x]['UAV_CPU'])]
     dataCPUsum = [np.sum(env_random.UAV.CPU), np.sum(env_force.UAV.CPU),
-               np.sum(logging_timeline[0][param['episodes']]['UAV_CPU'])]
+               np.sum(logging_timeline[0][x]['UAV_CPU'])]
     ax8[0].bar(type, [k * param['beta'] for k in dataAoImean], label='AoI')
     ax8[0].bar(type, [k * param['beta'] for k in dataCPUmean], bottom=np.array(dataAoImean) * param['beta'], label='CPU')
     ax8[0].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
@@ -679,6 +681,16 @@ def painting(avg):
     ax8[1].set_ylabel('Total Cost')  # Add a y-label to the axes.
     plt.show()
 
+    # †††††††††††††††††††††††††††††††††††††††速度图††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
+    V_avg = []
+    for x in range(1, param['episodes']):
+        V_avg.append(mean(logging_timeline[0][x]['UAV_VelocityList']))
+    fig_v, ax_v = plt.subplots(1)
+    ax_v.plot(np.arange(1, param['episodes']), V_avg)
+    ax_v.set_ylabel('Velocity(m/s)')
+    ax_v.set_xlabel('episodes')
+    ax_v.grid(True)
+    fig_v.suptitle('Velocity trend')
 
 
 
