@@ -844,6 +844,8 @@ def main():
 
     with open('fig_temp.pkl', 'wb') as f:
         pickle.dump([model, env, env_random, env_force, param, avg, logging_timeline], f)
+    # with open('fig_temp.pkl', 'rb') as f:
+    #     model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
     # †††††††††††††††††††††††††††††††††††††††Painting††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     painting(avg)
