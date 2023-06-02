@@ -191,6 +191,7 @@ class Env(object):
         # 4.UAV处得知的，每一个节点是否有新任务。当前节点信息最准确 # 每一个节点上次访问的时候是否是新任务(因为不知道其他节点当前的情况)，#当前节点当前任务被访问，故归0。其他节点不知道
         # state[action + self.num_Devices] = 0
         # 5. 当前任务出现时间长短（需要考虑飞行时间，也存在估计可能），正常情况+1，遇到新任务归0
+        # FIXME: 这里的不对，加的FLY TIME要改，不再是1了！！！！
         for i in range(self.num_Devices):  # 对所有的device，包括当前。
             state[i] += 1 # 当前flying time为1
         # UAV的初始位置
@@ -557,7 +558,7 @@ class Policy(nn.Module):
         # a = F.relu(self.action_affine1(x))
         action_prob = F.softmax(self.action_head(x), dim=-1)
         velocity = torch.sigmoid(self.velocity_head(x))
-        velocity = velocity * self.velocity_lim
+        velocity = max(velocity * self.velocity_lim, 5)
 
         # critic: evaluates being in the state s_t
         # v = F.relu(self.value_affine1(x))

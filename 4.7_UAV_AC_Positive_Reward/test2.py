@@ -1,3 +1,8 @@
+"""
+画图：UAV速度从10-30，RANDOM和FORCE的REWARD是多少
+双纵坐标，两条曲线
+"""
+
 import numpy as np
 import pickle
 import matplotlib.pyplot as plt
@@ -8,90 +13,85 @@ import random
 
 from env import Task
 
-fig, ax = plt.subplots(1)
-fig.suptitle('1')
-
-
-fig8, ax8 = plt.subplots(2)
-ax8[0].plot(range(10), 'r')
-ax8[1].plot(range(10), 'r')
-fig8.suptitle('8')
-
-fig9, ax9 = plt.subplots(2,2)
-ax9[0,0].plot(range(10), 'r')
-ax9[0,1].plot(range(10), 'b')
-ax9[1,0].plot(range(10), 'g')
-ax9[1,1].plot(range(10), 'k')
-fig9.suptitle('9')
-
-
-V_avg = []
-for x in range(1, param['episodes']):
-    V_avg.append(mean(logging_timeline[0][x]['UAV_VelocityList']))
-fig_v, ax_v = plt.subplots(1)
-ax_v.plot(np.arange(1, param['episodes']), V_avg)
-fig_v.suptitle('Velocity trend')
-
-fig7, ax7 = plt.subplots(2, sharex=True)
-fig7.suptitle('Devcie and UAV cost')
-type = ['Random', 'Force', 'Smart']
-data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward),
-           -np.mean(logging_timeline[0][10]['UAV_Reward'])]
-data1111 = [-np.sum(env_random.UAV.Reward), -np.sum(env_force.UAV.Reward),
-            -np.sum(logging_timeline[0][10]['UAV_Reward'])]
-data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
-          np.mean(logging_timeline[0][10]['UAV_Energy'])]
-data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
-           np.sum(logging_timeline[0][10]['UAV_Energy'])]
-ax7[0].bar(type, [k * param['mu'] for k in data111], label='reward')
-ax7[0].bar(type, [k * param['mu'] for k in data22], bottom=np.array(data111) * param['mu'], label='energy')
-ax7[0].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
-ax7[0].legend(loc="best")
-ax7[0].set_ylabel('Total Cost')  # Add a y-label to the axes.
-ax7[0].set_title('The Mean')
-ax7[1].bar(type, [k * param['mu'] for k in data1111], label='reward')
-ax7[1].bar(type, [k * param['mu'] for k in data222], bottom=np.array(data1111) * param['mu'], label='energy')
-ax7[1].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
-ax7[1].legend(loc="best")
-ax7[1].set_ylabel('Total Cost')  # Add a y-label to the axes.
-ax7[1].set_title('The Sum')
-plt.show()
-
-fig8, ax8 = plt.subplots(2, sharex=True)
-fig8.suptitle('AoI and CPU cost')
-type = ['Random', 'Force', 'Smart']
-dataAoImean = [np.mean(env_random.UAV.AoI), np.mean(env_force.UAV.AoI),
-               np.mean(logging_timeline[0][x]['UAV_AoI'])]
-dataAoIsum = [np.sum(env_random.UAV.AoI), np.sum(env_force.UAV.AoI),
-              np.sum(logging_timeline[0][x]['UAV_AoI'])]
-dataCPUmean = [np.mean(env_random.UAV.CPU), np.mean(env_force.UAV.CPU),
-               np.mean(logging_timeline[0][x]['UAV_CPU'])]
-dataCPUsum = [np.sum(env_random.UAV.CPU), np.sum(env_force.UAV.CPU),
-              np.sum(logging_timeline[0][x]['UAV_CPU'])]
-ax8[0].bar(type, [k * param['beta'] for k in dataAoImean], label='AoI')
-ax8[0].bar(type, [k * param['beta'] for k in dataCPUmean], bottom=np.array(dataAoImean) * param['beta'], label='CPU')
-ax8[0].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
-ax8[0].legend(loc="best")
-ax8[0].set_title('The Mean')
-ax8[0].set_ylabel('The mean cost')  # Add a y-label to the axes.
-ax8[1].bar(type, [k * param['beta'] for k in dataAoIsum], label='AoI')
-ax8[1].bar(type, [k * param['beta'] for k in dataCPUsum], bottom=np.array(dataAoIsum) * param['beta'], label='CPU')
-ax8[1].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
-ax8[1].legend(loc="best")
-ax8[1].set_title('The Sum')
-ax8[1].set_ylabel('The sum Cost')  # Add a y-label to the axes.
-plt.show()
 
 
 
-
-fig0, ax0 = plt.subplots(1)
-s = np.random.uniform(0,1000,(2,25))
-ax0.scatter(s[0], s[1])
-ax0.set_xlim(0, 1000)
-ax0.set_ylim(0, 1000)
+random_reward = []
+force_reward = []
+random_Dcost = []
+force_Dcost = []
 
 
+# velovity = 10
+with open('fig_A21.pkl', 'rb') as f:
+    model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
+data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward)]
+data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy)]
+dataAoImean = [np.mean(env_random.UAV.AoI), np.mean(env_force.UAV.AoI)]
+dataCPUmean = [np.mean(env_random.UAV.CPU), np.mean(env_force.UAV.CPU)]
+random_reward.append((data111[0] + data22[0]) * 0.5)
+force_reward.append((data111[1] + data22[1]) * 0.5)
+random_Dcost.append((dataAoImean[0] + dataCPUmean[0]) * 0.5)
+force_Dcost.append((dataAoImean[1] + dataCPUmean[1]) * 0.5)
+
+
+# velovity = 15
+with open('fig_A19.pkl', 'rb') as f:
+    model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
+data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward)]
+data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy)]
+dataAoImean = [np.mean(env_random.UAV.AoI), np.mean(env_force.UAV.AoI)]
+dataCPUmean = [np.mean(env_random.UAV.CPU), np.mean(env_force.UAV.CPU)]
+random_reward.append((data111[0] + data22[0]) * 0.5)
+force_reward.append((data111[1] + data22[1]) * 0.5)
+random_Dcost.append((dataAoImean[0] + dataCPUmean[0]) * 0.5)
+force_Dcost.append((dataAoImean[1] + dataCPUmean[1]) * 0.5)
+
+
+# velovity = 20
+with open('fig_A18.pkl', 'rb') as f:
+    model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
+data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward)]
+data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy)]
+dataAoImean = [np.mean(env_random.UAV.AoI), np.mean(env_force.UAV.AoI)]
+dataCPUmean = [np.mean(env_random.UAV.CPU), np.mean(env_force.UAV.CPU)]
+random_reward.append((data111[0] + data22[0]) * 0.5)
+force_reward.append((data111[1] + data22[1]) * 0.5)
+random_Dcost.append((dataAoImean[0] + dataCPUmean[0]) * 0.5)
+force_Dcost.append((dataAoImean[1] + dataCPUmean[1]) * 0.5)
+
+
+# velovity = 24
+with open('fig_A17.pkl', 'rb') as f:
+    model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
+data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward)]
+data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy)]
+dataAoImean = [np.mean(env_random.UAV.AoI), np.mean(env_force.UAV.AoI)]
+dataCPUmean = [np.mean(env_random.UAV.CPU), np.mean(env_force.UAV.CPU)]
+random_reward.append((data111[0] + data22[0]) * 0.5)
+force_reward.append((data111[1] + data22[1]) * 0.5)
+random_Dcost.append((dataAoImean[0] + dataCPUmean[0]) * 0.5)
+force_Dcost.append((dataAoImean[1] + dataCPUmean[1]) * 0.5)
+
+
+# velovity = 36
+with open('fig_A13.pkl', 'rb') as f:
+    model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
+data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward)]
+data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy)]
+random_reward.append((data111[0] + data22[0]) * 0.5)
+force_reward.append((data111[1] + data22[1]) * 0.5)
 
 
 
+fig, ax1 = plt.subplots(1)
+ax2 = ax1.twinx()
+ax1.set_title("The reward of UAV-Devices system")  # Add a title to the axes.
+ax1.plot(np.arange(10, 35, 5), random_reward, color='C1', lw=3,  label='Random:')
+ax2.plot(np.arange(10, 35, 5), force_reward,  color='C2', lw=3, label='Force:')
+ax1.set_xlabel('UAV Velocity')
+ax1.set_ylabel('Random Reward', color='C1', fontsize=14)
+ax2.set_ylabel('Force Reward', color='C2', fontsize=14)
+ax1.grid(True)
+
+d = 1
