@@ -9,7 +9,13 @@ FIG_2:总的收敛图，截取前16个EPISOD，并微调两个数值
 FIG_3:UAV-DEVICE的 reward和ENERGY柱状图
 FIG_4:DEVICE的AOI和CPU柱状图
 FIG_5:上面两幅图的综合
+# 
+注意：
+FIG3, FIG4, FIG5都是采用UAV的REWAR，energy数据来画图，UAV的REWARD是每一个飞行时的️当前IOT DEVICE的时段REWARD，
+只有Devices[i].KeyReward才是全部的都考虑的，也就是test4.py里面的计算方式。
+# 
 """
+
 
 
 import numpy as np
