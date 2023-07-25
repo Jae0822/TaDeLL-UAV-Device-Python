@@ -80,6 +80,7 @@ class Uav(object):
         self.init_location = Devices[0].location
         self.location = np.zeros((2,1))
         self.V = V   # m/s
+        self.TimeList = [0]
         self.PositionCor = [self.init_location]  # list of sequent locations in an episode
         self.PositionList = [0]
         self.VelocityList = []
@@ -110,6 +111,7 @@ class Env(object):
 
     def reset(self, Devices, UAV):
         # Reset Devices and UAV
+        UAV.TimeList = [0]
         UAV.location = UAV.init_location
         UAV.PositionCor = [UAV.init_location]
         UAV.PositionList = [0]
@@ -173,6 +175,7 @@ class Env(object):
         # t = t + 1
 
         self.UAV.location = self.Devices[action].location
+        self.UAV.TimeList.append(t)
         self.UAV.PositionCor.append(self.Devices[action].location)
         self.UAV.PositionList.append(action)
         self.UAV.VelocityList.append(velocity)

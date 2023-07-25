@@ -55,8 +55,8 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value', 'velocity'])
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-length = 2000
-param = {'episodes': 25, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
+length = 200
+param = {'episodes': 2, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
          'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
          'num_Devices': 25, 'V': 20, 'V_Lim': 20, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
@@ -303,6 +303,7 @@ def learning():
         #         logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['timeline'][j-1] + logging_timeline[i][EP]['intervals'][j])
         # for x in range(1, EP):
         x = i_episode
+        logging_timeline[0][x]['UAV_TimeList'] = UAV.TimeList
         logging_timeline[0][x]['UAV_PositionList'] = UAV.PositionList
         logging_timeline[0][x]['UAV_PositionCor'] = UAV.PositionCor
         logging_timeline[0][x]['UAV_VelocityList'] = UAV.VelocityList
@@ -732,6 +733,11 @@ def main():
     # log parameters
     print(param)
 
+    # †††††††††††††††††††††††††††††††††††††††Smart Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
+    learning()
+    # †††††††††††††††††††††††††††††††††††††††Smart Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
+
+
 
     # †††††††††††††††††††††††††††††††††††††††Random Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     print("Random trajectory: One Episode Only")
@@ -747,6 +753,7 @@ def main():
         CPoint = env_random.UAV.location  # current location
         NPoint = env_random.Devices[action_random].location  # next location
         distance = np.linalg.norm(CPoint - NPoint)  # Compute the distance of two points
+        env_random.UAV.V = logging_timeline[0][param['episodes']]['UAV_VelocityList'][-1]
         Fly_time = 1 if distance == 0 else math.ceil(distance / env_random.UAV.V)
         PV = UAV_Energy(param['V']) * Fly_time
         t = t + Fly_time
@@ -761,6 +768,7 @@ def main():
         # model.actions_random.append(action_random)
         # model.states_random.append(state_random)
         logging_timeline[0][0]['Reward_random'] = Reward_random
+        logging_timeline[0][0]['Random_UAV_TimeList'] = UAV_random.TimeList
         logging_timeline[0][0]['Random_UAV_PositionList'] = UAV_random.PositionList
         logging_timeline[0][0]['Random_UAV_PositionCor'] = UAV_random.PositionCor
         logging_timeline[0][0]['Random_UAV_VelocityList'] = UAV_random.VelocityList
@@ -829,6 +837,7 @@ def main():
         CPoint = env_force.UAV.location  # current location
         NPoint = env_force.Devices[action_force].location  # next location
         distance = np.linalg.norm(CPoint - NPoint)  # Compute the distance of two points
+        env_force.UAV.V = logging_timeline[0][param['episodes']]['UAV_VelocityList'][-1]
         Fly_time = 1 if distance == 0 else math.ceil(distance / env_force.UAV.V)
         PV = UAV_Energy(param['V']) * Fly_time
         t = t + Fly_time
@@ -840,6 +849,7 @@ def main():
         Reward_force.append(reward_force)
         ep_reward_force += reward_force
         logging_timeline[0][0]['Reward_force'] = Reward_force
+        logging_timeline[0][0]['Force_UAV_TimeList'] = UAV_force.TimeList
         logging_timeline[0][0]['Force_UAV_PositionList'] = UAV_force.PositionList
         logging_timeline[0][0]['Force_UAV_PositionCor'] = UAV_force.PositionCor
         logging_timeline[0][0]['Force_UAV_VelocityList'] = UAV_force.VelocityList
@@ -883,9 +893,6 @@ def main():
 
 
 
-    # †††††††††††††††††††††††††††††††††††††††Smart Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-    learning()
-    # †††††††††††††††††††††††††††††††††††††††Smart Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
 
 
     avg = {}
