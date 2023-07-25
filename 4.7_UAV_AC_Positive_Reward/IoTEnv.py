@@ -119,6 +119,7 @@ class Env(object):
         UAV.Sum_R_E = []
         UAV.AoI = []
         UAV.CPU = []
+        UAV.b = []
         for i in range(len(Devices)):
             # Devices[i].TimeList, Devices[i].TaskList  = Devices[i].gen_TimeTaskList(self.nTimeUnits)   # The list of time that indicates the arrival of a new task
             # Devices[i].nTasks = len(Devices[i].TaskList)
@@ -136,6 +137,7 @@ class Env(object):
             Devices[i].KeyReward = [tsk0.get_value(tsk0.init_policy['theta'])]  # Didn't use pg_rl() cause it has one step of update which I don't need here
             Devices[i].KeyAoI = [tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[0]]
             Devices[i].KeyCPU = [tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[1]]
+            Devices[i].Keyb = [tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[2]]
             Devices[i].nonvisitFlag = True  # To indicate the first visit. This device hasn't been visited.
             Devices[i].rewards = []
             Devices[i].intervals = []
@@ -145,6 +147,7 @@ class Env(object):
             Devices[i].KeyReward_Regular = copy.deepcopy(Devices[i].KeyReward)
             Devices[i].KeyAoI_Regular = copy.deepcopy(Devices[i].KeyAoI)
             Devices[i].KeyCPU_Regular = copy.deepcopy(Devices[i].KeyCPU)
+            Devices[i].Keyb_Regular = copy.deepcopy(Devices[i].Keyb)
         # Reset state
         state = np.concatenate((# [0 for x in range(self.num_Devices)],  # 1.当前节点总的已访问次数  不是已访问次数
                                 # [0 for x in range(self.num_Devices)],  # 2.当前节点、当前任务的已访问次数（新任务归1或者0，否则+1。其他节点不变
@@ -326,6 +329,7 @@ class Env(object):
             device.KeyReward.append(tsk0.get_value(tsk0.policy['theta']))
             device.KeyAoI.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[0])
             device.KeyCPU.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[1])
+            device.Keyb.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[2])
             # 2: Regular (Without Warm Start)
             pg_rl(device.task_Regular, 1)  # update the PG policy for one step
             device.KeyPol_Regular.append(device.task_Regular.policy)
@@ -334,6 +338,7 @@ class Env(object):
             device.KeyReward_Regular.append(tsk0_Regular.get_value(tsk0_Regular.policy['theta']))
             device.KeyAoI_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[0])
             device.KeyCPU_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[1])
+            device.Keyb_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[2])
         else:
             "访问间隔里有1出现"
             for i in np.nonzero(VisitTime)[0]:
@@ -351,6 +356,7 @@ class Env(object):
                 device.KeyReward.append(tsk0.get_value(tsk0.init_policy['theta']))
                 device.KeyAoI.append(tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[0])
                 device.KeyCPU.append(tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[1])
+                device.Keyb.append(tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[2])
                 # 2: Regular (Without Warm Start)
                 device.task_Regular = device.TaskList_Regular[device.ta_dex]
                 device.KeyPol_Regular.append(device.task_Regular.init_policy)
@@ -359,6 +365,7 @@ class Env(object):
                 device.KeyReward_Regular.append(tsk0_Regular.get_value(tsk0_Regular.init_policy['theta']))
                 device.KeyAoI_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.init_policy['theta'])[0])
                 device.KeyCPU_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.init_policy['theta'])[1])
+                device.Keyb_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.init_policy['theta'])[2])
                 state[action] = t - device.KeyTime[-1]
             if VisitTime[-1] == 0:    # 需要再对t做一个TaDeLL的更新
                 device.KeyTime.append(t)
@@ -370,6 +377,7 @@ class Env(object):
                 device.KeyReward.append(tsk0.get_value(tsk0.policy['theta']))
                 device.KeyAoI.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[0])
                 device.KeyCPU.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[1])
+                device.Keyb.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[2])
                 # 2: Regular (Without Warm Start)
                 pg_rl(device.task_Regular, 1)  # update the PG policy for one step
                 device.KeyPol_Regular.append(device.task_Regular.policy)
@@ -378,6 +386,7 @@ class Env(object):
                 device.KeyReward_Regular.append(tsk0_Regular.get_value(tsk0_Regular.policy['theta']))
                 device.KeyAoI_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[0])
                 device.KeyCPU_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[1])
+                device.Keyb_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[2])
 
 
 
@@ -421,6 +430,7 @@ class Env(object):
         reward_ = 0
         AoI_ = 0
         CPU_ = 0
+        b_ = 0
         for index in range(index_start, index_end):
             if index + 1 > len(device.KeyTime)-1:
                 print('Error captured!')
@@ -434,6 +444,7 @@ class Env(object):
             """
             AoI_ += device.KeyAoI[index] * interval
             CPU_ += device.KeyCPU[index] * interval
+            b_ += device.Keyb[index] * interval
 
 
 
@@ -443,6 +454,7 @@ class Env(object):
         reward_ = reward_ / (device.KeyTime[index_end] - device.KeyTime[index_start]) # not the same as  device.intervals[-1]
         AoI_ = AoI_ / (device.KeyTime[index_end] - device.KeyTime[index_start])
         CPU_ = CPU_ / (device.KeyTime[index_end] - device.KeyTime[index_start])
+        b_ = b_ / (device.KeyTime[index_end] - device.KeyTime[index_start])
 
         # add other devices' reward into account
         """
@@ -496,6 +508,8 @@ class Env(object):
         self.UAV.Sum_R_E.append(reward_fair1)
         self.UAV.AoI.append(AoI_)
         self.UAV.CPU.append(CPU_)
+        self.UAV.b.append(b_)
+
 
 
         # print("done one step")
@@ -558,7 +572,9 @@ class Policy(nn.Module):
         # a = F.relu(self.action_affine1(x))
         action_prob = F.softmax(self.action_head(x), dim=-1)
         velocity = torch.sigmoid(self.velocity_head(x))
-        velocity = max(velocity * self.velocity_lim, 5)
+        # if velocity < 5:
+        #     d = 1
+        velocity = max(velocity * self.velocity_lim, velocity / velocity  * 5) # 对5的操作，是为了保证velocity依然是TORCH
 
         # critic: evaluates being in the state s_t
         # v = F.relu(self.value_affine1(x))

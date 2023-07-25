@@ -57,7 +57,7 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value', 'velocity'])
 #  dist:
 length = 2000
 param = {'episodes': 25, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
-         'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.3, 'beta': 0.5,
+         'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
          'num_Devices': 25, 'V': 20, 'V_Lim': 20, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])
@@ -311,16 +311,30 @@ def learning():
         logging_timeline[0][x]['UAV_R_E'] = UAV.Sum_R_E
         logging_timeline[0][x]['UAV_AoI'] = UAV.AoI
         logging_timeline[0][x]['UAV_CPU'] = UAV.CPU
+        logging_timeline[0][x]['UAV_b'] = UAV.b
         for i in range(param['num_Devices']):
             logging_timeline[i][x]['intervals'] = Devices[i].intervals
             logging_timeline[i][x]['TimeList'] = Devices[i].TimeList
+            logging_timeline[i][x]['TaskList'] = Devices[i].TaskList
+            logging_timeline[i][x]['KeyTime'] = Devices[i].KeyTime
+            # 记录每一个EPISODE的非REGULAR的数据
             # FIXME: 这里的KEYREWARD只包含了AOI+CPU，没有包含UAV的能耗PV
             # 这里每一个DEVICE只能这样啊，DEVICE不像UAV一样一下一下飞，DEVICE是每一个时隙的
             # 这里的KEYREWARD是上面step输出reward的一部分，不包括UAV的PV，减200的penalty，不包括reward_rest
+            logging_timeline[i][x]['KeyTsk'] = Devices[i].KeyTsk
+            logging_timeline[i][x]['KeyPol'] = Devices[i].KeyPol
             logging_timeline[i][x]['KeyRewards'] = Devices[i].KeyReward
             logging_timeline[i][x]['KeyAoI'] = Devices[i].KeyAoI
             logging_timeline[i][x]['KeyCPU'] = Devices[i].KeyCPU
-            logging_timeline[i][x]['KeyTime'] = Devices[i].KeyTime
+            logging_timeline[i][x]['Keyb'] = Devices[i].Keyb
+            # 记录对应的REGULAR的数据
+            logging_timeline[i][x]['KeyTsk_Regular'] = Devices[i].KeyTsk_Regular
+            logging_timeline[i][x]['KeyPol_Regular'] = Devices[i].KeyPol_Regular
+            logging_timeline[i][x]['KeyReward_Regular'] = Devices[i].KeyReward_Regular
+            logging_timeline[i][x]['KeyAoI_Regular'] = Devices[i].KeyAoI_Regular
+            logging_timeline[i][x]['KeyCPU_Regular'] = Devices[i].KeyCPU_Regular
+            logging_timeline[i][x]['Keyb_Regular'] = Devices[i].Keyb_Regular
+
             # if not logging_timeline[i][x]['intervals']:
             #     continue
             # logging_timeline[i][x]['timeline'].append(logging_timeline[i][x]['intervals'][0])
@@ -719,8 +733,6 @@ def main():
     print(param)
 
 
-
-
     # †††††††††††††††††††††††††††††††††††††††Random Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     print("Random trajectory: One Episode Only")
     # env_random.initialization(Devices_random, UAV_random)
@@ -749,13 +761,34 @@ def main():
         # model.actions_random.append(action_random)
         # model.states_random.append(state_random)
         logging_timeline[0][0]['Reward_random'] = Reward_random
+        logging_timeline[0][0]['Random_UAV_PositionList'] = UAV_random.PositionList
+        logging_timeline[0][0]['Random_UAV_PositionCor'] = UAV_random.PositionCor
+        logging_timeline[0][0]['Random_UAV_VelocityList'] = UAV_random.VelocityList
+        logging_timeline[0][0]['Random_UAV_Reward'] = UAV_random.Reward
+        logging_timeline[0][0]['Random_UAV_Energy'] = UAV_random.Energy
+        logging_timeline[0][0]['Random_UAV_R_E'] = UAV_random.Sum_R_E
+        logging_timeline[0][0]['Random_UAV_AoI'] = UAV_random.AoI
+        logging_timeline[0][0]['Random_UAV_CPU'] = UAV_random.CPU
+        logging_timeline[0][0]['Random_UAV_b'] = UAV_random.b
         for i in range(param['num_Devices']):
             logging_timeline[i][0]['Random_intervals'] = Devices_random[i].intervals
             logging_timeline[i][0]['Random_TimeList'] = Devices_random[i].TimeList
+            logging_timeline[i][0]['Random_KeyTime'] = Devices_random[i].KeyTime
+            logging_timeline[i][0]['Random_TaskList'] = Devices_random[i].TaskList
+            # 记录每一个EPISODE的非REGULAR的数据
+            logging_timeline[i][0]['Random_KeyTsk'] = Devices_random[i].KeyTsk
+            logging_timeline[i][0]['Random_KeyPol'] = Devices_random[i].KeyPol
             logging_timeline[i][0]['Random_KeyRewards'] = Devices_random[i].KeyReward
             logging_timeline[i][0]['Random_KeyAoI'] = Devices_random[i].KeyAoI
             logging_timeline[i][0]['Random_KeyCPU'] = Devices_random[i].KeyCPU
-            logging_timeline[i][0]['Random_KeyTime'] = Devices_random[i].KeyTime
+            logging_timeline[i][0]['Random_Keyb'] = Devices_random[i].Keyb
+            # 记录对应的REGULAR的数据
+            logging_timeline[i][0]['Random_KeyTsk_Regular'] = Devices_random[i].KeyTsk_Regular
+            logging_timeline[i][0]['Random_KeyPol_Regular'] = Devices_random[i].KeyPol_Regular
+            logging_timeline[i][0]['Random_KeyReward_Regular'] = Devices_random[i].KeyReward_Regular
+            logging_timeline[i][0]['Random_KeyAoI_Regular'] = Devices_random[i].KeyAoI_Regular
+            logging_timeline[i][0]['Random_KeyCPU_Regular'] = Devices_random[i].KeyCPU_Regular
+            logging_timeline[i][0]['Random_Keyb_Regular'] = Devices_random[i].Keyb_Regular
             ls1 = [0] + logging_timeline[i][0]['Random_intervals']
             ls2 = logging_timeline[i][0]['Random_KeyRewards']
             if len(logging_timeline[i][0]['Random_KeyTime']) == 1:
@@ -807,13 +840,34 @@ def main():
         Reward_force.append(reward_force)
         ep_reward_force += reward_force
         logging_timeline[0][0]['Reward_force'] = Reward_force
+        logging_timeline[0][0]['Force_UAV_PositionList'] = UAV_force.PositionList
+        logging_timeline[0][0]['Force_UAV_PositionCor'] = UAV_force.PositionCor
+        logging_timeline[0][0]['Force_UAV_VelocityList'] = UAV_force.VelocityList
+        logging_timeline[0][0]['Force_UAV_Reward'] = UAV_force.Reward
+        logging_timeline[0][0]['Force_UAV_Energy'] = UAV_force.Energy
+        logging_timeline[0][0]['Force_UAV_R_E'] = UAV_force.Sum_R_E
+        logging_timeline[0][0]['Force_UAV_AoI'] = UAV_force.AoI
+        logging_timeline[0][0]['Force_UAV_CPU'] = UAV_force.CPU
+        logging_timeline[0][0]['Force_UAV_b'] = UAV_force.b
         for i in range(param['num_Devices']):
             logging_timeline[i][0]['Force_intervals'] = Devices_force[i].intervals
             logging_timeline[i][0]['Force_TimeList'] = Devices_force[i].TimeList
+            logging_timeline[i][0]['Force_KeyTime'] = Devices_force[i].KeyTime
+            logging_timeline[i][0]['Force_TaskList'] = Devices_force[i].TaskList
+            # 记录每一个EPISODE的非REGULAR的数据
+            logging_timeline[i][0]['Force_KeyTsk'] = Devices_force[i].KeyTsk
+            logging_timeline[i][0]['Force_KeyPol'] = Devices_force[i].KeyPol
             logging_timeline[i][0]['Force_KeyRewards'] = Devices_force[i].KeyReward
             logging_timeline[i][0]['Force_KeyAoI'] = Devices_force[i].KeyAoI
             logging_timeline[i][0]['Force_KeyCPU'] = Devices_force[i].KeyCPU
-            logging_timeline[i][0]['Force_KeyTime'] = Devices_force[i].KeyTime
+            logging_timeline[i][0]['Force_Keyb'] = Devices_force[i].Keyb
+            # 记录对应的REGULAR的数据
+            logging_timeline[i][0]['Force_KeyTsk_Regular'] = Devices_force[i].KeyTsk_Regular
+            logging_timeline[i][0]['Force_KeyPol_Regular'] = Devices_force[i].KeyPol_Regular
+            logging_timeline[i][0]['Force_KeyReward_Regular'] = Devices_force[i].KeyReward_Regular
+            logging_timeline[i][0]['Force_KeyAoI_Regular'] = Devices_force[i].KeyAoI_Regular
+            logging_timeline[i][0]['Force_KeyCPU_Regular'] = Devices_force[i].KeyCPU_Regular
+            logging_timeline[i][0]['Force_Keyb_Regular'] = Devices_force[i].Keyb_Regular
             ls1 = [0] + logging_timeline[i][0]['Force_intervals']
             ls2 = logging_timeline[i][0]['Force_KeyRewards']
             if len(logging_timeline[i][0]['Force_KeyTime']) == 1:
