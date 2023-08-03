@@ -179,8 +179,8 @@ def finish_episode():
         advantage = R - value.item()
 
         # calculate actor (policy) loss
-        # policy_losses.append(-log_prob * advantage - velocity * advantage)
-        policy_losses.append(-log_prob * advantage)
+        policy_losses.append(-log_prob * advantage - velocity * advantage)
+        # policy_losses.append(-log_prob * advantage)
 
         # calculate critic (value) loss using L1 smooth loss
         value_losses.append(F.smooth_l1_loss(value, torch.tensor([R])))
@@ -247,9 +247,6 @@ def learning():
             print(Fly_time)
             PV = UAV_Energy(velocity) * Fly_time
 
-            pppvvv = float(PV)
-            if math.isnan(pppvvv):
-                luck = 1
 
             # take the action
             # state, reward, reward_Regular, t = env.step(state, action, t)

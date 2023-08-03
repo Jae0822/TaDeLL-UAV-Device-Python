@@ -544,7 +544,7 @@ class Policy(nn.Module):
         # self.action_affine1 = nn.Linear(32, 64)
         self.action_head = nn.Linear(64, output_size - 1)
         self.velocity_head = nn.Linear(64, 1)
-        self.velocity_head.weight.requires_grad_(False) # 禁用梯度
+        # self.velocity_head.weight.requires_grad_(False) # 禁用梯度
 
         # critic's layer
         # self.value_affine1 = nn.Linear(32, 64)
@@ -579,15 +579,14 @@ class Policy(nn.Module):
         print('velocity:', velocity)
         # if velocity < 5:
         #     d = 1
-        # velocity = max(velocity * self.velocity_lim, velocity / velocity * 5) # 对5的操作，是为了保证左边的velocity依然是TORCH
-        # luck = float(velocity.item())
-        # luck = float(velocity[0])
-        # if math.isnan(luck):
-        #     luck = 1
+        velocity = max(velocity * self.velocity_lim, velocity / velocity * 5) # 对5的操作，是为了保证左边的velocity依然是TORCH
+        # 取下限的另一种方法，可以避免NAN
+        # vv[0] = 5
+        # velocity = max(velocity * self.velocity_lim, vv) # 对5的操作，是为了保证左边的velocity依然是TORCH
+        # 锁定速度值，并确保不出现NAN
+        # if velocity.isnan():
         #     velocity[0] = 35
-        if velocity.isnan():
-            velocity[0] = 35
-        velocity[0] = 35  # 用这种方式更保险，避免了出现NAN的情况，强制采用一个固定速度 [10, 15, 20, 25, 30, 35, 40]
+        # velocity[0] = 35  # 用这种方式更保险，避免了出现NAN的情况，强制采用一个固定速度 [10, 15, 20, 25, 30, 35, 40]
         # velocity = velocity / velocity * 35  # 强制采用一个固定速度 [10, 15, 20, 25, 30, 35, 40]
         # critic: evaluates being in the state s_t
         # v = F.relu(self.value_affine1(x))
