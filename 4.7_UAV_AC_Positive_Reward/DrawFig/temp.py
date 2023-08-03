@@ -3,10 +3,13 @@ import numpy as np
 import matplotlib.cbook as cbook
 import pickle
 from statistics import mean, stdev
-
+import pandas as pd
+import seaborn as sns
+import seaborn.objects as so
 
 """
-画不同的速度收敛图，matplotlib, fill_between
+画不同的速度收敛图的尝试，matplotlib, fill_between
+全部舍弃了，未采纳
 """
 
 #参考链接： https://matplotlib.org/3.7.1/gallery/lines_bars_and_markers/fill_between_alpha.html
@@ -53,6 +56,18 @@ Vmin = min(V)
 V_min_real = min(V_real)
 
 
+#  4 --------------------------------
+# 用SEABORN画速度收敛图的尝试
+df = pd.DataFrame()
+for x in range(1, param['episodes']):
+    # temp = logging_timeline[0][x]['UAV_VelocityList']
+    v = logging_timeline[0][x]['UAV_VelocityList']
+    dd = {'episode': x, 'steps': np.arange(1, len(v) + 1), 'v': v}
+    df0 = pd.DataFrame(data=dd)
+    df = df.append(df0)
+sns.lineplot(data=df, x="episode", y="v")
+
+
 
 # 1 --------------------------------
 fig, ax = plt.subplots(1)
@@ -77,6 +92,7 @@ ax.plot(np.arange(num/2, num * (param['episodes'] - 1), num), avg2,'C0', alpha =
 fig, ax = plt.subplots(1)
 ax.fill_between(np.arange(1, len(V_real) + 1), V_min_real, V_real, alpha=0.7)
 ax.plot(np.arange(num/2, num * (param['episodes'] - 1), num), avg2,'red', alpha = 1)
+
 
 
 

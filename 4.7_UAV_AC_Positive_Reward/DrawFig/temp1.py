@@ -1,31 +1,32 @@
-"""
-用SEABORN画速度收敛图的尝试
-"""
-
 import numpy as np
-import pandas as pd
-import pickle
+import math
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-
-import seaborn as sns
-import seaborn.objects as so
-
-
-with open('fig_A19.pkl', 'rb') as f:
-    model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
-
-df = pd.DataFrame()
-for x in range(1, param['episodes']):
-    # temp = logging_timeline[0][x]['UAV_VelocityList']
-    v = logging_timeline[0][x]['UAV_VelocityList']
-    dd = {'episode': x, 'steps': np.arange(1, len(v) + 1), 'v': v}
-    df0 = pd.DataFrame(data=dd)
-    df = df.append(df0)
-
-
-sns.lineplot(data=df, x="episode", y="v")
+# n1 = float('nan')
+#
+# math.isnan(n1)
+#
+# t1 = torch.tensor([2,4], dtype = torch.float64)
+# t2 = torch.tensor([2], dtype = torch.float64)
+#
+# self.velocity_head
+#
+#
+#
+# self.velocity_head.weight.is_leaf
+#
+# self.velocity_head.weight.requires_grad
+#
+# self.velocity_head.weight.requires_grad_(False)
 
 
-d = 1
+
+
+
+
+
+
+
+luck = 1

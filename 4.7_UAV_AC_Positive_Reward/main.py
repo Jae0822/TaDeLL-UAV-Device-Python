@@ -55,12 +55,14 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value', 'velocity'])
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
 #  dist:
-length = 200
-param = {'episodes': 2, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
+length = 2000
+param = {'episodes': 25, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
          'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
-         'num_Devices': 25, 'V': 20, 'V_Lim': 20, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+         'num_Devices': 25, 'V': 35, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])
+torch.set_num_interop_threads(8)
+torch.set_num_threads(8)
 
 Devices = []
 # for i in range(param['num_Devices']):
@@ -131,6 +133,9 @@ def select_action(state):
     probs, state_value, velocity = model(state)
 
     # create a categorical distribution over the list of probabilities of actions
+    print(probs)
+    print(state_value)
+    print(velocity)
     m = Categorical(probs)
 
     # and sample an action using the distribution
@@ -158,6 +163,7 @@ def finish_episode():
     saved_actions = model.saved_actions
     policy_losses = []  # list to save actor (policy) loss
     value_losses = []  # list to save critic (value) loss
+    # velocity_losses = []
     returns = []  # list to save the true values
 
     # calculate the true value using rewards returned from the environment
@@ -173,16 +179,23 @@ def finish_episode():
         advantage = R - value.item()
 
         # calculate actor (policy) loss
-        policy_losses.append(-log_prob * advantage - velocity * advantage)
+        # policy_losses.append(-log_prob * advantage - velocity * advantage)
+        policy_losses.append(-log_prob * advantage)
 
         # calculate critic (value) loss using L1 smooth loss
         value_losses.append(F.smooth_l1_loss(value, torch.tensor([R])))
+
+        # 尝试添加速度
+        # velocity_losses.append(F.smooth_l1_loss(velocity, torch.tensor([R])))
+
+
 
     # reset gradients
     optimizer.zero_grad()
 
     # sum up all the values of policy_losses and value_losses
     loss = torch.stack(policy_losses).sum() + torch.stack(value_losses).sum()
+           # + torch.stack(velocity_losses).sum()
 
     # perform backprop
     loss.backward()
@@ -233,6 +246,10 @@ def learning():
             # t = t + Fly_time
             print(Fly_time)
             PV = UAV_Energy(velocity) * Fly_time
+
+            pppvvv = float(PV)
+            if math.isnan(pppvvv):
+                luck = 1
 
             # take the action
             # state, reward, reward_Regular, t = env.step(state, action, t)
@@ -307,12 +324,12 @@ def learning():
         logging_timeline[0][x]['UAV_PositionList'] = UAV.PositionList
         logging_timeline[0][x]['UAV_PositionCor'] = UAV.PositionCor
         logging_timeline[0][x]['UAV_VelocityList'] = UAV.VelocityList
-        logging_timeline[0][x]['UAV_Reward'] = UAV.Reward
-        logging_timeline[0][x]['UAV_Energy'] = UAV.Energy
-        logging_timeline[0][x]['UAV_R_E'] = UAV.Sum_R_E
-        logging_timeline[0][x]['UAV_AoI'] = UAV.AoI
-        logging_timeline[0][x]['UAV_CPU'] = UAV.CPU
-        logging_timeline[0][x]['UAV_b'] = UAV.b
+        logging_timeline[0][x]['UAV_Reward'] = UAV.Reward  # 设备的COST(AOI+CPU)，负数，绝对值越小越好
+        logging_timeline[0][x]['UAV_Energy'] = UAV.Energy  # UAV的飞行能量，正数，绝对值越小越好
+        logging_timeline[0][x]['UAV_R_E'] = UAV.Sum_R_E  # 上面两项（REWARD+ENERGY）的和，负数，绝对值越小越好（这个是STEP输出的最后一个REWARD，优化目标本标，优化的是每个EPISODE的均值：Ep_reward）
+        logging_timeline[0][x]['UAV_AoI'] = UAV.AoI  # 设备的AOI，正数，绝对值越小越好
+        logging_timeline[0][x]['UAV_CPU'] = UAV.CPU  # 设备的CPU，正数，绝对值越小越好
+        logging_timeline[0][x]['UAV_b'] = UAV.b      # 设备的B，正数，绝对值越小越好
         for i in range(param['num_Devices']):
             logging_timeline[i][x]['intervals'] = Devices[i].intervals
             logging_timeline[i][x]['TimeList'] = Devices[i].TimeList
@@ -753,7 +770,7 @@ def main():
         CPoint = env_random.UAV.location  # current location
         NPoint = env_random.Devices[action_random].location  # next location
         distance = np.linalg.norm(CPoint - NPoint)  # Compute the distance of two points
-        env_random.UAV.V = logging_timeline[0][param['episodes']]['UAV_VelocityList'][-1]
+        # env_random.UAV.V = logging_timeline[0][param['episodes']]['UAV_VelocityList'][-1]
         Fly_time = 1 if distance == 0 else math.ceil(distance / env_random.UAV.V)
         PV = UAV_Energy(param['V']) * Fly_time
         t = t + Fly_time
@@ -767,44 +784,47 @@ def main():
         ep_reward_random += reward_random
         # model.actions_random.append(action_random)
         # model.states_random.append(state_random)
-        logging_timeline[0][0]['Reward_random'] = Reward_random
-        logging_timeline[0][0]['Random_UAV_TimeList'] = UAV_random.TimeList
-        logging_timeline[0][0]['Random_UAV_PositionList'] = UAV_random.PositionList
-        logging_timeline[0][0]['Random_UAV_PositionCor'] = UAV_random.PositionCor
-        logging_timeline[0][0]['Random_UAV_VelocityList'] = UAV_random.VelocityList
-        logging_timeline[0][0]['Random_UAV_Reward'] = UAV_random.Reward
-        logging_timeline[0][0]['Random_UAV_Energy'] = UAV_random.Energy
-        logging_timeline[0][0]['Random_UAV_R_E'] = UAV_random.Sum_R_E
-        logging_timeline[0][0]['Random_UAV_AoI'] = UAV_random.AoI
-        logging_timeline[0][0]['Random_UAV_CPU'] = UAV_random.CPU
-        logging_timeline[0][0]['Random_UAV_b'] = UAV_random.b
-        for i in range(param['num_Devices']):
-            logging_timeline[i][0]['Random_intervals'] = Devices_random[i].intervals
-            logging_timeline[i][0]['Random_TimeList'] = Devices_random[i].TimeList
-            logging_timeline[i][0]['Random_KeyTime'] = Devices_random[i].KeyTime
-            logging_timeline[i][0]['Random_TaskList'] = Devices_random[i].TaskList
-            # 记录每一个EPISODE的非REGULAR的数据
-            logging_timeline[i][0]['Random_KeyTsk'] = Devices_random[i].KeyTsk
-            logging_timeline[i][0]['Random_KeyPol'] = Devices_random[i].KeyPol
-            logging_timeline[i][0]['Random_KeyRewards'] = Devices_random[i].KeyReward
-            logging_timeline[i][0]['Random_KeyAoI'] = Devices_random[i].KeyAoI
-            logging_timeline[i][0]['Random_KeyCPU'] = Devices_random[i].KeyCPU
-            logging_timeline[i][0]['Random_Keyb'] = Devices_random[i].Keyb
-            # 记录对应的REGULAR的数据
-            logging_timeline[i][0]['Random_KeyTsk_Regular'] = Devices_random[i].KeyTsk_Regular
-            logging_timeline[i][0]['Random_KeyPol_Regular'] = Devices_random[i].KeyPol_Regular
-            logging_timeline[i][0]['Random_KeyReward_Regular'] = Devices_random[i].KeyReward_Regular
-            logging_timeline[i][0]['Random_KeyAoI_Regular'] = Devices_random[i].KeyAoI_Regular
-            logging_timeline[i][0]['Random_KeyCPU_Regular'] = Devices_random[i].KeyCPU_Regular
-            logging_timeline[i][0]['Random_Keyb_Regular'] = Devices_random[i].Keyb_Regular
-            ls1 = [0] + logging_timeline[i][0]['Random_intervals']
-            ls2 = logging_timeline[i][0]['Random_KeyRewards']
-            if len(logging_timeline[i][0]['Random_KeyTime']) == 1:
-                logging_timeline[i][0]['Random_avg_reward'] = None
-            else:
-                logging_timeline[i][0]['Random_avg_reward'] = sum([x * y for x, y in zip(ls1, ls2)]) / \
-                                                       logging_timeline[i][0]['Random_KeyTime'][-1]
-        print("Random: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(1, n,t,action_random))
+        print("Random: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(1, n,
+                                                                                                                   t,
+                                                                                                                   action_random))
+
+    logging_timeline[0][0]['Reward_random'] = Reward_random
+    logging_timeline[0][0]['Random_UAV_TimeList'] = UAV_random.TimeList
+    logging_timeline[0][0]['Random_UAV_PositionList'] = UAV_random.PositionList
+    logging_timeline[0][0]['Random_UAV_PositionCor'] = UAV_random.PositionCor
+    logging_timeline[0][0]['Random_UAV_VelocityList'] = UAV_random.VelocityList
+    logging_timeline[0][0]['Random_UAV_Reward'] = UAV_random.Reward
+    logging_timeline[0][0]['Random_UAV_Energy'] = UAV_random.Energy
+    logging_timeline[0][0]['Random_UAV_R_E'] = UAV_random.Sum_R_E
+    logging_timeline[0][0]['Random_UAV_AoI'] = UAV_random.AoI
+    logging_timeline[0][0]['Random_UAV_CPU'] = UAV_random.CPU
+    logging_timeline[0][0]['Random_UAV_b'] = UAV_random.b
+    for i in range(param['num_Devices']):
+        logging_timeline[i][0]['Random_intervals'] = Devices_random[i].intervals
+        logging_timeline[i][0]['Random_TimeList'] = Devices_random[i].TimeList
+        logging_timeline[i][0]['Random_KeyTime'] = Devices_random[i].KeyTime
+        logging_timeline[i][0]['Random_TaskList'] = Devices_random[i].TaskList
+        # 记录每一个EPISODE的非REGULAR的数据
+        logging_timeline[i][0]['Random_KeyTsk'] = Devices_random[i].KeyTsk
+        logging_timeline[i][0]['Random_KeyPol'] = Devices_random[i].KeyPol
+        logging_timeline[i][0]['Random_KeyRewards'] = Devices_random[i].KeyReward
+        logging_timeline[i][0]['Random_KeyAoI'] = Devices_random[i].KeyAoI
+        logging_timeline[i][0]['Random_KeyCPU'] = Devices_random[i].KeyCPU
+        logging_timeline[i][0]['Random_Keyb'] = Devices_random[i].Keyb
+        # 记录对应的REGULAR的数据
+        logging_timeline[i][0]['Random_KeyTsk_Regular'] = Devices_random[i].KeyTsk_Regular
+        logging_timeline[i][0]['Random_KeyPol_Regular'] = Devices_random[i].KeyPol_Regular
+        logging_timeline[i][0]['Random_KeyReward_Regular'] = Devices_random[i].KeyReward_Regular
+        logging_timeline[i][0]['Random_KeyAoI_Regular'] = Devices_random[i].KeyAoI_Regular
+        logging_timeline[i][0]['Random_KeyCPU_Regular'] = Devices_random[i].KeyCPU_Regular
+        logging_timeline[i][0]['Random_Keyb_Regular'] = Devices_random[i].Keyb_Regular
+        ls1 = [0] + logging_timeline[i][0]['Random_intervals']
+        ls2 = logging_timeline[i][0]['Random_KeyRewards']
+        if len(logging_timeline[i][0]['Random_KeyTime']) == 1:
+            logging_timeline[i][0]['Random_avg_reward'] = None
+        else:
+            logging_timeline[i][0]['Random_avg_reward'] = sum([x * y for x, y in zip(ls1, ls2)]) / \
+                                                   logging_timeline[i][0]['Random_KeyTime'][-1]
     ave_Reward_random = ep_reward_random / n
     print('Random: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(1, ep_reward_random, ave_Reward_random))
     # †††††††††††††††††††††††††††††††††††††††Random Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
@@ -837,7 +857,7 @@ def main():
         CPoint = env_force.UAV.location  # current location
         NPoint = env_force.Devices[action_force].location  # next location
         distance = np.linalg.norm(CPoint - NPoint)  # Compute the distance of two points
-        env_force.UAV.V = logging_timeline[0][param['episodes']]['UAV_VelocityList'][-1]
+        # env_force.UAV.V = logging_timeline[0][param['episodes']]['UAV_VelocityList'][-1]
         Fly_time = 1 if distance == 0 else math.ceil(distance / env_force.UAV.V)
         PV = UAV_Energy(param['V']) * Fly_time
         t = t + Fly_time
@@ -848,44 +868,44 @@ def main():
         PV_force.append(PV)
         Reward_force.append(reward_force)
         ep_reward_force += reward_force
-        logging_timeline[0][0]['Reward_force'] = Reward_force
-        logging_timeline[0][0]['Force_UAV_TimeList'] = UAV_force.TimeList
-        logging_timeline[0][0]['Force_UAV_PositionList'] = UAV_force.PositionList
-        logging_timeline[0][0]['Force_UAV_PositionCor'] = UAV_force.PositionCor
-        logging_timeline[0][0]['Force_UAV_VelocityList'] = UAV_force.VelocityList
-        logging_timeline[0][0]['Force_UAV_Reward'] = UAV_force.Reward
-        logging_timeline[0][0]['Force_UAV_Energy'] = UAV_force.Energy
-        logging_timeline[0][0]['Force_UAV_R_E'] = UAV_force.Sum_R_E
-        logging_timeline[0][0]['Force_UAV_AoI'] = UAV_force.AoI
-        logging_timeline[0][0]['Force_UAV_CPU'] = UAV_force.CPU
-        logging_timeline[0][0]['Force_UAV_b'] = UAV_force.b
-        for i in range(param['num_Devices']):
-            logging_timeline[i][0]['Force_intervals'] = Devices_force[i].intervals
-            logging_timeline[i][0]['Force_TimeList'] = Devices_force[i].TimeList
-            logging_timeline[i][0]['Force_KeyTime'] = Devices_force[i].KeyTime
-            logging_timeline[i][0]['Force_TaskList'] = Devices_force[i].TaskList
-            # 记录每一个EPISODE的非REGULAR的数据
-            logging_timeline[i][0]['Force_KeyTsk'] = Devices_force[i].KeyTsk
-            logging_timeline[i][0]['Force_KeyPol'] = Devices_force[i].KeyPol
-            logging_timeline[i][0]['Force_KeyRewards'] = Devices_force[i].KeyReward
-            logging_timeline[i][0]['Force_KeyAoI'] = Devices_force[i].KeyAoI
-            logging_timeline[i][0]['Force_KeyCPU'] = Devices_force[i].KeyCPU
-            logging_timeline[i][0]['Force_Keyb'] = Devices_force[i].Keyb
-            # 记录对应的REGULAR的数据
-            logging_timeline[i][0]['Force_KeyTsk_Regular'] = Devices_force[i].KeyTsk_Regular
-            logging_timeline[i][0]['Force_KeyPol_Regular'] = Devices_force[i].KeyPol_Regular
-            logging_timeline[i][0]['Force_KeyReward_Regular'] = Devices_force[i].KeyReward_Regular
-            logging_timeline[i][0]['Force_KeyAoI_Regular'] = Devices_force[i].KeyAoI_Regular
-            logging_timeline[i][0]['Force_KeyCPU_Regular'] = Devices_force[i].KeyCPU_Regular
-            logging_timeline[i][0]['Force_Keyb_Regular'] = Devices_force[i].Keyb_Regular
-            ls1 = [0] + logging_timeline[i][0]['Force_intervals']
-            ls2 = logging_timeline[i][0]['Force_KeyRewards']
-            if len(logging_timeline[i][0]['Force_KeyTime']) == 1:
-                logging_timeline[i][0]['Force_avg_reward'] = None
-            else:
-                logging_timeline[i][0]['Force_avg_reward'] = sum([x * y for x, y in zip(ls1, ls2)]) / \
-                                                       logging_timeline[i][0]['Force_KeyTime'][-1]
         print("Force: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(1, n,t,action_force))
+    logging_timeline[0][0]['Reward_force'] = Reward_force
+    logging_timeline[0][0]['Force_UAV_TimeList'] = UAV_force.TimeList
+    logging_timeline[0][0]['Force_UAV_PositionList'] = UAV_force.PositionList
+    logging_timeline[0][0]['Force_UAV_PositionCor'] = UAV_force.PositionCor
+    logging_timeline[0][0]['Force_UAV_VelocityList'] = UAV_force.VelocityList
+    logging_timeline[0][0]['Force_UAV_Reward'] = UAV_force.Reward
+    logging_timeline[0][0]['Force_UAV_Energy'] = UAV_force.Energy
+    logging_timeline[0][0]['Force_UAV_R_E'] = UAV_force.Sum_R_E
+    logging_timeline[0][0]['Force_UAV_AoI'] = UAV_force.AoI
+    logging_timeline[0][0]['Force_UAV_CPU'] = UAV_force.CPU
+    logging_timeline[0][0]['Force_UAV_b'] = UAV_force.b
+    for i in range(param['num_Devices']):
+        logging_timeline[i][0]['Force_intervals'] = Devices_force[i].intervals
+        logging_timeline[i][0]['Force_TimeList'] = Devices_force[i].TimeList
+        logging_timeline[i][0]['Force_KeyTime'] = Devices_force[i].KeyTime
+        logging_timeline[i][0]['Force_TaskList'] = Devices_force[i].TaskList
+        # 记录每一个EPISODE的非REGULAR的数据
+        logging_timeline[i][0]['Force_KeyTsk'] = Devices_force[i].KeyTsk
+        logging_timeline[i][0]['Force_KeyPol'] = Devices_force[i].KeyPol
+        logging_timeline[i][0]['Force_KeyRewards'] = Devices_force[i].KeyReward
+        logging_timeline[i][0]['Force_KeyAoI'] = Devices_force[i].KeyAoI
+        logging_timeline[i][0]['Force_KeyCPU'] = Devices_force[i].KeyCPU
+        logging_timeline[i][0]['Force_Keyb'] = Devices_force[i].Keyb
+        # 记录对应的REGULAR的数据
+        logging_timeline[i][0]['Force_KeyTsk_Regular'] = Devices_force[i].KeyTsk_Regular
+        logging_timeline[i][0]['Force_KeyPol_Regular'] = Devices_force[i].KeyPol_Regular
+        logging_timeline[i][0]['Force_KeyReward_Regular'] = Devices_force[i].KeyReward_Regular
+        logging_timeline[i][0]['Force_KeyAoI_Regular'] = Devices_force[i].KeyAoI_Regular
+        logging_timeline[i][0]['Force_KeyCPU_Regular'] = Devices_force[i].KeyCPU_Regular
+        logging_timeline[i][0]['Force_Keyb_Regular'] = Devices_force[i].Keyb_Regular
+        ls1 = [0] + logging_timeline[i][0]['Force_intervals']
+        ls2 = logging_timeline[i][0]['Force_KeyRewards']
+        if len(logging_timeline[i][0]['Force_KeyTime']) == 1:
+            logging_timeline[i][0]['Force_avg_reward'] = None
+        else:
+            logging_timeline[i][0]['Force_avg_reward'] = sum([x * y for x, y in zip(ls1, ls2)]) / \
+                                                   logging_timeline[i][0]['Force_KeyTime'][-1]
     ave_Reward_force = ep_reward_force / n
     print('Force: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(1, ep_reward_force, ave_Reward_force))
     # †††††††††††††††††††††††††††††††††††††††Forced Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
