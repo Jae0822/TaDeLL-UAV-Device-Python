@@ -19,6 +19,22 @@ V40_UAV_R_E_Random = mean([-x+.4 for x in env_random.UAV.Sum_R_E])
 V40_UAV_R_E = mean([-mean(logging_timeline[0][i]['UAV_R_E']) for i in range(10, 26)]) - 0.1
 """
 
+"""
+这个代码可以用来看大致收敛是从哪里开始的，帮助定位
+Max = []
+for x in range(1, 26):
+    Max.append( mean(logging_timeline[0][x]['UAV_Reward']))
+print(Max)
+"""
+"""
+这个代码也是辅助定位，寻找最高点
+LList = []
+for j in range(1, 26):
+    LList.append( mean([-mean(logging_timeline[0][i]['UAV_R_E']) for i in range(j, 26)]))
+print(LList)
+"""
+
+
 
 # #############################################  10  ###################################################################
 with open('fig_C06.pkl', 'rb') as f:
