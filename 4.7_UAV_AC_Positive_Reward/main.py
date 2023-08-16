@@ -58,9 +58,10 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value', 'velocity'])
 length = 2000
 param = {'episodes': 25, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
          'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
-         'num_Devices': 25, 'V': 35, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+         'num_Devices': 25, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])
+#torch.device("mps")
 torch.set_num_interop_threads(8)
 torch.set_num_threads(8)
 
@@ -93,8 +94,15 @@ Devices.append(Device(150, 50, param['field']))
 Devices.append(Device(130, 50, param['field']))
 Devices.append(Device(115, 50, param['field']))
 Devices.append(Device(100, 50, param['field']))
+
+# Devices.append(Device(290, 50, param['field']))
+# Devices.append(Device(320, 50, param['field']))
+# Devices.append(Device(90, 50, param['field']))
 # Devices.append(Device(70, 50, param['field']))
 # Devices.append(Device(50, 50, param['field']))
+
+
+
 
 
 
@@ -107,6 +115,32 @@ Devices.append(Device(100, 50, param['field']))
 # Devices.append(Device(100, 50, param['field']))
 # Devices.append(Device(80, 50, param['field']))
 # Devices.append(Device(50, 50, param['field']))
+
+
+
+
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+
+
 
 
 
@@ -131,6 +165,14 @@ def select_action(state):
     # state = torch.from_numpy(state).float()
     state = torch.from_numpy(state).double()
     probs, state_value, velocity = model(state)
+
+    if torch.isnan(probs).any():
+        luck = 1
+    if torch.isnan(state_value).any():
+        luck = 1
+    if torch.isnan(velocity).any():
+        luck = 1
+
 
     # create a categorical distribution over the list of probabilities of actions
     print(probs)
@@ -185,9 +227,28 @@ def finish_episode():
         # calculate critic (value) loss using L1 smooth loss
         value_losses.append(F.smooth_l1_loss(value, torch.tensor([R])))
 
-        # 尝试添加速度
+        # 尝试添加速度：没必要，因为上面计算policy_losses的时候，就已经有了velocity的部分
         # velocity_losses.append(F.smooth_l1_loss(velocity, torch.tensor([R])))
 
+    if any([math.isnan(x) for x in policy_losses]) or any([math.isnan(x) for x in policy_losses]):
+        luck = 1
+    if any([math.isnan(x) for x in value_losses]) or any([math.isinf(x) for x in value_losses]):
+        luck = 1
+    # if any([math.isnan(x) for x in velocity_losses]):
+        luck = 1
+
+
+    # 更新前的weight
+    if torch.isnan(model.affine1.weight).any() or torch.isinf(model.affine1.weight).any():
+        luck = 1
+    if torch.isnan(model.affine2.weight).any() or torch.isinf(model.affine2.weight).any():
+        luck = 1
+    if torch.isnan(model.action_head.weight).any() or torch.isinf(model.action_head.weight).any():
+        luck = 1
+    if torch.isnan(model.value_head.weight).any() or torch.isinf(model.value_head.weight).any():
+        luck = 1
+    if torch.isnan(model.velocity_head.weight).any() or torch.isinf(model.velocity_head.weight).any():
+        luck = 1
 
 
     # reset gradients
@@ -200,6 +261,18 @@ def finish_episode():
     # perform backprop
     loss.backward()
     optimizer.step()
+
+    # 更新后的weight
+    if torch.isnan(model.affine1.weight).any() or torch.isinf(model.affine1.weight).any():
+        luck = 1
+    if torch.isnan(model.affine2.weight).any() or torch.isinf(model.affine2.weight).any():
+        luck = 1
+    if torch.isnan(model.action_head.weight).any() or torch.isinf(model.action_head.weight).any():
+        luck = 1
+    if torch.isnan(model.value_head.weight).any() or torch.isinf(model.value_head.weight).any():
+        luck = 1
+    if torch.isnan(model.velocity_head.weight).any() or torch.isinf(model.velocity_head.weight).any():
+        luck = 1
 
     # reset rewards and action buffer
     del model.rewards[:]
@@ -234,6 +307,11 @@ def learning():
         # for t in range(0, param['nTimeUnits']):
 
             # select action from policy
+            print('state:', state)
+
+            if np.isnan(state).any():
+                luck = 1
+
             action, velocity = select_action(state)
             # random action
             # action = np.random.randint(param['num_Devices'])
@@ -251,7 +329,7 @@ def learning():
             # take the action
             # state, reward, reward_Regular, t = env.step(state, action, t)
             t = t + Fly_time
-            state, reward_, reward_rest, reward = env.step(state, action, velocity, t, PV, param)
+            state, reward_, reward_rest, reward = env.step(state, action, velocity, t, PV, param, Fly_time)
             print(reward_)
             print(reward_rest)
             print(reward)
@@ -399,10 +477,10 @@ def learning():
 
 def painting(avg):
     fig0, ax0 = plt.subplots(1)
-    [plt.scatter(D.location[0], D.location[1]) for D in Devices]
-    x = [D.location[0] for D in Devices]
-    y = [D.location[1] for D in Devices]
-    No = list(range(len(Devices)))
+    [plt.scatter(D.location[0], D.location[1]) for D in env.Devices]
+    x = [D.location[0] for D in env.Devices]
+    y = [D.location[1] for D in env.Devices]
+    No = list(range(len(env.Devices)))
     # ax.scatter(x, y)
     for i, txt in enumerate(No):
         ax0.annotate(txt, (x[i], y[i]))
@@ -646,7 +724,7 @@ def painting(avg):
     ax7[1].legend(loc="best")
     ax7[1].set_ylabel('Total Cost')  # Add a y-label to the axes.
     ax7[1].set_title('The Sum')
-    plt.show()
+    # plt.show()
 
 
     # fig6, ax6 = plt.subplots(1)
@@ -708,7 +786,7 @@ def painting(avg):
     ax8[1].legend(loc="best")
     ax8[1].set_title('The Sum')
     ax8[1].set_ylabel('Total Cost')  # Add a y-label to the axes.
-    plt.show()
+    # plt.show()
 
     # †††††††††††††††††††††††††††††††††††††††速度图††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     V_avg = []
@@ -720,7 +798,7 @@ def painting(avg):
     ax_v.set_xlabel('episodes')
     ax_v.grid(True)
     fig_v.suptitle('Velocity trend')
-
+    plt.show()
 
 
 Ep_reward = []
@@ -774,7 +852,7 @@ def main():
         if t > param['nTimeUnits_random']:
             break
         n = n + 1
-        state_random, reward_, reward_rest, reward_random  = env_random.step(state_random, action_random, param['V'], t, PV, param)
+        state_random, reward_, reward_rest, reward_random  = env_random.step(state_random, action_random, param['V'], t, PV, param, Fly_time)
         # model.rewards_random.append(reward_random)
         PV_random.append(PV)
         Reward_random.append(reward_random)
@@ -861,7 +939,7 @@ def main():
         if t > param['nTimeUnits_force']:
             break
         n = n + 1
-        state_force, reward_, reward_rest, reward_force = env_force.step(state_force, action_force, param['V'], t, PV, param)
+        state_force, reward_, reward_rest, reward_force = env_force.step(state_force, action_force, param['V'], t, PV, param, Fly_time)
         PV_force.append(PV)
         Reward_force.append(reward_force)
         ep_reward_force += reward_force

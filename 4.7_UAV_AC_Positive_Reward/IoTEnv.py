@@ -160,7 +160,7 @@ class Env(object):
                                 ))
         return state  # (1 * num_Devices,)
 
-    def step(self, state_, action, velocity, t, PV, param):
+    def step(self, state_, action, velocity, t, PV, param, Fly_time):
 
         state = copy.deepcopy(state_)
 
@@ -199,9 +199,11 @@ class Env(object):
         # 5. 当前任务出现时间长短（需要考虑飞行时间，也存在估计可能），正常情况+1，遇到新任务归0
         # FIXME: 这里的不对，加的FLY TIME要改，不再是1了！！！！
         for i in range(self.num_Devices):  # 对所有的device，包括当前。
-            state[i] += 1 # 当前flying time为1
+            # state[i] = state[i] + Fly_time # 当前flying time为1
+            state[i] += 1
         # UAV的初始位置
         # state[-2:] = np.concatenate(self.UAV.location)
+        # state[action] = 0 # 永远重置为1
 
 
         device = self.Devices[action]
@@ -370,6 +372,7 @@ class Env(object):
                 device.KeyCPU_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.init_policy['theta'])[1])
                 device.Keyb_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.init_policy['theta'])[2])
                 state[action] = t - device.KeyTime[-1]
+                # state[action] = 0
             if VisitTime[-1] == 0:    # 需要再对t做一个TaDeLL的更新
                 device.KeyTime.append(t)
                 # 1: Warm Start
@@ -575,32 +578,22 @@ class Policy(nn.Module):
         # by returning probability of each action
         # a = F.relu(self.action_affine1(x))
         action_prob = F.softmax(self.action_head(x), dim=-1)
-        velocity = torch.sigmoid(self.velocity_head(x))
-        print('velocity:', velocity)
-        # if velocity < 5:
-        #     d = 1
-        velocity = max(velocity * self.velocity_lim, velocity / velocity * 5) # 对5的操作，是为了保证左边的velocity依然是TORCH
-        # 取下限的另一种方法，可以避免NAN
-        # vv[0] = 5
-        # velocity = max(velocity * self.velocity_lim, vv) # 对5的操作，是为了保证左边的velocity依然是TORCH
-        # 锁定速度值，并确保不出现NAN
-        # if velocity.isnan():
-        #     velocity[0] = 35
-        # velocity[0] = 35  # 用这种方式更保险，避免了出现NAN的情况，强制采用一个固定速度 [10, 15, 20, 25, 30, 35, 40]
-        # velocity = velocity / velocity * 35  # 强制采用一个固定速度 [10, 15, 20, 25, 30, 35, 40]
-        # critic: evaluates being in the state s_t
-        # v = F.relu(self.value_affine1(x))
         state_values = self.value_head(x)
+        velocity = torch.clamp(self.velocity_head(x), 5, self.velocity_lim)
+        print('velocity:', velocity)
+        # 锁定速度值，并确保不出现NAN
+        if velocity.isnan() or velocity.isinf():
+            luck = 1
+            # velocity[0] = 25
+
+        if torch.isnan(action_prob).any() or torch.isinf(action_prob).any():
+            luck = 1
+        if torch.isnan(state_values).any() or torch.isinf(state_values).any():
+            luck = 1
+        if torch.isnan(velocity).any() or torch.isinf(velocity).any():
+            luck = 1
 
         # return values for both actor and critic as a tuple of 2 values:
         # 1. a list with the probability of each action over the action space
         # 2. the value from state s_t
         return action_prob, state_values, velocity
-
-
-
-
-
-
-
-
