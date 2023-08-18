@@ -22,8 +22,6 @@ from UAVEnergy import UAV_Energy
 SavedAction = namedtuple('SavedAction', ['log_prob', 'value', 'velocity'])
 
 
-
-
 # Prepare the environment and devices
 #  V: 72 km/h =  20 m/s
 #  field: 1 km * 1km
@@ -34,9 +32,8 @@ param = {'episodes': 25, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTi
          'num_Devices': 25, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])
-#torch.device("mps")
-torch.set_num_interop_threads(8)
-torch.set_num_threads(8)
+torch.set_num_interop_threads(4)
+torch.set_num_threads(4)
 
 Devices = []
 # for i in range(param['num_Devices']):
@@ -92,14 +89,6 @@ def select_action(state):
     # state = torch.from_numpy(state).float()
     state = torch.from_numpy(state).double()
     probs, state_value, velocity = model(state)
-
-    if torch.isnan(probs).any():
-        luck = 1
-    if torch.isnan(state_value).any():
-        luck = 1
-    if torch.isnan(velocity).any():
-        luck = 1
-
 
     # create a categorical distribution over the list of probabilities of actions
     print(probs)
@@ -157,26 +146,6 @@ def finish_episode():
         # 尝试添加速度：没必要，因为上面计算policy_losses的时候，就已经有了velocity的部分
         # velocity_losses.append(F.smooth_l1_loss(velocity, torch.tensor([R])))
 
-    if any([math.isnan(x) for x in policy_losses]) or any([math.isnan(x) for x in policy_losses]):
-        luck = 1
-    if any([math.isnan(x) for x in value_losses]) or any([math.isinf(x) for x in value_losses]):
-        luck = 1
-    # if any([math.isnan(x) for x in velocity_losses]):
-        luck = 1
-
-
-    # 更新前的weight
-    if torch.isnan(model.affine1.weight).any() or torch.isinf(model.affine1.weight).any():
-        luck = 1
-    if torch.isnan(model.affine2.weight).any() or torch.isinf(model.affine2.weight).any():
-        luck = 1
-    if torch.isnan(model.action_head.weight).any() or torch.isinf(model.action_head.weight).any():
-        luck = 1
-    if torch.isnan(model.value_head.weight).any() or torch.isinf(model.value_head.weight).any():
-        luck = 1
-    if torch.isnan(model.velocity_head.weight).any() or torch.isinf(model.velocity_head.weight).any():
-        luck = 1
-
 
     # reset gradients
     optimizer.zero_grad()
@@ -188,18 +157,6 @@ def finish_episode():
     # perform backprop
     loss.backward()
     optimizer.step()
-
-    # 更新后的weight
-    if torch.isnan(model.affine1.weight).any() or torch.isinf(model.affine1.weight).any():
-        luck = 1
-    if torch.isnan(model.affine2.weight).any() or torch.isinf(model.affine2.weight).any():
-        luck = 1
-    if torch.isnan(model.action_head.weight).any() or torch.isinf(model.action_head.weight).any():
-        luck = 1
-    if torch.isnan(model.value_head.weight).any() or torch.isinf(model.value_head.weight).any():
-        luck = 1
-    if torch.isnan(model.velocity_head.weight).any() or torch.isinf(model.velocity_head.weight).any():
-        luck = 1
 
     # reset rewards and action buffer
     del model.rewards[:]
@@ -236,9 +193,6 @@ def learning():
             # select action from policy
             print('state:', state)
 
-            if np.isnan(state).any():
-                luck = 1
-
             action, velocity = select_action(state)
             # random action
             # action = np.random.randint(param['num_Devices'])
@@ -267,21 +221,9 @@ def learning():
 
 
 
-
-
-            # print("the action          ", action)
-            # print("the state:          ", state)
-            # print("the reward_         ", reward_)  # current device
-            # print("the rest reward:    ", reward_rest)  # of other devices
-            # print("the sum reward:     ", reward)  # reward_ + reward_rest
-
             model.actions.append(action)
             model.states.append(state)
 
-
-            # model.reward_.append(reward_)
-            # model.reward_rest.append(reward_rest)
-            # model.reward_.append(reward)
             model.rewards.append(reward)
             ep_reward += reward
 
@@ -291,13 +233,6 @@ def learning():
             print("       ")
 
 
-        # 归一化
-        # model.rewards = preprocessing.normalize([model.reward_])[0]
-        # model.rewards = model.rewards.tolist()
-        # model.rewards = [np.float64(x) for x in model.rewards]
-
-        #  Average Reward
-        # FIXME: 为什么要除以N呀？UAV飞行的次数每次都不一样咋办？直接不除以N不就好了？或者除以设备数量？
         """
         FX3
         不除以N，凸起变高
@@ -465,27 +400,6 @@ def painting(avg):
                   label='Forced:' + str(avg['ave_Reward_force']))
     ax_ep.legend(loc="best")
 
-    # EP_reward复现SUMMATION
-    # a = []
-    # for x in range(1, param['episodes'] + 1):
-    #     # print(x)
-    #     a.append(len(logging_timeline[0][x]['UAV_Reward']))
-    # fig_re, ax_re = plt.subplots(1)
-    # # ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP, args.gamma, args.learning_rate))
-    # ax_re.plot(np.arange(1, param['episodes'] + 1), [x * y for x, y in zip(a, avg['Ep_reward'])],
-    #         label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
-    #             param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
-    #             param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
-    # ax_re.set_xlabel('Episodes')  # Add an x-label to the axes.
-    # ax_re.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
-    # ax_re.set_title("The Ave_Reward, NN:" + str(model.pattern))  # Add a title to the axes.
-    # # ax.axhline(y=max(avg['Ave_Reward']), color='r', linestyle='--', linewidth='0.9',
-    # #            label='Smart: ' + str(max(avg['Ave_Reward'])))
-    # ax_re.axhline(y=avg['ave_Reward_random'] * len(env_random.UAV.Reward), color='b', linestyle='--', linewidth='0.9',
-    #            label='Random:' + str(avg['ave_Reward_random'] * len(env_random.UAV.Reward)))
-    # ax_re.axhline(y=avg['ave_Reward_force'] * len(env_force.UAV.Reward), color='g', linestyle='--', linewidth='0.9',
-    #            label='Forced:' + str(avg['ave_Reward_force'] * len(env_force.UAV.Reward)))
-    # ax_re.legend(loc="best")
 
     # †††††††††††††††††††††††††††††††††††††††Smart††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     x = param['episodes']

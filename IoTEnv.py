@@ -10,18 +10,6 @@ import torch.nn.functional as F
 
 from associations import pg_rl
 from env import Task
-from UAVEnergy import UAV_Energy
-
-# Prepare the model and parameters
-with open('mu_sig.pkl', 'rb') as f:
-    mu, sig = pickle.load(f)  # Load the mu and sig to extract normalized feature
-
-with open('TaDeLL_result_k_2.pkl', 'rb') as f:
-    means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
-
-with open('SourceTask_temp.pkl', 'rb') as f:
-    TaskList_set, Values_array_set = pickle.load(f)
-
 
 class Device(object):
     def __init__(self, frequency, cpu_capacity, field):
@@ -32,7 +20,13 @@ class Device(object):
         self.field = field
         self.location = field * np.random.random_sample((2, 1))  # results are from the “continuous uniform” distribution over the stated interval.
         self.TimeSinceLastVisit = 0
-        # self.flag = False  # if the device is visited, then flag = True
+        # Prepare the model and parameters
+        with open('input_files/mu_sig.pkl', 'rb') as f:
+            self.mu, self.sig = pickle.load(f)  # Load the mu and sig to extract normalized feature
+
+        with open('input_files/SourceTask_temp.pkl', 'rb') as f:
+            self.taskList_set, _ = pickle.load(f)
+
 
 
     def gen_TimeTaskList(self, nTimeUnits):
@@ -40,20 +34,17 @@ class Device(object):
         TaskList = []
         task = Task(mean_packet_cycles=random.randint(15, 35), variance_packet_cycles=random.randint(3, 8),
                     cpu_max=self.cpu_capacity, p=0.4 * np.random.random_sample() + 0.3, d=2, k=2)
-        task.extract_feature(mu, sig)  # Normalize the plain_feature using mu, sig. self.feature will be updated.
+        task.extract_feature(self.mu, self.sig)  # Normalize the plain_feature using mu, sig. self.feature will be updated.
         TaskList.append(task)  # This is the very first task at time slot 0
 
         mean = self.frequency
         t = int(np.random.normal(mean, mean / 10))
-        # task = Task(mean_packet_cycles=random.randint(15, 35), variance_packet_cycles=random.randint(3, 8),
-        #                 cpu_max=self.cpu_capacity, p=0.4 * np.random.random_sample() + 0.3, d=2, k=2)
-        # task.extract_feature(mu, sig)  # Normalize the plain_feature using mu, sig. self.feature will be updated.
-        # TaskList.append(task)
+
         while t < nTimeUnits:
             TimeList[t] = 1
             task = Task(mean_packet_cycles=random.randint(15, 35), variance_packet_cycles=random.randint(3, 8),
                         cpu_max=self.cpu_capacity, p=0.4 * np.random.random_sample() + 0.3, d=2, k=2)
-            task.extract_feature(mu, sig)  # Normalize the plain_feature using mu, sig. self.feature will be updated.
+            task.extract_feature(self.mu, self.sig)  # Normalize the plain_feature using mu, sig. self.feature will be updated.
             TaskList.append(task)
             # t = t + int(np.random.normal(mean, mean / 10))
             t = t + mean
@@ -63,12 +54,12 @@ class Device(object):
     def gen_TimeTaskList_set(self, nTimeUnits):
         TimeList = np.zeros(nTimeUnits)
         TaskList = []
-        TaskList.append(TaskList_set[1])
+        TaskList.append(self.taskList_set[1])
         mean = self.frequency
         t = int(np.random.normal(mean, mean / 10))
         while t < nTimeUnits:
             TimeList[t] = 1
-            TaskList.append(TaskList_set[1])
+            TaskList.append(self.taskList_set[1])
             # t = t + int(np.random.normal(mean, mean / 10))
             t = t + mean
         return TimeList, TaskList
@@ -98,6 +89,11 @@ class Env(object):
         self.UAV = UAV
         self.nTimeUnits = nTimeUnits
         self.num_Devices = len(Devices)
+
+        with open('input_files/TaDeLL_result_k_2.pkl', 'rb') as f:
+            _, _, _, self.TaDeLL_Model, _, _, _, _, _ = pickle.load(f)
+
+
 
     def seed(self):
         pass
@@ -164,47 +160,19 @@ class Env(object):
 
         state = copy.deepcopy(state_)
 
-
-
-
-        # CPoint = self.UAV.location  # current location
-        # NPoint = self.Devices[action].location  # next location
-        # distance = np.linalg.norm(CPoint - NPoint)  # Compute the distance of two points
-        # Fly_time = 1 if distance == 0 else math.ceil(distance / self.UAV.V)
-        # t = t + Fly_time
-        # t = t + 1
-
         self.UAV.location = self.Devices[action].location
         self.UAV.TimeList.append(t)
         self.UAV.PositionCor.append(self.Devices[action].location)
         self.UAV.PositionList.append(action)
         self.UAV.VelocityList.append(velocity)
-        # if not self.Devices[action].flag:
-            # self.Devices[action].flag = True
 
         for i in range(self.num_Devices):
             self.Devices[i].TimeSinceLastVisit += 1
         self.Devices[action].TimeSinceLastVisit = 0
 
-        # 1.当前节点总的已访问次数
-        # state[action] += 1
-        # 3.距离上次访问每一个点的时间，初始都为0，当前节点归0，其他节点+1
-        # for i in range(self.num_Devices):
-        #     # state[i + 2 * self.num_Devices] += 1
-        #     state[i] += 1
-        # # state[action + 2 * self.num_Devices] = 0  # 当前节点被访问，距离当前节点的上次访问时间为0 or 1
-        # state[action] = 0
-        # 4.UAV处得知的，每一个节点是否有新任务。当前节点信息最准确 # 每一个节点上次访问的时候是否是新任务(因为不知道其他节点当前的情况)，#当前节点当前任务被访问，故归0。其他节点不知道
-        # state[action + self.num_Devices] = 0
-        # 5. 当前任务出现时间长短（需要考虑飞行时间，也存在估计可能），正常情况+1，遇到新任务归0
-        # FIXME: 这里的不对，加的FLY TIME要改，不再是1了！！！！
         for i in range(self.num_Devices):  # 对所有的device，包括当前。
             # state[i] = state[i] + Fly_time # 当前flying time为1
             state[i] += 1
-        # UAV的初始位置
-        # state[-2:] = np.concatenate(self.UAV.location)
-        # state[action] = 0 # 永远重置为1
-
 
         device = self.Devices[action]
         device.nonvisitFlag = False
@@ -219,101 +187,6 @@ class Env(object):
 
         VisitTime = device.TimeList[device.KeyTime[-1]+1 : t+1]
 
-        #
-        # #  ------------------Update policy for the current device ------------------#
-        # if device.flag and (not np.any(device.TimeList[device.KeyTime[-1]: t])):
-        #     # it's first time and there's no more new task arrival before this visit (still the very first/initial task)
-        #     # state[action + 1 * self.num_Devices] = 1  # 2.当前节点、当前任务的已访问次数（新任务归1或者0，否则+1。其他节点不变
-        #
-        #     device.flag = False
-        #     device.KeyTime.append(t)
-        #
-        #     # 1: Warm Start
-        #     TaDeLL_Model.getDictPolicy_Single(device.task)
-        #     device.KeyPol.append(device.task.policy)
-        #     tsk0 = copy.deepcopy(device.task)
-        #     device.KeyTsk.append(tsk0)
-        #
-        #     # 2: Regular (Without Warm Start)
-        #     pg_rl(device.task_Regular, 1)  # update the PG policy for one step
-        #     device.KeyPol_Regular.append(device.task_Regular.policy)
-        #     tsk0_Regular = copy.deepcopy(device.task_Regular)
-        #     device.KeyTsk_Regular.append(tsk0_Regular)
-        # elif np.any(device.TimeList[device.KeyTime[-1] + 1: t]):  # when there's a new task arrived
-        #     # state[action + 1 * self.num_Devices] = 1  # 2.当前节点、当前任务的已访问次数（新任务归1或者0，否则+1。其他节点不变
-        #     if device.flag:  # If it's the first time visit. But there's a second new task arrives
-        #         device.flag = False
-        #     device.ta_dex = device.ta_dex + 1
-        #     if device.ta_dex > self.Devices[action].nTasks - 1:
-        #         print("index out!")  # FXIME: This might come from the shortage of TaskList
-        #         # FIXED: remember to provide a task for the very beginning, i.e. t=0 in Device.gen_TimeTaskList()
-        #     device.task = device.TaskList[device.ta_dex]
-        #     device.task_Regular = device.TaskList_Regular[device.ta_dex]
-        #
-        #     # FIXME: What if there is more than one task? index can only find the first "1"
-        #     # FIXED: The tasks in the middle can be directly ignored because they get nothing improved.
-        #     # Can be reckoned as a random task as the last one
-        #     ind = device.KeyTime[-1] + 1 + np.where(device.TimeList[device.KeyTime[-1] + 1: t])[0][
-        #         0]  # Find the first index of time that has a new task arrival
-        #     if ind == device.KeyTime[-1]:
-        #         print('bug appears!')
-        #     device.KeyTime.append(ind)
-        #     state[action] = t - device.KeyTime[-1]
-        #
-        #     # 1: Warm Start
-        #     device.KeyPol.append(device.task.init_policy)  # For the policy changes not from UAV's update
-        #     tsk0 = copy.deepcopy(device.task)
-        #     device.KeyTsk.append(tsk0)  # tsk0 with initial policy
-        #     device.KeyTime.append(t)
-        #     TaDeLL_Model.getDictPolicy_Single(device.task)  # initialize the warm start policy
-        #     device.KeyPol.append(device.task.policy)
-        #     tsk0 = copy.deepcopy(device.task)
-        #     device.KeyTsk.append(tsk0)  # tsk0 with the improved policy
-        #
-        #     # 2: Regular (Without Warm Start)
-        #     device.KeyPol_Regular.append(device.task_Regular.init_policy)
-        #     tsk0_Regular = copy.deepcopy(device.task_Regular)
-        #     device.KeyTsk_Regular.append(tsk0_Regular)
-        #     pg_rl(device.task_Regular, 1)
-        #     device.KeyPol_Regular.append(device.task_Regular.policy)
-        #     tsk0_Regular = copy.deepcopy(device.task_Regular)
-        #     device.KeyTsk_Regular.append(tsk0_Regular)
-        #
-        #     # elif device.TimeList[t] == 1:  # If the new task arrival encounters the UAV visit
-        # #     device.ta_dex = device.ta_dex + 1
-        # #     device.task = device.TaskList[device.ta_dex]
-        # #
-        # #     device.KeyTime.append(t)
-        # #     TaDeLL_Model.getDictPolicy_Single(device.task)  # initialize the warm start policy
-        # #     device.KeyPol.append(device.task.policy)
-        # #     tsk0 = copy.deepcopy(device.task)
-        # #     device.KeyTsk.append(tsk0)  # tsk0 with the improved policy
-        # else:  # when this task has got warm start policy before
-        #     # state[action + 1 * self.num_Devices] += 1   # 2.当前节点、当前任务的已访问次数（新任务归1或者0，否则+1。其他节点不变
-        #     # device.task = device.TaskList[device.ta_dex]
-        #     device.KeyTime.append(t)
-        #
-        #     # 1: Warm Start
-        #     pg_rl(device.task, 1)  # update the PG policy for one step
-        #     device.KeyPol.append(device.task.policy)
-        #     tsk0 = copy.deepcopy(device.task)
-        #     device.KeyTsk.append(tsk0)  # tsk0 with the improved policy
-        #
-        #     # 2: Regular (Warm Start)
-        #     pg_rl(device.task_Regular, 1)
-        #     device.KeyPol_Regular.append(device.task_Regular.policy)
-        #     tsk0_Regular = copy.deepcopy(device.task_Regular)
-        #     device.KeyTsk_Regular.append(tsk0_Regular)
-        #
-
-
-
-
-
-
-
-
-
 
         # ------------------Update estimated reward for rest devices----------------------#
         # FIXME: Fly_Time or state[i] （两种模式哪一种更好）
@@ -324,7 +197,7 @@ class Env(object):
             device.KeyTime.append(t)
             # 1: Warm Start
             if device.task.nonvisitFlag:
-                TaDeLL_Model.getDictPolicy_Single(device.task)
+                self.TaDeLL_Model.getDictPolicy_Single(device.task)
                 device.task.nonvisitFlag = False
             else:
                 pg_rl(device.task, 1)  # update the PG policy for one step
@@ -376,7 +249,7 @@ class Env(object):
             if VisitTime[-1] == 0:    # 需要再对t做一个TaDeLL的更新
                 device.KeyTime.append(t)
                 # 1: Warm Start
-                TaDeLL_Model.getDictPolicy_Single(device.task)
+                self.TaDeLL_Model.getDictPolicy_Single(device.task)
                 device.KeyPol.append(device.task.policy)
                 tsk0 = copy.deepcopy(device.task)
                 device.KeyTsk.append(tsk0)  # tsk0 with the improved policy
@@ -394,22 +267,8 @@ class Env(object):
                 device.KeyCPU_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[1])
                 device.Keyb_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[2])
 
-
-
-        # FIXME: 不加这个REWARD_REST会不会收敛
         reward_rest = 0
-        # for i in range(self.num_Devices):
-        #     if i == action:
-        #         pass
-        #     else:
-        #         device = self.Devices[i]
-        #         if device.nonvisitFlag:                # if never been visited by UAV
-        #             # reward_rest += state[i] * (-5)  # FIXME: choose a proper constant
-        #             reward_rest += -5
-        #             # 在TIMEUNITS够(100)的情况下，这个数值从 -1 ～ -60 都不会影响reward_, reward_rest的比例, 太大的话就有风险了
-        #         else:                             # if this device has been visited by UAV
-        #             reward_rest += device.KeyReward[-1]  #  * self.Devices[i].TimeSinceLastVisit # should decrease with time
-        #             # reward_rest += state[i] * device.rewards[-1]
+
         for i in range(self.num_Devices):
             if i != action:
                 if device.nonvisitFlag:
@@ -419,15 +278,6 @@ class Env(object):
         reward_rest = reward_rest / (self.num_Devices - 1)
 
 
-
-        # for index in range(index_start, index_end):
-        #     tsk = device.KeyTsk[index]
-        #     alpha = device.KeyPol[index]
-        #     device.intervals.append(device.KeyTime[index+1] - device.KeyTime[index])
-        #     reward = tsk.get_value(
-        #         alpha['theta'])  # Didn't use pg_rl() cause it has one step of update which I don't need here
-        #     device.rewards.append(reward)
-        #     reward_ += device.intervals[-1] * device.rewards[-1]
         device = self.Devices[action]
         index_end = device.KeyTime.index(device.KeyTime[-1])
         # 1: Warm Start rewards history
