@@ -93,6 +93,7 @@ class Env(object):
         with open('input_files/TaDeLL_result_k_2.pkl', 'rb') as f:
             _, _, _, self.TaDeLL_Model, _, _, _, _, _ = pickle.load(f)
 
+        self.initialization(Devices, UAV)
 
 
     def seed(self):

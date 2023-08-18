@@ -3,8 +3,9 @@ import torch
 import numpy as np
 from collections import namedtuple
 
-from IoTEnv import Uav, Device, Env, Policy
+from IoTEnv import Uav, Env, Policy
 from UAVEnergy import UAV_Energy
+import Util
 
 class NNStrategy:
     def __init__(self, param, logging_timeline) -> None:
@@ -12,39 +13,10 @@ class NNStrategy:
         self.logging_timeline = logging_timeline
         self.episode_reward = []
         self.average_reward = []
-        self.devices = []
-        # for i in range(param['num_Devices']):
-        #     Devices.append(Device(random.randint(param['freq_low'], param['freq_high']), random.randint(30, 70), param['field']))
-
-        self.devices.append(Device(530, 50, param['field']))
-        self.devices.append(Device(510, 50, param['field']))
-        self.devices.append(Device(500, 50, param['field']))
-        self.devices.append(Device(485, 50, param['field']))
-        self.devices.append(Device(470, 50, param['field']))
-        self.devices.append(Device(450, 50, param['field']))
-        self.devices.append(Device(430, 50, param['field']))
-        self.devices.append(Device(400, 50, param['field']))
-        self.devices.append(Device(380, 50, param['field']))
-        self.devices.append(Device(350, 50, param['field']))
-        self.devices.append(Device(370, 50, param['field']))
-        self.devices.append(Device(340, 50, param['field']))
-        self.devices.append(Device(330, 50, param['field']))
-        self.devices.append(Device(315, 50, param['field']))
-        self.devices.append(Device(300, 50, param['field']))
-        self.devices.append(Device(275, 50, param['field']))
-        self.devices.append(Device(250, 50, param['field']))
-        self.devices.append(Device(230, 50, param['field']))
-        self.devices.append(Device(215, 50, param['field']))
-        self.devices.append(Device(200, 50, param['field']))
-        self.devices.append(Device(180, 50, param['field']))
-        self.devices.append(Device(150, 50, param['field']))
-        self.devices.append(Device(130, 50, param['field']))
-        self.devices.append(Device(115, 50, param['field']))
-        self.devices.append(Device(100, 50, param['field']))
+        self.devices = Util.initialize_fixed_devices(50, param)
 
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits'])
-        self.env.initialization(self.devices, self.uav)
 
         self.model = Policy(1 * param['num_Devices'], param['num_Devices'] + 1, param['V_Lim'])
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=param['learning_rate'])  # lr=3e-2

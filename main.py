@@ -10,6 +10,8 @@ import torch
 from IoTEnv import Uav, Device, Env, Policy
 from UAVEnergy import UAV_Energy
 from NNStrategy import NNStrategy
+from RandomStrategy import RandomStrategy
+from ForcedStrategy import ForcedStrategy
 
 def painting(avg, param, env, model, env_random, env_force, logging_timeline):
     fig0, ax0 = plt.subplots(1)
@@ -241,196 +243,41 @@ def main():
 
     # log parameters
     print(param)
-    nn_strategy = NNStrategy(param, logging_timeline)
-
-    Devices_random = copy.deepcopy(nn_strategy.devices) #FIXME
-    UAV_random = copy.deepcopy(nn_strategy.uav) #FIXME
-    env_random = Env(Devices_random, UAV_random, param['nTimeUnits_random'])
-
-    Devices_force = copy.deepcopy(nn_strategy.devices) #FIXME
-    UAV_force = copy.deepcopy(nn_strategy.uav) #FIXME
-    env_force = Env(Devices_force, UAV_force, param['nTimeUnits_force'])
 
     # †††††††††††††††††††††††††††††††††††††††Smart Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
+    nn_strategy = NNStrategy(param, logging_timeline)
     nn_strategy.learning()
     # †††††††††††††††††††††††††††††††††††††††Smart Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
 
 
 
     # †††††††††††††††††††††††††††††††††††††††Random Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-    print("Random trajectory: One Episode Only")
-    # env_random.initialization(Devices_random, UAV_random)
-    state_random = env_random.reset(Devices_random, UAV_random)
-    ep_reward_random = 0
-    t = 0
-    n = 0  # logging fly behaviors
-    Reward_random = []
-    PV_random = []
-    while t < param['nTimeUnits_random']:
-        action_random = np.random.randint(param['num_Devices'])  # 纯粹随机选择
-        CPoint = env_random.UAV.location  # current location
-        NPoint = env_random.Devices[action_random].location  # next location
-        distance = np.linalg.norm(CPoint - NPoint)  # Compute the distance of two points
-        # env_random.UAV.V = logging_timeline[0][param['episodes']]['UAV_VelocityList'][-1]
-        Fly_time = 1 if distance == 0 else math.ceil(distance / env_random.UAV.V)
-        PV = UAV_Energy(param['V']) * Fly_time
-        t = t + Fly_time
-        if t > param['nTimeUnits_random']:
-            break
-        n = n + 1
-        state_random, reward_, reward_rest, reward_random  = env_random.step(state_random, action_random, param['V'], t, PV, param, Fly_time)
-        # model.rewards_random.append(reward_random)
-        PV_random.append(PV)
-        Reward_random.append(reward_random)
-        ep_reward_random += reward_random
-        # model.actions_random.append(action_random)
-        # model.states_random.append(state_random)
-        print("Random: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(1, n,
-                                                                                                                   t,
-                                                                                                                   action_random))
-
-    logging_timeline[0][0]['Reward_random'] = Reward_random
-    logging_timeline[0][0]['Random_UAV_TimeList'] = UAV_random.TimeList
-    logging_timeline[0][0]['Random_UAV_PositionList'] = UAV_random.PositionList
-    logging_timeline[0][0]['Random_UAV_PositionCor'] = UAV_random.PositionCor
-    logging_timeline[0][0]['Random_UAV_VelocityList'] = UAV_random.VelocityList
-    logging_timeline[0][0]['Random_UAV_Reward'] = UAV_random.Reward
-    logging_timeline[0][0]['Random_UAV_Energy'] = UAV_random.Energy
-    logging_timeline[0][0]['Random_UAV_R_E'] = UAV_random.Sum_R_E
-    logging_timeline[0][0]['Random_UAV_AoI'] = UAV_random.AoI
-    logging_timeline[0][0]['Random_UAV_CPU'] = UAV_random.CPU
-    logging_timeline[0][0]['Random_UAV_b'] = UAV_random.b
-    for i in range(param['num_Devices']):
-        logging_timeline[i][0]['Random_intervals'] = Devices_random[i].intervals
-        logging_timeline[i][0]['Random_TimeList'] = Devices_random[i].TimeList
-        logging_timeline[i][0]['Random_KeyTime'] = Devices_random[i].KeyTime
-        logging_timeline[i][0]['Random_TaskList'] = Devices_random[i].TaskList
-        # 记录每一个EPISODE的非REGULAR的数据
-        logging_timeline[i][0]['Random_KeyTsk'] = Devices_random[i].KeyTsk
-        logging_timeline[i][0]['Random_KeyPol'] = Devices_random[i].KeyPol
-        logging_timeline[i][0]['Random_KeyRewards'] = Devices_random[i].KeyReward
-        logging_timeline[i][0]['Random_KeyAoI'] = Devices_random[i].KeyAoI
-        logging_timeline[i][0]['Random_KeyCPU'] = Devices_random[i].KeyCPU
-        logging_timeline[i][0]['Random_Keyb'] = Devices_random[i].Keyb
-        # 记录对应的REGULAR的数据
-        logging_timeline[i][0]['Random_KeyTsk_Regular'] = Devices_random[i].KeyTsk_Regular
-        logging_timeline[i][0]['Random_KeyPol_Regular'] = Devices_random[i].KeyPol_Regular
-        logging_timeline[i][0]['Random_KeyReward_Regular'] = Devices_random[i].KeyReward_Regular
-        logging_timeline[i][0]['Random_KeyAoI_Regular'] = Devices_random[i].KeyAoI_Regular
-        logging_timeline[i][0]['Random_KeyCPU_Regular'] = Devices_random[i].KeyCPU_Regular
-        logging_timeline[i][0]['Random_Keyb_Regular'] = Devices_random[i].Keyb_Regular
-        ls1 = [0] + logging_timeline[i][0]['Random_intervals']
-        ls2 = logging_timeline[i][0]['Random_KeyRewards']
-        if len(logging_timeline[i][0]['Random_KeyTime']) == 1:
-            logging_timeline[i][0]['Random_avg_reward'] = None
-        else:
-            logging_timeline[i][0]['Random_avg_reward'] = sum([x * y for x, y in zip(ls1, ls2)]) / \
-                                                   logging_timeline[i][0]['Random_KeyTime'][-1]
-    ave_Reward_random = ep_reward_random / n
-    print('Random: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(1, ep_reward_random, ave_Reward_random))
+    random_strategy = RandomStrategy(param, logging_timeline)
+    random_strategy.learning()
     # †††††††††††††††††††††††††††††††††††††††Random Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
 
 
 
     # †††††††††††††††††††††††††††††††††††††††Forced Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-    print("Forced trajectory: One Episode Only")
-    # env_force.initialization(Devices_force, UAV_force)
-    state_force = env_force.reset(Devices_force, UAV_force)
-    ep_reward_force = 0
-    t = 0
-    n = 0
-    Reward_force = []
-    PV_force = []
-    while t < param['nTimeUnits_force']:
-
-        # 强制选择action
-        action_table_force = np.zeros(param['num_Devices'])  # 筛选出当前有新任务的设备
-        for i in range(param['num_Devices']):
-            if Devices_force[i].TimeList[t-1] == 1:
-                action_table_force[i] = 1
-        inx = np.where(action_table_force == 1)[0]
-        # action = inx[np.random.randint(len(inx))] if inx else np.random.randint(param['num_Devices']) # 随机选一个去访问
-        if inx.any():
-            action_force = inx[0]  # inx[np.random.randint(len(inx))] #优先选择变化最不频繁的
-        else:
-            action_force = np.random.randint(param['num_Devices'])
-        # compute the distance
-        CPoint = env_force.UAV.location  # current location
-        NPoint = env_force.Devices[action_force].location  # next location
-        distance = np.linalg.norm(CPoint - NPoint)  # Compute the distance of two points
-        # env_force.UAV.V = logging_timeline[0][param['episodes']]['UAV_VelocityList'][-1]
-        Fly_time = 1 if distance == 0 else math.ceil(distance / env_force.UAV.V)
-        PV = UAV_Energy(param['V']) * Fly_time
-        t = t + Fly_time
-        if t > param['nTimeUnits_force']:
-            break
-        n = n + 1
-        state_force, reward_, reward_rest, reward_force = env_force.step(state_force, action_force, param['V'], t, PV, param, Fly_time)
-        PV_force.append(PV)
-        Reward_force.append(reward_force)
-        ep_reward_force += reward_force
-        print("Force: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(1, n,t,action_force))
-    logging_timeline[0][0]['Reward_force'] = Reward_force
-    logging_timeline[0][0]['Force_UAV_TimeList'] = UAV_force.TimeList
-    logging_timeline[0][0]['Force_UAV_PositionList'] = UAV_force.PositionList
-    logging_timeline[0][0]['Force_UAV_PositionCor'] = UAV_force.PositionCor
-    logging_timeline[0][0]['Force_UAV_VelocityList'] = UAV_force.VelocityList
-    logging_timeline[0][0]['Force_UAV_Reward'] = UAV_force.Reward
-    logging_timeline[0][0]['Force_UAV_Energy'] = UAV_force.Energy
-    logging_timeline[0][0]['Force_UAV_R_E'] = UAV_force.Sum_R_E
-    logging_timeline[0][0]['Force_UAV_AoI'] = UAV_force.AoI
-    logging_timeline[0][0]['Force_UAV_CPU'] = UAV_force.CPU
-    logging_timeline[0][0]['Force_UAV_b'] = UAV_force.b
-    for i in range(param['num_Devices']):
-        logging_timeline[i][0]['Force_intervals'] = Devices_force[i].intervals
-        logging_timeline[i][0]['Force_TimeList'] = Devices_force[i].TimeList
-        logging_timeline[i][0]['Force_KeyTime'] = Devices_force[i].KeyTime
-        logging_timeline[i][0]['Force_TaskList'] = Devices_force[i].TaskList
-        # 记录每一个EPISODE的非REGULAR的数据
-        logging_timeline[i][0]['Force_KeyTsk'] = Devices_force[i].KeyTsk
-        logging_timeline[i][0]['Force_KeyPol'] = Devices_force[i].KeyPol
-        logging_timeline[i][0]['Force_KeyRewards'] = Devices_force[i].KeyReward
-        logging_timeline[i][0]['Force_KeyAoI'] = Devices_force[i].KeyAoI
-        logging_timeline[i][0]['Force_KeyCPU'] = Devices_force[i].KeyCPU
-        logging_timeline[i][0]['Force_Keyb'] = Devices_force[i].Keyb
-        # 记录对应的REGULAR的数据
-        logging_timeline[i][0]['Force_KeyTsk_Regular'] = Devices_force[i].KeyTsk_Regular
-        logging_timeline[i][0]['Force_KeyPol_Regular'] = Devices_force[i].KeyPol_Regular
-        logging_timeline[i][0]['Force_KeyReward_Regular'] = Devices_force[i].KeyReward_Regular
-        logging_timeline[i][0]['Force_KeyAoI_Regular'] = Devices_force[i].KeyAoI_Regular
-        logging_timeline[i][0]['Force_KeyCPU_Regular'] = Devices_force[i].KeyCPU_Regular
-        logging_timeline[i][0]['Force_Keyb_Regular'] = Devices_force[i].Keyb_Regular
-        ls1 = [0] + logging_timeline[i][0]['Force_intervals']
-        ls2 = logging_timeline[i][0]['Force_KeyRewards']
-        if len(logging_timeline[i][0]['Force_KeyTime']) == 1:
-            logging_timeline[i][0]['Force_avg_reward'] = None
-        else:
-            logging_timeline[i][0]['Force_avg_reward'] = sum([x * y for x, y in zip(ls1, ls2)]) / \
-                                                   logging_timeline[i][0]['Force_KeyTime'][-1]
-    ave_Reward_force = ep_reward_force / n
-    print('Force: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(1, ep_reward_force, ave_Reward_force))
+    forced_strategy = ForcedStrategy(param, logging_timeline)
+    forced_strategy.learning()
     # †††††††††††††††††††††††††††††††††††††††Forced Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-
-
-
 
 
 
     avg = {}
     avg['Ave_Reward'] = nn_strategy.average_reward
     avg['Ep_reward'] = nn_strategy.episode_reward
-    avg['ave_Reward_random'] = ave_Reward_random
-    avg['ave_Reward_force'] = ave_Reward_force
+    avg['ave_Reward_random'] = random_strategy.ave_Reward_random
+    avg['ave_Reward_force'] = forced_strategy.ave_Reward_force
     # with open('fig_temp.pkl', 'wb') as f:
     #     pickle.dump([model, env, param, avg, logging_timeline], f)
 
     with open('fig_temp.pkl', 'wb') as f:
-        pickle.dump([nn_strategy.model, nn_strategy.env, env_random, env_force, param, avg, logging_timeline], f)
-    # with open('fig_temp.pkl', 'rb') as f:
-    #     model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
+        pickle.dump([nn_strategy.model, nn_strategy.env, random_strategy.env, forced_strategy.env, param, avg, logging_timeline], f)
 
     # †††††††††††††††††††††††††††††††††††††††Painting††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-    painting(avg, param, nn_strategy.env, nn_strategy.model, env_random, env_force, logging_timeline)
+    painting(avg, param, nn_strategy.env, nn_strategy.model, random_strategy.env, forced_strategy.env, logging_timeline)
     # †††††††††††††††††††††††††††††††††††††††Painting††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
 
 
