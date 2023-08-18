@@ -1,7 +1,4 @@
 import numpy as np
-import random
-from itertools import count
-from collections import namedtuple
 import copy
 import matplotlib.pyplot as plt
 from statistics import mean
@@ -9,335 +6,12 @@ import pickle
 import math
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.distributions import Categorical
 
 from IoTEnv import Uav, Device, Env, Policy
 from UAVEnergy import UAV_Energy
+from NNStrategy import NNStrategy
 
-
-
-SavedAction = namedtuple('SavedAction', ['log_prob', 'value', 'velocity'])
-
-
-# Prepare the environment and devices
-#  V: 72 km/h =  20 m/s
-#  field: 1 km * 1km
-#  dist:
-length = 2000
-param = {'episodes': 25, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
-         'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
-         'num_Devices': 25, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
-np.random.seed(param['seed'])
-torch.manual_seed(param['seed'])
-torch.set_num_interop_threads(4)
-torch.set_num_threads(4)
-
-Devices = []
-# for i in range(param['num_Devices']):
-#     Devices.append(Device(random.randint(param['freq_low'], param['freq_high']), random.randint(30, 70), param['field']))
-
-Devices.append(Device(530, 50, param['field']))
-Devices.append(Device(510, 50, param['field']))
-Devices.append(Device(500, 50, param['field']))
-Devices.append(Device(485, 50, param['field']))
-Devices.append(Device(470, 50, param['field']))
-Devices.append(Device(450, 50, param['field']))
-Devices.append(Device(430, 50, param['field']))
-Devices.append(Device(400, 50, param['field']))
-Devices.append(Device(380, 50, param['field']))
-Devices.append(Device(350, 50, param['field']))
-Devices.append(Device(370, 50, param['field']))
-Devices.append(Device(340, 50, param['field']))
-Devices.append(Device(330, 50, param['field']))
-Devices.append(Device(315, 50, param['field']))
-Devices.append(Device(300, 50, param['field']))
-Devices.append(Device(275, 50, param['field']))
-Devices.append(Device(250, 50, param['field']))
-Devices.append(Device(230, 50, param['field']))
-Devices.append(Device(215, 50, param['field']))
-Devices.append(Device(200, 50, param['field']))
-Devices.append(Device(180, 50, param['field']))
-Devices.append(Device(150, 50, param['field']))
-Devices.append(Device(130, 50, param['field']))
-Devices.append(Device(115, 50, param['field']))
-Devices.append(Device(100, 50, param['field']))
-
-
-
-
-UAV = Uav(param['V'], Devices)
-env = Env(Devices, UAV, param['nTimeUnits'])
-env.initialization(Devices, UAV)
-
-Devices_random = copy.deepcopy(Devices)
-UAV_random = copy.deepcopy(UAV)
-env_random = Env(Devices_random, UAV_random, param['nTimeUnits_random'])
-
-Devices_force = copy.deepcopy(Devices)
-UAV_force = copy.deepcopy(UAV)
-env_force = Env(Devices_force, UAV_force, param['nTimeUnits_force'])
-
-model = Policy(1 * param['num_Devices'], param['num_Devices'] + 1, param['V_Lim'])
-optimizer = optim.Adam(model.parameters(), lr=param['learning_rate'])  # lr=3e-2
-eps = np.finfo(np.float32).eps.item()
-
-
-def select_action(state):
-    # state = torch.from_numpy(state).float()
-    state = torch.from_numpy(state).double()
-    probs, state_value, velocity = model(state)
-
-    # create a categorical distribution over the list of probabilities of actions
-    print(probs)
-    print(state_value)
-    print(velocity)
-    m = Categorical(probs)
-
-    # and sample an action using the distribution
-    action = m.sample()
-    # action = torch.tensor(2)
-
-
-    # print(state)
-    for label, p in enumerate(probs):
-        print(f'{label:2}: {100 * p:5.2f}%')
-    # print("---", action, "is chosen")
-
-    # save to action buffer
-    model.saved_actions.append(SavedAction(m.log_prob(action), state_value, velocity))
-
-    # the action to take
-    return action.item(), velocity.item()
-
-
-def finish_episode():
-    """
-    Training code. Calculates actor and critic loss and performs backprop.
-    """
-    R = 0
-    saved_actions = model.saved_actions
-    policy_losses = []  # list to save actor (policy) loss
-    value_losses = []  # list to save critic (value) loss
-    # velocity_losses = []
-    returns = []  # list to save the true values
-
-    # calculate the true value using rewards returned from the environment
-    for r in model.rewards[::-1]:
-        # calculate the discounted value
-        R = r + param['gamma'] * R
-        returns.insert(0, R)
-
-    returns = torch.tensor(returns)
-    returns = (returns - returns.mean()) / (returns.std() + eps)
-
-    for (log_prob, value, velocity), R in zip(saved_actions, returns):
-        advantage = R - value.item()
-
-        # calculate actor (policy) loss
-        policy_losses.append(-log_prob * advantage - velocity * advantage)
-        # policy_losses.append(-log_prob * advantage)
-
-        # calculate critic (value) loss using L1 smooth loss
-        value_losses.append(F.smooth_l1_loss(value, torch.tensor([R])))
-
-        # 尝试添加速度：没必要，因为上面计算policy_losses的时候，就已经有了velocity的部分
-        # velocity_losses.append(F.smooth_l1_loss(velocity, torch.tensor([R])))
-
-
-    # reset gradients
-    optimizer.zero_grad()
-
-    # sum up all the values of policy_losses and value_losses
-    loss = torch.stack(policy_losses).sum() + torch.stack(value_losses).sum()
-           # + torch.stack(velocity_losses).sum()
-
-    # perform backprop
-    loss.backward()
-    optimizer.step()
-
-    # reset rewards and action buffer
-    del model.rewards[:]
-    # del model.reward_[:]
-    del model.saved_actions[:]
-
-
-def learning():
-
-    rate1 = []
-    rate2 = []
-
-    # env.initialization(Devices, UAV)
-
-    for i_episode in count(1):
-
-        state = env.reset(Devices, UAV)
-        # print("the initial state: ", state)
-        print("----------------------------------------------------------------------------")
-        print("       ")
-
-        model.states.append(state)
-        ep_reward = 0
-        t = 0
-        n = 0  # logging fly behaviors
-        # FIXME: when the distance is large or the velocity is small, the Fly_time can be too large to surpass the nTimeUnits
-
-
-        rate1.append([])
-        rate2.append([])
-        while t < param['nTimeUnits']:
-        # for t in range(0, param['nTimeUnits']):
-
-            # select action from policy
-            print('state:', state)
-
-            action, velocity = select_action(state)
-            # random action
-            # action = np.random.randint(param['num_Devices'])
-
-            # compute the distance
-            CPoint = env.UAV.location  # current location
-            NPoint = env.Devices[action].location  # next location
-            distance = np.linalg.norm(CPoint - NPoint)  # Compute the distance of two points
-            Fly_time = 1 if distance == 0 else math.ceil(distance / velocity)
-            # t = t + Fly_time
-            print(Fly_time)
-            PV = UAV_Energy(velocity) * Fly_time
-
-
-            # take the action
-            # state, reward, reward_Regular, t = env.step(state, action, t)
-            t = t + Fly_time
-            state, reward_, reward_rest, reward = env.step(state, action, velocity, t, PV, param, Fly_time)
-            print(reward_)
-            print(reward_rest)
-            print(reward)
-            n += 1
-
-            rate1[-1].append(reward_ / reward)
-            rate2[-1].append(reward_rest / reward)
-
-
-
-            model.actions.append(action)
-            model.states.append(state)
-
-            model.rewards.append(reward)
-            ep_reward += reward
-
-            print("Smart: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(i_episode, n, t, action))
-
-            print("----------------------------------------------------------------------------")
-            print("       ")
-
-
-        """
-        FX3
-        不除以N，凸起变高
-        """
-
-        ave_Reward = ep_reward
-        # ave_Reward = sum(model.rewards) / n
-
-        # update cumulative reward
-        # running_reward = 0.05 * ep_reward + (1 - 0.05) * running_reward
-
-        # perform backprop
-        finish_episode()
-
-        Ep_reward.append(ep_reward / n)
-        # Running_reward.append(running_reward)
-        Ave_Reward.append(ep_reward)
-
-        # for i in range(param['num_Devices']):
-        #     logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['intervals'][0])
-        #     for j in range(1, len(logging_timeline[i][EP]['intervals'])):
-        #         logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['timeline'][j-1] + logging_timeline[i][EP]['intervals'][j])
-        # for x in range(1, EP):
-        x = i_episode
-        logging_timeline[0][x]['UAV_TimeList'] = UAV.TimeList
-        logging_timeline[0][x]['UAV_PositionList'] = UAV.PositionList
-        logging_timeline[0][x]['UAV_PositionCor'] = UAV.PositionCor
-        logging_timeline[0][x]['UAV_VelocityList'] = UAV.VelocityList
-        logging_timeline[0][x]['UAV_Reward'] = UAV.Reward  # 设备的COST(AOI+CPU)，负数，绝对值越小越好
-        logging_timeline[0][x]['UAV_Energy'] = UAV.Energy  # UAV的飞行能量，正数，绝对值越小越好
-        logging_timeline[0][x]['UAV_R_E'] = UAV.Sum_R_E  # 上面两项（REWARD+ENERGY）的和，负数，绝对值越小越好（这个是STEP输出的最后一个REWARD，优化目标本标，优化的是每个EPISODE的均值：Ep_reward）
-        logging_timeline[0][x]['UAV_AoI'] = UAV.AoI  # 设备的AOI，正数，绝对值越小越好
-        logging_timeline[0][x]['UAV_CPU'] = UAV.CPU  # 设备的CPU，正数，绝对值越小越好
-        logging_timeline[0][x]['UAV_b'] = UAV.b      # 设备的B，正数，绝对值越小越好
-        for i in range(param['num_Devices']):
-            logging_timeline[i][x]['intervals'] = Devices[i].intervals
-            logging_timeline[i][x]['TimeList'] = Devices[i].TimeList
-            logging_timeline[i][x]['TaskList'] = Devices[i].TaskList
-            logging_timeline[i][x]['KeyTime'] = Devices[i].KeyTime
-            # 记录每一个EPISODE的非REGULAR的数据
-            # FIXME: 这里的KEYREWARD只包含了AOI+CPU，没有包含UAV的能耗PV
-            # 这里每一个DEVICE只能这样啊，DEVICE不像UAV一样一下一下飞，DEVICE是每一个时隙的
-            # 这里的KEYREWARD是上面step输出reward的一部分，不包括UAV的PV，减200的penalty，不包括reward_rest
-            logging_timeline[i][x]['KeyTsk'] = Devices[i].KeyTsk
-            logging_timeline[i][x]['KeyPol'] = Devices[i].KeyPol
-            logging_timeline[i][x]['KeyRewards'] = Devices[i].KeyReward
-            logging_timeline[i][x]['KeyAoI'] = Devices[i].KeyAoI
-            logging_timeline[i][x]['KeyCPU'] = Devices[i].KeyCPU
-            logging_timeline[i][x]['Keyb'] = Devices[i].Keyb
-            # 记录对应的REGULAR的数据
-            logging_timeline[i][x]['KeyTsk_Regular'] = Devices[i].KeyTsk_Regular
-            logging_timeline[i][x]['KeyPol_Regular'] = Devices[i].KeyPol_Regular
-            logging_timeline[i][x]['KeyReward_Regular'] = Devices[i].KeyReward_Regular
-            logging_timeline[i][x]['KeyAoI_Regular'] = Devices[i].KeyAoI_Regular
-            logging_timeline[i][x]['KeyCPU_Regular'] = Devices[i].KeyCPU_Regular
-            logging_timeline[i][x]['Keyb_Regular'] = Devices[i].Keyb_Regular
-
-            # if not logging_timeline[i][x]['intervals']:
-            #     continue
-            # logging_timeline[i][x]['timeline'].append(logging_timeline[i][x]['intervals'][0])
-            # for j in range(1, len(logging_timeline[i][x]['intervals'])):
-            #     logging_timeline[i][x]['timeline'].append(
-            #         logging_timeline[i][x]['timeline'][j - 1] + logging_timeline[i][x]['intervals'][j])
-            ls1 = [0] + logging_timeline[i][x]['intervals']
-            ls2 = logging_timeline[i][x]['KeyRewards']
-            # 这里的avg_reward知识单纯的每一个device的reward均值
-            if len(logging_timeline[i][x]['KeyTime']) == 1:
-                logging_timeline[i][x]['avg_reward'] = None
-            else:
-                logging_timeline[i][x]['avg_reward'] = sum([x * y for x, y in zip(ls1, ls2)]) / logging_timeline[i][x]['KeyTime'][-1]
-
-
-
-        # pdb.set_trace()
-
-
-        print("----------------------------------------------------------------------------")
-        print("The percentage to all the devices:")
-        for x in range(param['num_Devices']):
-            action_list = model.actions[(i_episode - 1) * param['nTimeUnits']::]
-            p = len([ele for ele in action_list if ele == x]) / param['nTimeUnits']
-            print(f'{x:2}: {100 * p:5.2f}%')
-            # print(f'{x:2}: {100 * p:5.2f}%', end = '')
-        # print('  ')
-
-
-        if i_episode % param['log_interval'] == 0:
-            print('Smart: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(
-                  i_episode, ep_reward, ave_Reward))
-        # print("**********************************************************************************")
-        # check if we have "solved" the cart pole problem
-        # if running_reward > env.spec.reward_threshold:
-        #     print("Solved! Running reward is now {} and "
-        #           "the last episode runs to {} time steps!".format(running_reward, t))
-        #     break
-        if i_episode >= EP:
-            break
-
-
-    for k in range(len(rate1)):
-        m1.append(mean(rate1[k]))
-        m2.append(mean(rate2[k]))
-
-
-def painting(avg):
+def painting(avg, param, env, model, env_random, env_force, logging_timeline):
     fig0, ax0 = plt.subplots(1)
     [plt.scatter(D.location[0], D.location[1]) for D in env.Devices]
     x = [D.location[0] for D in env.Devices]
@@ -355,12 +29,7 @@ def painting(avg):
 
     # †††††††††††††††††††††††††††††††††††††††Plotting Phase††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     fig, ax = plt.subplots(1)
-    # ax[0].plot(np.arange(i_episode), Ep_reward, label='Actor-Critic')
-    # ax[0].set_xlabel('Episodes')  # Add an x-label to the axes.
-    # ax[0].set_ylabel('ep_reward')  # Add a y-label to the axes.
-    # ax[0].set_title("The ep_reward")  # Add a title to the axes.
 
-    # ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP, args.gamma, args.learning_rate))
     ax.plot(np.arange(1, param['episodes'] + 1), avg['Ave_Reward'],
             label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
                 param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
@@ -373,14 +42,6 @@ def painting(avg):
                label='Random:' + str(avg['ave_Reward_random']*len(env_random.UAV.Reward)))
     ax.axhline(y=avg['ave_Reward_force'] * len(env_force.UAV.Reward), color='g', linestyle='--', linewidth='0.9', label='Forced:' + str(avg['ave_Reward_force']* len(env_force.UAV.Reward)))
     ax.legend(loc="best")
-
-    # ax[1].plot(np.arange(i_episode), [ave_Reward_random]*i_episode, label='Random')
-    # ax[1].set_xlabel('Episodes')  # Add an x-label to the axes.
-    # ax[1].set_ylabel('Ave_Reward')  # Add a y-label to the axes.
-    # ax[1].set_title("The Ave_Reward")  # Add a title to the axes.
-    # plt.legend()
-    # plt.grid(True)
-    # plt.show()
 
     # †††††††††††††††††††††††††††††††††††††††EP_REWARD††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     fig_ep, ax_ep = plt.subplots(1)
@@ -551,32 +212,47 @@ def painting(avg):
     plt.show()
 
 
-Ep_reward = []
-Ave_Reward = []
-m1 = []
-m2 = []
-EP = param['episodes']
-
-# logging for each episode
-# logging_timeline = [ device0, device1, device2....,  ,  ]
-# device = [episode0, episode1, episode2, ...,  ]
-# episode = {'intervals': [], 'rewards': []}
-logging_timeline = []
-for i in range(param['num_Devices']):
-    logging_timeline.append([])
-    for j in range(EP + 1):
-        logging_timeline[i].append(
-            {'intervals': [], 'rewards': [], 'rewards_regular': [], 'timeline': [], 'plt_reward': [], 'avg_reward': []})
-    # logging_timeline.append([{'intervals': [], 'rewards': [], 'rewards_regular': []}, {'intervals': [], 'rewards': [], 'rewards_regular': []}])
-
 
 def main():
 
+    # Prepare the environment and devices
+    #  V: 72 km/h =  20 m/s
+    #  field: 1 km * 1km
+    #  dist:
+    length = 2000
+    param = {'episodes': 25, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
+             'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
+             'num_Devices': 25, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+    np.random.seed(param['seed'])
+    torch.manual_seed(param['seed'])
+    torch.set_num_interop_threads(4)
+    torch.set_num_threads(4)
+
+    # logging for each episode
+    # logging_timeline = [ device0, device1, device2....,  ,  ]
+    # device = [episode0, episode1, episode2, ...,  ]
+    # episode = {'intervals': [], 'rewards': []}
+    logging_timeline = []
+    for i in range(param['num_Devices']):
+        logging_timeline.append([])
+        for j in range(param['episodes'] + 1):
+            logging_timeline[i].append(
+                {'intervals': [], 'rewards': [], 'rewards_regular': [], 'timeline': [], 'plt_reward': [], 'avg_reward': []})
+
     # log parameters
     print(param)
+    nn_strategy = NNStrategy(param, logging_timeline)
+
+    Devices_random = copy.deepcopy(nn_strategy.devices) #FIXME
+    UAV_random = copy.deepcopy(nn_strategy.uav) #FIXME
+    env_random = Env(Devices_random, UAV_random, param['nTimeUnits_random'])
+
+    Devices_force = copy.deepcopy(nn_strategy.devices) #FIXME
+    UAV_force = copy.deepcopy(nn_strategy.uav) #FIXME
+    env_force = Env(Devices_force, UAV_force, param['nTimeUnits_force'])
 
     # †††††††††††††††††††††††††††††††††††††††Smart Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-    learning()
+    nn_strategy.learning()
     # †††††††††††††††††††††††††††††††††††††††Smart Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
 
 
@@ -741,20 +417,20 @@ def main():
 
 
     avg = {}
-    avg['Ave_Reward'] = Ave_Reward
-    avg['Ep_reward'] = Ep_reward
+    avg['Ave_Reward'] = nn_strategy.average_reward
+    avg['Ep_reward'] = nn_strategy.episode_reward
     avg['ave_Reward_random'] = ave_Reward_random
     avg['ave_Reward_force'] = ave_Reward_force
     # with open('fig_temp.pkl', 'wb') as f:
     #     pickle.dump([model, env, param, avg, logging_timeline], f)
 
     with open('fig_temp.pkl', 'wb') as f:
-        pickle.dump([model, env, env_random, env_force, param, avg, logging_timeline], f)
+        pickle.dump([nn_strategy.model, nn_strategy.env, env_random, env_force, param, avg, logging_timeline], f)
     # with open('fig_temp.pkl', 'rb') as f:
     #     model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
     # †††††††††††††††††††††††††††††††††††††††Painting††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-    painting(avg)
+    painting(avg, param, nn_strategy.env, nn_strategy.model, env_random, env_force, logging_timeline)
     # †††††††††††††††††††††††††††††††††††††††Painting††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
 
 
