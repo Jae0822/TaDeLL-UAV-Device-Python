@@ -13,7 +13,7 @@ class NNStrategy:
         self.logging_timeline = logging_timeline
         self.episode_reward = []
         self.average_reward = []
-        self.devices = Util.initialize_fixed_devices(50, param)
+        self.devices = Util.initialize_fixed_devices(param)
 
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits'])
@@ -223,12 +223,6 @@ class NNStrategy:
                 self.logging_timeline[i][x]['KeyCPU_Regular'] = self.devices[i].KeyCPU_Regular
                 self.logging_timeline[i][x]['Keyb_Regular'] = self.devices[i].Keyb_Regular
 
-                # if not logging_timeline[i][x]['intervals']:
-                #     continue
-                # logging_timeline[i][x]['timeline'].append(logging_timeline[i][x]['intervals'][0])
-                # for j in range(1, len(logging_timeline[i][x]['intervals'])):
-                #     logging_timeline[i][x]['timeline'].append(
-                #         logging_timeline[i][x]['timeline'][j - 1] + logging_timeline[i][x]['intervals'][j])
                 ls1 = [0] + self.logging_timeline[i][x]['intervals']
                 ls2 = self.logging_timeline[i][x]['KeyRewards']
                 # 这里的avg_reward知识单纯的每一个device的reward均值
@@ -248,17 +242,8 @@ class NNStrategy:
                 action_list = self.model.actions[(i_episode - 1) * self.param['nTimeUnits']::]
                 p = len([ele for ele in action_list if ele == x]) / self.param['nTimeUnits']
                 print(f'{x:2}: {100 * p:5.2f}%')
-                # print(f'{x:2}: {100 * p:5.2f}%', end = '')
-            # print('  ')
 
 
             if i_episode % self.param['log_interval'] == 0:
                 print('Smart: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(
                       i_episode, ep_reward, ave_Reward))
-            # print("**********************************************************************************")
-            # check if we have "solved" the cart pole problem
-            # if running_reward > env.spec.reward_threshold:
-            #     print("Solved! Running reward is now {} and "
-            #           "the last episode runs to {} time steps!".format(running_reward, t))
-            #     break
-

@@ -9,7 +9,7 @@ class RandomStrategy:
     def __init__(self, param, logging_timeline) -> None:
         self.param = param
         self.logging_timeline = logging_timeline
-        self.devices = Util.initialize_fixed_devices(50, param)
+        self.devices = Util.initialize_fixed_devices(param)
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits_random'])
         self.ave_Reward_random = 0.0
