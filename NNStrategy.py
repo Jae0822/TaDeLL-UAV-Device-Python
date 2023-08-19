@@ -116,7 +116,7 @@ class NNStrategy:
             self.model.states.append(state)
             ep_reward = 0
             t = 0
-            n = 0  # logging fly behaviors
+            n_fly = 0  # logging fly behaviors
             # FIXME: when the distance is large or the velocity is small, the Fly_time can be too large to surpass the nTimeUnits
 
 
@@ -126,6 +126,7 @@ class NNStrategy:
             # for t in range(0, param['nTimeUnits']):
 
                 # select action from policy
+                print("----------------------------------------------------------------------------")
                 print('state:', state)
 
                 action, velocity = self.select_action(state)
@@ -138,18 +139,17 @@ class NNStrategy:
                 distance = np.linalg.norm(CPoint - NPoint)  # Compute the distance of two points
                 Fly_time = 1 if distance == 0 else math.ceil(distance / velocity)
                 # t = t + Fly_time
-                print(Fly_time)
                 PV = UAV_Energy(velocity) * Fly_time
+                print("action: {}, cur_loc: {}, next_loc: {}, distance: {}, velocity: {}, fly_time: {}, PV: {}".format(
+                    action, CPoint, NPoint, distance, velocity, Fly_time, PV))
 
 
                 # take the action
                 # state, reward, reward_Regular, t = env.step(state, action, t)
                 t = t + Fly_time
                 state, reward_, reward_rest, reward = self.env.step(state, action, velocity, t, PV, self.param, Fly_time)
-                print(reward_)
-                print(reward_rest)
-                print(reward)
-                n += 1
+                print("reward: {}, reward_rest: {}, reward_: {}".format(reward_, reward_rest, reward_))
+                n_fly += 1
 
                 rate1[-1].append(reward_ / reward)
                 rate2[-1].append(reward_rest / reward)
@@ -160,7 +160,7 @@ class NNStrategy:
                 self.model.rewards.append(reward)
                 ep_reward += reward
 
-                print("Smart: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(i_episode, n, t, action))
+                print("Smart: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(i_episode, n_fly, t, action))
 
                 print("----------------------------------------------------------------------------")
                 print("       ")
@@ -180,58 +180,13 @@ class NNStrategy:
             # perform backprop
             self.finish_episode()
 
-            self.episode_reward.append(ep_reward / n) # this episode/average seems the contrary
+            self.episode_reward.append(ep_reward / n_fly) # this episode/average seems the contrary
             # Running_reward.append(running_reward)
             self.average_reward.append(ep_reward)
 
-            # for i in range(param['num_Devices']):
-            #     logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['intervals'][0])
-            #     for j in range(1, len(logging_timeline[i][EP]['intervals'])):
-            #         logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['timeline'][j-1] + logging_timeline[i][EP]['intervals'][j])
-            # for x in range(1, EP):
-            x = i_episode
-            self.logging_timeline[0][x]['UAV_TimeList'] = self.uav.TimeList
-            self.logging_timeline[0][x]['UAV_PositionList'] = self.uav.PositionList
-            self.logging_timeline[0][x]['UAV_PositionCor'] = self.uav.PositionCor
-            self.logging_timeline[0][x]['UAV_VelocityList'] = self.uav.VelocityList
-            self.logging_timeline[0][x]['UAV_Reward'] = self.uav.Reward  # 设备的COST(AOI+CPU)，负数，绝对值越小越好
-            self.logging_timeline[0][x]['UAV_Energy'] = self.uav.Energy  # UAV的飞行能量，正数，绝对值越小越好
-            self.logging_timeline[0][x]['UAV_R_E'] = self.uav.Sum_R_E  # 上面两项（REWARD+ENERGY）的和，负数，绝对值越小越好（这个是STEP输出的最后一个REWARD，优化目标本标，优化的是每个EPISODE的均值：Ep_reward）
-            self.logging_timeline[0][x]['UAV_AoI'] = self.uav.AoI  # 设备的AOI，正数，绝对值越小越好
-            self.logging_timeline[0][x]['UAV_CPU'] = self.uav.CPU  # 设备的CPU，正数，绝对值越小越好
-            self.logging_timeline[0][x]['UAV_b'] = self.uav.b      # 设备的B，正数，绝对值越小越好
-            for i in range(self.param['num_Devices']):
-                self.logging_timeline[i][x]['intervals'] = self.devices[i].intervals
-                self.logging_timeline[i][x]['TimeList'] = self.devices[i].TimeList
-                self.logging_timeline[i][x]['TaskList'] = self.devices[i].TaskList
-                self.logging_timeline[i][x]['KeyTime'] = self.devices[i].KeyTime
-                # 记录每一个EPISODE的非REGULAR的数据
-                # FIXME: 这里的KEYREWARD只包含了AOI+CPU，没有包含UAV的能耗PV
-                # 这里每一个DEVICE只能这样啊，DEVICE不像UAV一样一下一下飞，DEVICE是每一个时隙的
-                # 这里的KEYREWARD是上面step输出reward的一部分，不包括UAV的PV，减200的penalty，不包括reward_rest
-                self.logging_timeline[i][x]['KeyTsk'] = self.devices[i].KeyTsk
-                self.logging_timeline[i][x]['KeyPol'] = self.devices[i].KeyPol
-                self.logging_timeline[i][x]['KeyRewards'] = self.devices[i].KeyReward
-                self.logging_timeline[i][x]['KeyAoI'] = self.devices[i].KeyAoI
-                self.logging_timeline[i][x]['KeyCPU'] = self.devices[i].KeyCPU
-                self.logging_timeline[i][x]['Keyb'] = self.devices[i].Keyb
-                # 记录对应的REGULAR的数据
-                self.logging_timeline[i][x]['KeyTsk_Regular'] = self.devices[i].KeyTsk_Regular
-                self.logging_timeline[i][x]['KeyPol_Regular'] = self.devices[i].KeyPol_Regular
-                self.logging_timeline[i][x]['KeyReward_Regular'] = self.devices[i].KeyReward_Regular
-                self.logging_timeline[i][x]['KeyAoI_Regular'] = self.devices[i].KeyAoI_Regular
-                self.logging_timeline[i][x]['KeyCPU_Regular'] = self.devices[i].KeyCPU_Regular
-                self.logging_timeline[i][x]['Keyb_Regular'] = self.devices[i].Keyb_Regular
 
-                ls1 = [0] + self.logging_timeline[i][x]['intervals']
-                ls2 = self.logging_timeline[i][x]['KeyRewards']
-                # 这里的avg_reward知识单纯的每一个device的reward均值
-                if len(self.logging_timeline[i][x]['KeyTime']) == 1:
-                    self.logging_timeline[i][x]['avg_reward'] = None
-                else:
-                    self.logging_timeline[i][x]['avg_reward'] = sum([x * y for x, y in zip(ls1, ls2)]) / self.logging_timeline[i][x]['KeyTime'][-1]
-
-
+            # save results in logging
+            self.save_logging(i_episode)
 
             # pdb.set_trace()
 
@@ -247,3 +202,50 @@ class NNStrategy:
             if i_episode % self.param['log_interval'] == 0:
                 print('Smart: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(
                       i_episode, ep_reward, ave_Reward))
+        
+    def save_logging(self, episode):
+        # for i in range(param['num_Devices']):
+        #     logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['intervals'][0])
+        #     for j in range(1, len(logging_timeline[i][EP]['intervals'])):
+        #         logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['timeline'][j-1] + logging_timeline[i][EP]['intervals'][j])
+        # for x in range(1, EP):
+        self.logging_timeline[0][episode]['UAV_TimeList'] = self.uav.TimeList
+        self.logging_timeline[0][episode]['UAV_PositionList'] = self.uav.PositionList
+        self.logging_timeline[0][episode]['UAV_PositionCor'] = self.uav.PositionCor
+        self.logging_timeline[0][episode]['UAV_VelocityList'] = self.uav.VelocityList
+        self.logging_timeline[0][episode]['UAV_Reward'] = self.uav.Reward  # 设备的COST(AOI+CPU)，负数，绝对值越小越好
+        self.logging_timeline[0][episode]['UAV_Energy'] = self.uav.Energy  # UAV的飞行能量，正数，绝对值越小越好
+        self.logging_timeline[0][episode]['UAV_R_E'] = self.uav.Sum_R_E  # 上面两项（REWARD+ENERGY）的和，负数，绝对值越小越好（这个是STEP输出的最后一个REWARD，优化目标本标，优化的是每个EPISODE的均值：Ep_reward）
+        self.logging_timeline[0][episode]['UAV_AoI'] = self.uav.AoI  # 设备的AOI，正数，绝对值越小越好
+        self.logging_timeline[0][episode]['UAV_CPU'] = self.uav.CPU  # 设备的CPU，正数，绝对值越小越好
+        self.logging_timeline[0][episode]['UAV_b'] = self.uav.b      # 设备的B，正数，绝对值越小越好
+        for i in range(self.param['num_Devices']):
+            self.logging_timeline[i][episode]['intervals'] = self.devices[i].intervals
+            self.logging_timeline[i][episode]['TimeList'] = self.devices[i].TimeList
+            self.logging_timeline[i][episode]['TaskList'] = self.devices[i].TaskList
+            self.logging_timeline[i][episode]['KeyTime'] = self.devices[i].KeyTime
+            # 记录每一个EPISODE的非REGULAR的数据
+            # FIXME: 这里的KEYREWARD只包含了AOI+CPU，没有包含UAV的能耗PV
+            # 这里每一个DEVICE只能这样啊，DEVICE不像UAV一样一下一下飞，DEVICE是每一个时隙的
+            # 这里的KEYREWARD是上面step输出reward的一部分，不包括UAV的PV，减200的penalty，不包括reward_rest
+            self.logging_timeline[i][episode]['KeyTsk'] = self.devices[i].KeyTsk
+            self.logging_timeline[i][episode]['KeyPol'] = self.devices[i].KeyPol
+            self.logging_timeline[i][episode]['KeyRewards'] = self.devices[i].KeyReward
+            self.logging_timeline[i][episode]['KeyAoI'] = self.devices[i].KeyAoI
+            self.logging_timeline[i][episode]['KeyCPU'] = self.devices[i].KeyCPU
+            self.logging_timeline[i][episode]['Keyb'] = self.devices[i].Keyb
+            # 记录对应的REGULAR的数据
+            self.logging_timeline[i][episode]['KeyTsk_Regular'] = self.devices[i].KeyTsk_Regular
+            self.logging_timeline[i][episode]['KeyPol_Regular'] = self.devices[i].KeyPol_Regular
+            self.logging_timeline[i][episode]['KeyReward_Regular'] = self.devices[i].KeyReward_Regular
+            self.logging_timeline[i][episode]['KeyAoI_Regular'] = self.devices[i].KeyAoI_Regular
+            self.logging_timeline[i][episode]['KeyCPU_Regular'] = self.devices[i].KeyCPU_Regular
+            self.logging_timeline[i][episode]['Keyb_Regular'] = self.devices[i].Keyb_Regular
+
+            ls1 = [0] + self.logging_timeline[i][episode]['intervals']
+            ls2 = self.logging_timeline[i][episode]['KeyRewards']
+            # 这里的avg_reward知识单纯的每一个device的reward均值
+            if len(self.logging_timeline[i][episode]['KeyTime']) == 1:
+                self.logging_timeline[i][episode]['avg_reward'] = None
+            else:
+                self.logging_timeline[i][episode]['avg_reward'] = sum([x * y for x, y in zip(ls1, ls2)]) / self.logging_timeline[i][episode]['KeyTime'][-1]

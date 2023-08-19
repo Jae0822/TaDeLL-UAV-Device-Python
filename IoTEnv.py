@@ -276,7 +276,7 @@ class Env(object):
                     reward_rest += -10
                 else:
                     reward_rest += device.KeyReward[-1]   # should decrease with time
-        reward_rest = reward_rest / (self.num_Devices - 1)
+        reward_rest = reward_rest / max(1, (self.num_Devices - 1)) #avoid dividing by 0 if only 1 device
 
 
         device = self.Devices[action]
