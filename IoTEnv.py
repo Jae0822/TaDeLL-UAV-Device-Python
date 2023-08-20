@@ -28,16 +28,14 @@ class Device(object):
 
 
     def gen_TimeTaskList_set(self, nTimeUnits):
-        TimeList = np.zeros(nTimeUnits)
-        TaskList = []
-        TaskList.append(self.taskList_set[1])
+        TaskList = [None]*nTimeUnits
         mean = self.frequency
         t = int(np.random.normal(mean, mean / 10))
+        TaskList[0] = self.taskList_set[1]
         while t < nTimeUnits:
-            TimeList[t] = 1
-            TaskList.append(self.taskList_set[1])
+            TaskList[t] = self.taskList_set[1]
             t = t + mean
-        return TimeList, TaskList
+        return TaskList
 
 class Uav(object):
     def __init__(self, V, Devices):
@@ -77,9 +75,7 @@ class Env(object):
     def initialization(self, Devices, UAV):
         # initialize for each device
         for i in range(len(Devices)):
-            Devices[i].TimeList, Devices[i].TaskList  = Devices[i].gen_TimeTaskList_set(self.nTimeUnits)   # The list of time that indicates the arrival of a new task
-            Devices[i].nTasks = len(Devices[i].TaskList)
-            Devices[i].NewTaskArrival = np.where(Devices[i].TimeList)[0]  # The list of New task arrival time
+            Devices[i].TaskList = Devices[i].gen_TimeTaskList_set(self.nTimeUnits)   # The list of time that indicates the arrival of a new task
 
     def reset(self, Devices, UAV):
         # Reset Devices and UAV
@@ -95,13 +91,9 @@ class Env(object):
         UAV.CPU = []
         UAV.b = []
         for i in range(len(Devices)):
-            # Devices[i].TimeList, Devices[i].TaskList  = Devices[i].gen_TimeTaskList(self.nTimeUnits)   # The list of time that indicates the arrival of a new task
-            # Devices[i].nTasks = len(Devices[i].TaskList)
-            # Devices[i].NewTaskArrival = np.where(Devices[i].TimeList)[0]  # The list of New task arrival time
             Devices[i].ta_dex = 0  # current task index
             Devices[i].task = Devices[i].TaskList[Devices[i].ta_dex]  # current task
             Devices[i].TaskList_Regular = copy.deepcopy(Devices[i].TaskList)  # For the comparison without warm start
-            Devices[i].task_Regular = Devices[i].TaskList_Regular[Devices[i].ta_dex]   # current task for comparison without warm start
 
             Devices[i].KeyTime = [0]  # The list of key time at which the policy changes (1. UAV visits 2. new task arrival)
             Devices[i].KeyPol = [Devices[i].TaskList[0].init_policy]  # The list of policy at/after key time slot
@@ -146,96 +138,29 @@ class Env(object):
         state[action] = 0
 
         cur_device = self.Devices[action]
-        index_start = self.update_device_since_keytime(cur_device, t)
+        #index_start = self.update_device_since_keytime(cur_device, t)
 
         # update reward
         reward_rest = 0
-        for device in self.Devices: 
-            if device != cur_device:
-                if device.nonvisitFlag:
-                    reward_rest += -10
-                else:
-                    reward_rest += device.KeyReward[-1]   # should decrease with time
-        print("reward_rest: {}".format(reward_rest))
-        reward_rest = reward_rest / max(1, (self.num_Devices - 1)) #avoid dividing by 0 if only 1 device
-
-
-        index_end = cur_device.KeyTime.index(cur_device.KeyTime[-1])
-
         reward_ = 0
         AoI_ = 0
         CPU_ = 0
-        b_ = 0
-        for index in range(index_start, index_end):
-            if index + 1 > len(cur_device.KeyTime)-1:
-                print('Error captured!')
-            interval = cur_device.KeyTime[index + 1] - cur_device.KeyTime[index]
-            cur_device.intervals.append(interval)
-            if index > len(cur_device.KeyReward)-1:
-                print('Error captured!')
-            print("updating reward: {} inteval: {}".format(cur_device.KeyReward[index], interval))
-            reward_ += cur_device.KeyReward[index] * interval
-            """
-            FX8: 利用KeyAoI KeyCPU，计算加权均值
-            """
-            AoI_ += cur_device.KeyAoI[index] * interval
-            CPU_ += cur_device.KeyCPU[index] * interval
-            b_ += cur_device.Keyb[index] * interval
+        b_  = 0
+        for dev in self.Devices:
+            r, a, c, b = self.calculate_reward_since_last_visit(dev, t)
+            reward_ += r
+            AoI_ += a
+            CPU_ += c
+            b_ += b
 
+        cur_device.KeyTime.append(t)
+        cur_device.KeyReward.append(reward_)   # should decrease with time
 
-
-        """
-        FX6:取消这个除的过程，会怎么样呢？还没尝试
-        """
-        reward_ = reward_ / (cur_device.KeyTime[index_end] - cur_device.KeyTime[index_start]) # not the same as  device.intervals[-1]
-        AoI_ = AoI_ / (cur_device.KeyTime[index_end] - cur_device.KeyTime[index_start])
-        CPU_ = CPU_ / (cur_device.KeyTime[index_end] - cur_device.KeyTime[index_start])
-        b_ = b_ / (cur_device.KeyTime[index_end] - cur_device.KeyTime[index_start])
-
-        # add other devices' reward into account
-        """
-        FX5: 取消REWARD_REST
-        """
-        # reward_final = (reward_ + reward_rest)/2  # weighted average,  iteration :discounted reward, back discount
         reward_final = reward_  # weighted average,  iteration :discounted reward, back discount
-        # FIXME: Compute UAV's energy consumption when flies from previous point to next point
-        # reward_Fly_energy = reward_ +
-
-
-        # # 2: Regular (Without Warm Start)
-        # reward_Regular = 0
-        # for index in range(index_start, index_end):
-        #     tsk = device.KeyTsk_Regular[index]
-        #     alpha = device.KeyPol_Regular[index]
-        #     reward = tsk.get_value(alpha['theta'])  # Cause the pg_rl has one step of update which I don't need here
-        #     device.rewards_Regular.append(reward)
-        #     reward_Regular += device.intervals[-1] * device.rewards_Regular[-1]
-
         alpha = param['alpha']
-        # reward_fair = 100 * pow(reward_final, 1-alpha) / (1 - alpha)
-        # reward_fair = math.log(reward_final)
-        """
-        FX1
-        reward_fair = reward_final + 20
-        不需要为了收敛加一个正数，不加也可以照样收敛
-        在收敛前，第10个EPISODE的时候，会有一个凸起，不知道与什么有关？
-        """
         reward_fair = reward_final
 
-        # FIXME: 不加这个PENALTY这个会收敛吗？
-        """
-        FX4: 取消访问同一个DEVICE的penalty
-        """
-        # if action == self.UAV.PositionList[-2]:  # 重复访问的penalty
-        #     reward_fair = reward_fair - 200
-
         mu = param['mu']
-        """
-        FX2
-        这里的reward_fair本来就是要maximize的（在单个TASK里面，我已经翻转过一次了：我要minimize AOI + CPU，相当于maximize和的负）
-        所以reward_fair可以直接给到神经网络去maximize
-        但是，PV是要minimize的，所以相当于maximize PV的负
-        """
         reward_fair1 = (1 - mu) * reward_fair - mu * PV  # 添加飞行能量消耗
         print('reward: ', reward_fair, ', Energy:', PV)
 
@@ -246,99 +171,33 @@ class Env(object):
         self.UAV.CPU.append(CPU_)
         self.UAV.b.append(b_)
 
-
-
-        # print("done one step")
-        # return state, reward_, reward_Regular, t
         return state, reward_, reward_rest, reward_fair1
+
+    def calculate_reward_since_last_visit(self, device, time):
+        reward = 0
+        AoI = 0
+        CPU = 0
+        b = 0
+
+        last_visited_time = device.KeyTime[-1]
+        #for i in [i for i in range(len(test_list)) if test_list[i] != None]
+        for i in np.nonzero(device.TaskList)[0]:
+            if i > time:
+                break
+            if i <= last_visited_time:
+                continue
+            cur_task = device.TaskList[i]
+            interval = time - i
+            reward += cur_task.get_value(cur_task.init_policy['theta']) * interval
+            AoI += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[0] * interval
+            CPU += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[1] * interval
+            b += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[2] * interval
+            #print("cur time {} index {} updating reward: {} inteval: {}".format(
+            #    time, i, cur_task.get_value(cur_task.init_policy['theta']), interval))
+        return reward, AoI, CPU, b
 
     def update(self):
         pass
-
-    def update_device_since_keytime(self, device, t):
-        device.nonvisitFlag = False
-        last_visited_time = device.KeyTime[-1]
-        index_start = device.KeyTime.index(last_visited_time)
-
-        VisitTime = device.TimeList[last_visited_time+1 : t+1]
-
-        # ------------------Update estimated reward for rest devices----------------------#
-        # FIXME: Fly_Time or state[i] （两种模式哪一种更好）
-        # FIXME: end of the nTimeUnits, 怎么处理剩下的一小部分或多或少的时间。
-
-        if not np.any(VisitTime):
-            "两次访问之间为全0，没有任何新任务出现"
-            device.KeyTime.append(t)
-            # 1: Warm Start
-            if device.task.nonvisitFlag:
-                self.TaDeLL_Model.getDictPolicy_Single(device.task)
-                device.task.nonvisitFlag = False
-            else:
-                pg_rl(device.task, 1)  # update the PG policy for one step
-
-            device.KeyPol.append(device.task.policy)
-            tsk0 = copy.deepcopy(device.task)
-            device.KeyTsk.append(tsk0)  # tsk0 with the improved policy
-            device.KeyReward.append(tsk0.get_value(tsk0.policy['theta']))
-            device.KeyAoI.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[0])
-            device.KeyCPU.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[1])
-            device.Keyb.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[2])
-            # 2: Regular (Without Warm Start)
-            pg_rl(device.task_Regular, 1)  # update the PG policy for one step
-            device.KeyPol_Regular.append(device.task_Regular.policy)
-            tsk0_Regular = copy.deepcopy(device.task_Regular)
-            device.KeyTsk_Regular.append(tsk0_Regular)
-            device.KeyReward_Regular.append(tsk0_Regular.get_value(tsk0_Regular.policy['theta']))
-            device.KeyAoI_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[0])
-            device.KeyCPU_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[1])
-            device.Keyb_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[2])
-        else:
-            "访问间隔里有1出现"
-            for i in np.nonzero(VisitTime)[0]:
-                "Iterate所有的1"
-                kt = last_visited_time + 1 + i  # kt: key time
-                device.KeyTime.append(kt)
-                device.ta_dex = device.ta_dex + 1
-                # 1: Warm Start
-                device.task = device.TaskList[device.ta_dex]
-                device.KeyPol.append(device.task.init_policy)  # For the policy changes not from UAV's update
-                tsk0 = copy.deepcopy(device.task)
-                device.KeyTsk.append(tsk0)  # tsk0 with initial policy
-                device.KeyReward.append(tsk0.get_value(tsk0.init_policy['theta']))
-                device.KeyAoI.append(tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[0])
-                device.KeyCPU.append(tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[1])
-                device.Keyb.append(tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[2])
-                # 2: Regular (Without Warm Start)
-                device.task_Regular = device.TaskList_Regular[device.ta_dex]
-                device.KeyPol_Regular.append(device.task_Regular.init_policy)
-                tsk0_Regular = copy.deepcopy(device.task_Regular)
-                device.KeyTsk_Regular.append(tsk0_Regular)
-                device.KeyReward_Regular.append(tsk0_Regular.get_value(tsk0_Regular.init_policy['theta']))
-                device.KeyAoI_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.init_policy['theta'])[0])
-                device.KeyCPU_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.init_policy['theta'])[1])
-                device.Keyb_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.init_policy['theta'])[2])
-            if VisitTime[-1] == 0:    # 需要再对t做一个TaDeLL的更新
-                device.KeyTime.append(t)
-                # 1: Warm Start
-                self.TaDeLL_Model.getDictPolicy_Single(device.task)
-                device.KeyPol.append(device.task.policy)
-                tsk0 = copy.deepcopy(device.task)
-                device.KeyTsk.append(tsk0)  # tsk0 with the improved policy
-                device.KeyReward.append(tsk0.get_value(tsk0.policy['theta']))
-                device.KeyAoI.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[0])
-                device.KeyCPU.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[1])
-                device.Keyb.append(tsk0.get_AoI_CPU(tsk0.policy['theta'])[2])
-                # 2: Regular (Without Warm Start)
-                pg_rl(device.task_Regular, 1)  # update the PG policy for one step
-                device.KeyPol_Regular.append(device.task_Regular.policy)
-                tsk0_Regular = copy.deepcopy(device.task_Regular)
-                device.KeyTsk_Regular.append(tsk0_Regular)
-                device.KeyReward_Regular.append(tsk0_Regular.get_value(tsk0_Regular.policy['theta']))
-                device.KeyAoI_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[0])
-                device.KeyCPU_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[1])
-                device.Keyb_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.policy['theta'])[2])
-        return index_start
-
 
 class Policy(nn.Module):
     """
@@ -358,7 +217,7 @@ class Policy(nn.Module):
 
         # actor's layer
         # self.action_affine1 = nn.Linear(32, 64)
-        self.action_head = nn.Linear(64, output_size - 1)
+        self.action_head = nn.Linear(64, output_size)
         self.velocity_head = nn.Linear(64, 1)
         # self.velocity_head.weight.requires_grad_(False) # 禁用梯度
 
@@ -370,13 +229,8 @@ class Policy(nn.Module):
         self.saved_actions = []
         self.actions = []  # To record the actions
         self.states = []  # To record the states
-        self.reward_rewards = []
         self.rewards = []
-        self.reward_rest = []
 
-        self.actions_random = []  # To record the actions
-        self.states_random = []  # To record the states
-        self.rewards_random = []
         self.double()
 
     def forward(self, x):
@@ -392,19 +246,10 @@ class Policy(nn.Module):
         # a = F.relu(self.action_affine1(x))
         action_prob = F.softmax(self.action_head(x), dim=-1)
         state_values = self.value_head(x)
+        print("action prob {}".format(self.action_head(x)))
+        print("action value {}".format(self.value_head(x)))
         velocity = torch.clamp(self.velocity_head(x), 5, self.velocity_lim)
         print('velocity:', velocity)
-        # 锁定速度值，并确保不出现NAN
-        if velocity.isnan() or velocity.isinf():
-            luck = 1
-            # velocity[0] = 25
-
-        if torch.isnan(action_prob).any() or torch.isinf(action_prob).any():
-            luck = 1
-        if torch.isnan(state_values).any() or torch.isinf(state_values).any():
-            luck = 1
-        if torch.isnan(velocity).any() or torch.isinf(velocity).any():
-            luck = 1
 
         # return values for both actor and critic as a tuple of 2 values:
         # 1. a list with the probability of each action over the action space

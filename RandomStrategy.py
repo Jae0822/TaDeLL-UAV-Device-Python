@@ -46,7 +46,6 @@ class RandomStrategy:
                                                                                                                        action_random))
 
         self.logging_timeline[0][0]['Reward_random'] = Reward_random
-        self.logging_timeline[0][0]['Random_UAV_TimeList'] = self.uav.TimeList
         self.logging_timeline[0][0]['Random_UAV_PositionList'] = self.uav.PositionList
         self.logging_timeline[0][0]['Random_UAV_PositionCor'] = self.uav.PositionCor
         self.logging_timeline[0][0]['Random_UAV_VelocityList'] = self.uav.VelocityList
@@ -58,7 +57,6 @@ class RandomStrategy:
         self.logging_timeline[0][0]['Random_UAV_b'] = self.uav.b
         for i in range(self.param['num_Devices']):
             self.logging_timeline[i][0]['Random_intervals'] = self.devices[i].intervals
-            self.logging_timeline[i][0]['Random_TimeList'] = self.devices[i].TimeList
             self.logging_timeline[i][0]['Random_KeyTime'] = self.devices[i].KeyTime
             self.logging_timeline[i][0]['Random_TaskList'] = self.devices[i].TaskList
             # 记录每一个EPISODE的非REGULAR的数据

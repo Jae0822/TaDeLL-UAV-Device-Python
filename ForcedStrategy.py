@@ -27,7 +27,7 @@ class ForcedStrategy:
             # 强制选择action
             action_table_force = np.zeros(self.param['num_Devices'])  # 筛选出当前有新任务的设备
             for i in range(self.param['num_Devices']):
-                if self.devices[i].TimeList[t-1] == 1:
+                if self.devices[i].TaskList[t-1]:
                     action_table_force[i] = 1
             inx = np.where(action_table_force == 1)[0]
             # action = inx[np.random.randint(len(inx))] if inx else np.random.randint(param['num_Devices']) # 随机选一个去访问
@@ -52,7 +52,6 @@ class ForcedStrategy:
             ep_reward_force += reward_force
             print("Force: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(1, n,t,action_force))
         self.logging_timeline[0][0]['Reward_force'] = Reward_force
-        self.logging_timeline[0][0]['Force_UAV_TimeList'] = self.uav.TimeList
         self.logging_timeline[0][0]['Force_UAV_PositionList'] = self.uav.PositionList
         self.logging_timeline[0][0]['Force_UAV_PositionCor'] = self.uav.PositionCor
         self.logging_timeline[0][0]['Force_UAV_VelocityList'] = self.uav.VelocityList
@@ -64,7 +63,6 @@ class ForcedStrategy:
         self.logging_timeline[0][0]['Force_UAV_b'] = self.uav.b
         for i in range(self.param['num_Devices']):
             self.logging_timeline[i][0]['Force_intervals'] = self.devices[i].intervals
-            self.logging_timeline[i][0]['Force_TimeList'] = self.devices[i].TimeList
             self.logging_timeline[i][0]['Force_KeyTime'] = self.devices[i].KeyTime
             self.logging_timeline[i][0]['Force_TaskList'] = self.devices[i].TaskList
             # 记录每一个EPISODE的非REGULAR的数据

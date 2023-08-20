@@ -11,8 +11,8 @@ def initialize_fixed_devices(param):
     #     Devices.append(Device(random.randint(param['freq_low'], param['freq_high']), random.randint(30, 70), param['field']))
 
     freq_list = [
-        530,
-        510,
+        10,
+        70,
         500,
         485,
         470,
@@ -59,40 +59,40 @@ def painting(avg, param, env_nn, model, env_random, env_force, logging_timeline)
 
 
     # †††††††††††††††††††††††††††††††††††††††Plotting Phase††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-    fig, ax = plt.subplots(1)
-
-    ax.plot(np.arange(1, param['episodes'] + 1), avg['Ave_Reward'],
-            label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
-                param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
-                param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
-    ax.set_xlabel('Episodes')  # Add an x-label to the axes.
-    ax.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
-    ax.set_title("The Ave_Reward, NN:" + str(model.pattern))  # Add a title to the axes.
-    ax.axhline(y=max(avg['Ave_Reward']), color='r', linestyle='--', linewidth='0.9', label='Smart: ' + str(max(avg['Ave_Reward'])))
-    ax.axhline(y=avg['ave_Reward_random'] * len(env_random.UAV.Reward), color='b', linestyle='--', linewidth='0.9',
-               label='Random:' + str(avg['ave_Reward_random']*len(env_random.UAV.Reward)))
-    ax.axhline(y=avg['ave_Reward_force'] * len(env_force.UAV.Reward), color='g', linestyle='--', linewidth='0.9', label='Forced:' + str(avg['ave_Reward_force']* len(env_force.UAV.Reward)))
-    ax.legend(loc="best")
-
-    # †††††††††††††††††††††††††††††††††††††††EP_REWARD††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-    fig_ep, ax_ep = plt.subplots(1)
-    # ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP, args.gamma, args.learning_rate))
-    ax_ep.plot(np.arange(1, param['episodes'] + 1), avg['Ep_reward'],
-               label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
-                   param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
-                   param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
-    ax_ep.set_xlabel('Episodes')  # Add an x-label to the axes.
-    ax_ep.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
-    ax_ep.set_title("The reward divided by number of flights, NN:" + str(model.pattern))  # Add a title to the axes.
-    # ax.axhline(y=max(avg['Ave_Reward']), color='r', linestyle='--', linewidth='0.9',
-    #            label='Smart: ' + str(max(avg['Ave_Reward'])))
-    ax_ep.axhline(y=avg['ave_Reward_random'], color='b', linestyle='--', linewidth='0.9',
-                  label='Random:' + str(avg['ave_Reward_random']))
-    ax_ep.axhline(y=avg['ave_Reward_force'], color='g', linestyle='--', linewidth='0.9',
-                  label='Forced:' + str(avg['ave_Reward_force']))
-    ax_ep.legend(loc="best")
-
-
+#    fig, ax = plt.subplots(1)
+#
+#    ax.plot(np.arange(1, param['episodes'] + 1), avg['Ave_Reward'],
+#            label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
+#                param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
+#                param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
+#    ax.set_xlabel('Episodes')  # Add an x-label to the axes.
+#    ax.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
+#    ax.set_title("The Ave_Reward, NN:" + str(model.pattern))  # Add a title to the axes.
+#    ax.axhline(y=max(avg['Ave_Reward']), color='r', linestyle='--', linewidth='0.9', label='Smart: ' + str(max(avg['Ave_Reward'])))
+#    ax.axhline(y=avg['ave_Reward_random'] * len(env_random.UAV.Reward), color='b', linestyle='--', linewidth='0.9',
+#               label='Random:' + str(avg['ave_Reward_random']*len(env_random.UAV.Reward)))
+#    ax.axhline(y=avg['ave_Reward_force'] * len(env_force.UAV.Reward), color='g', linestyle='--', linewidth='0.9', label='Forced:' + str(avg['ave_Reward_force']* len(env_force.UAV.Reward)))
+#    ax.legend(loc="best")
+#
+#    # †††††††††††††††††††††††††††††††††††††††EP_REWARD††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
+#    fig_ep, ax_ep = plt.subplots(1)
+#    # ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP, args.gamma, args.learning_rate))
+#    ax_ep.plot(np.arange(1, param['episodes'] + 1), avg['Ep_reward'],
+#               label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
+#                   param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
+#                   param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
+#    ax_ep.set_xlabel('Episodes')  # Add an x-label to the axes.
+#    ax_ep.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
+#    ax_ep.set_title("The reward divided by number of flights, NN:" + str(model.pattern))  # Add a title to the axes.
+#    # ax.axhline(y=max(avg['Ave_Reward']), color='r', linestyle='--', linewidth='0.9',
+#    #            label='Smart: ' + str(max(avg['Ave_Reward'])))
+#    ax_ep.axhline(y=avg['ave_Reward_random'], color='b', linestyle='--', linewidth='0.9',
+#                  label='Random:' + str(avg['ave_Reward_random']))
+#    ax_ep.axhline(y=avg['ave_Reward_force'], color='g', linestyle='--', linewidth='0.9',
+#                  label='Forced:' + str(avg['ave_Reward_force']))
+#    ax_ep.legend(loc="best")
+#
+#
     # †††††††††††††††††††††††††††††††††††††††Smart††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     x = param['episodes']
     fig1, ax1 = plt.subplots(param['num_Devices'])
@@ -100,7 +100,7 @@ def painting(avg, param, env_nn, model, env_random, env_force, logging_timeline)
     fig1.supylabel('The Ave Reward')
     fig1.suptitle('The episode %.0f' % (x))
     for i in range(param['num_Devices']):
-        if len(logging_timeline[i][x]['intervals']) == 0:
+        if logging_timeline[i][x]['KeyTime'][-1] == 0:
             ax1[i].text(0.4, 0.5, 'No Visit by UAV')
         else:
             ax1[i].step(logging_timeline[i][x]['KeyTime'], logging_timeline[i][x]['KeyRewards'], '^-g', where='post',
@@ -114,9 +114,8 @@ def painting(avg, param, env_nn, model, env_random, env_force, logging_timeline)
             # if i == 0:
             #     ax1[i].set_title(model.pattern)
             # ax1[i].set_title('CPU Capacity: %.0f' % (env.Devices[i].cpu_capacity))
-            for vv in range(len(np.where(logging_timeline[i][x]['TimeList'])[0])):
-                ax1[i].axvline(x=np.where(logging_timeline[i][x]['TimeList'])[0][vv], linestyle='--', linewidth='0.9')
-                # ax1[i].plot([np.where(Devices[i].TimeList)],[logging_timeline[i][x]['rewards']], 'o')
+            for vv in range(len(np.where(logging_timeline[i][x]['TaskList'])[0])):
+                ax1[i].axvline(x=np.where(logging_timeline[i][x]['TaskList'])[0][vv], linestyle='--', linewidth='0.9')
     # plt.show()
     #      https://matplotlib.org/stable/tutorials/text/text_intro.html
 
@@ -144,7 +143,6 @@ def painting(avg, param, env_nn, model, env_random, env_force, logging_timeline)
             for vv in range(len(np.where(logging_timeline[i][0]['Random_TimeList'])[0])):
                 ax3[i].axvline(x=np.where(logging_timeline[i][0]['Random_TimeList'])[0][vv], linestyle='--',
                                linewidth='0.9')
-                # ax1[i].plot([np.where(Devices[i].TimeList)],[logging_timeline[i][x]['rewards']], 'o')
 
 
     # †††††††††††††††††††††††††††††††††††††††Force††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
@@ -169,7 +167,6 @@ def painting(avg, param, env_nn, model, env_random, env_force, logging_timeline)
             #     ax1[i].set_title(model.pattern)
             ax4[i].set_title('CPU Capacity: %.0f' % (env_force.Devices[i].cpu_capacity))
             for vv in range(len(np.where(logging_timeline[i][0]['Force_TimeList'])[0])):
-                # ax1[i].plot([np.where(Devices[i].TimeList)],[logging_timeline[i][x]['rewards']], 'o')
                 ax4[i].axvline(x=np.where(logging_timeline[i][0]['Force_TimeList'])[0][vv], linestyle='--',
                                linewidth='0.9')
 

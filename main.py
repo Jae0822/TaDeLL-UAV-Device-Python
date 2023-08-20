@@ -16,10 +16,10 @@ def main():
     #  V: 72 km/h =  20 m/s
     #  field: 1 km * 1km
     #  dist:
-    length = 2000
+    length = 500 #2000
     param = {'episodes': 5, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
              'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
-             'num_Devices': 25, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16,
+             'num_Devices': 2, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16,
              'cpu_capacity' : 50}
 
     random.seed(param['seed'])
@@ -65,8 +65,8 @@ def main():
 
 
     avg = {}
-    avg['Ave_Reward'] = nn_strategy.average_reward
-    avg['Ep_reward'] = nn_strategy.episode_reward
+    avg['Ave_Reward'] = 0
+    avg['Ep_reward'] = 0
     avg['ave_Reward_random'] = random_strategy.ave_Reward_random
     avg['ave_Reward_force'] = forced_strategy.ave_Reward_force
     # with open('fig_temp.pkl', 'wb') as f:

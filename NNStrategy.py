@@ -11,14 +11,12 @@ class NNStrategy:
     def __init__(self, param, logging_timeline) -> None:
         self.param = param
         self.logging_timeline = logging_timeline
-        self.episode_reward = []
-        self.average_reward = []
         self.devices = Util.initialize_fixed_devices(param)
 
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits'])
 
-        self.model = Policy(1 * param['num_Devices'], param['num_Devices'] + 1, param['V_Lim'])
+        self.model = Policy(param['num_Devices'], param['num_Devices'], param['V_Lim'])
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=param['learning_rate'])  # lr=3e-2
         self.eps = np.finfo(np.float32).eps.item()
 
@@ -28,9 +26,10 @@ class NNStrategy:
         probs, state_value, velocity = self.model(state)
 
         # create a categorical distribution over the list of probabilities of actions
-        print(probs)
-        print(state_value)
-        print(velocity)
+        print("select action")
+        print("\tprobs: {}".format(probs))
+        print("\tstate: {}".format(state_value))
+        print("\tvelocity: {}".format(velocity))
         m = torch.distributions.Categorical(probs)
 
         # and sample an action using the distribution
@@ -103,9 +102,6 @@ class NNStrategy:
 
     def learning(self):
 
-        rate1 = []
-        rate2 = []
-
         for i_episode in range(1, self.param['episodes'] + 1):
 
             state = self.env.reset(self.devices, self.uav)
@@ -120,8 +116,6 @@ class NNStrategy:
             # FIXME: when the distance is large or the velocity is small, the Fly_time can be too large to surpass the nTimeUnits
 
 
-            rate1.append([])
-            rate2.append([])
             while t < self.param['nTimeUnits']:
             # for t in range(0, param['nTimeUnits']):
 
@@ -148,17 +142,13 @@ class NNStrategy:
                 # state, reward, reward_Regular, t = env.step(state, action, t)
                 t = t + Fly_time
                 state, reward_, reward_rest, reward = self.env.step(state, action, velocity, t, PV, self.param, Fly_time)
-                print("reward: {}, reward_rest: {}, reward_: {}".format(reward_, reward_rest, reward_))
+                print("reward: {}, reward_rest: {}, reward_: {}".format(reward, reward_rest, reward_))
                 n_fly += 1
-
-                rate1[-1].append(reward_ / reward)
-                rate2[-1].append(reward_rest / reward)
 
                 self.model.actions.append(action)
                 self.model.states.append(state)
-
-                self.model.rewards.append(reward)
-                ep_reward += reward
+                self.model.rewards.append(reward_)
+                ep_reward += reward_
 
                 print("Smart: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(i_episode, n_fly, t, action))
 
@@ -171,19 +161,8 @@ class NNStrategy:
             不除以N，凸起变高
             """
 
-            ave_Reward = ep_reward
-            # ave_Reward = sum(model.rewards) / n
-
-            # update cumulative reward
-            # running_reward = 0.05 * ep_reward + (1 - 0.05) * running_reward
-
             # perform backprop
             self.finish_episode()
-
-            self.episode_reward.append(ep_reward / n_fly) # this episode/average seems the contrary
-            # Running_reward.append(running_reward)
-            self.average_reward.append(ep_reward)
-
 
             # save results in logging
             self.save_logging(i_episode)
@@ -200,15 +179,10 @@ class NNStrategy:
 
 
             if i_episode % self.param['log_interval'] == 0:
-                print('Smart: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(
-                      i_episode, ep_reward, ave_Reward))
+                print('Smart: Episode {}\tLast reward: {:.2f}'.format(
+                      i_episode, ep_reward))
         
     def save_logging(self, episode):
-        # for i in range(param['num_Devices']):
-        #     logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['intervals'][0])
-        #     for j in range(1, len(logging_timeline[i][EP]['intervals'])):
-        #         logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['timeline'][j-1] + logging_timeline[i][EP]['intervals'][j])
-        # for x in range(1, EP):
         self.logging_timeline[0][episode]['UAV_TimeList'] = self.uav.TimeList
         self.logging_timeline[0][episode]['UAV_PositionList'] = self.uav.PositionList
         self.logging_timeline[0][episode]['UAV_PositionCor'] = self.uav.PositionCor
@@ -220,8 +194,6 @@ class NNStrategy:
         self.logging_timeline[0][episode]['UAV_CPU'] = self.uav.CPU  # 设备的CPU，正数，绝对值越小越好
         self.logging_timeline[0][episode]['UAV_b'] = self.uav.b      # 设备的B，正数，绝对值越小越好
         for i in range(self.param['num_Devices']):
-            self.logging_timeline[i][episode]['intervals'] = self.devices[i].intervals
-            self.logging_timeline[i][episode]['TimeList'] = self.devices[i].TimeList
             self.logging_timeline[i][episode]['TaskList'] = self.devices[i].TaskList
             self.logging_timeline[i][episode]['KeyTime'] = self.devices[i].KeyTime
             # 记录每一个EPISODE的非REGULAR的数据
@@ -242,10 +214,9 @@ class NNStrategy:
             self.logging_timeline[i][episode]['KeyCPU_Regular'] = self.devices[i].KeyCPU_Regular
             self.logging_timeline[i][episode]['Keyb_Regular'] = self.devices[i].Keyb_Regular
 
-            ls1 = [0] + self.logging_timeline[i][episode]['intervals']
             ls2 = self.logging_timeline[i][episode]['KeyRewards']
             # 这里的avg_reward知识单纯的每一个device的reward均值
             if len(self.logging_timeline[i][episode]['KeyTime']) == 1:
                 self.logging_timeline[i][episode]['avg_reward'] = None
             else:
-                self.logging_timeline[i][episode]['avg_reward'] = sum([x * y for x, y in zip(ls1, ls2)]) / self.logging_timeline[i][episode]['KeyTime'][-1]
+                self.logging_timeline[i][episode]['avg_reward'] = sum(ls2)
