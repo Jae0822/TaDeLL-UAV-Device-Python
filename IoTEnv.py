@@ -26,6 +26,14 @@ class Device(object):
         with open('input_files/SourceTask_temp.pkl', 'rb') as f:
             self.taskList_set, _ = pickle.load(f)
 
+        self.KeyTime = [0]  # The list of key time at which the policy changes (1. UAV visits 2. new task arrival)
+        self.KeyReward = [0]  # Didn't use pg_rl() cause it has one step of update which I don't need here
+        #self.KeyReward = [tsk0.get_value(tsk0.init_policy['theta'])]  # Didn't use pg_rl() cause it has one step of update which I don't need here
+
+        self.TaskList = []
+        self.missedTasks = {}
+        self.lastTimeMissed = 0
+
 
     def gen_TimeTaskList_set(self, nTimeUnits):
         TaskList = [None]*nTimeUnits
@@ -91,28 +99,11 @@ class Env(object):
         UAV.CPU = []
         UAV.b = []
         for i in range(len(Devices)):
-            Devices[i].ta_dex = 0  # current task index
-            Devices[i].task = Devices[i].TaskList[Devices[i].ta_dex]  # current task
-            Devices[i].TaskList_Regular = copy.deepcopy(Devices[i].TaskList)  # For the comparison without warm start
-
             Devices[i].KeyTime = [0]  # The list of key time at which the policy changes (1. UAV visits 2. new task arrival)
-            Devices[i].KeyPol = [Devices[i].TaskList[0].init_policy]  # The list of policy at/after key time slot
-            tsk0 = copy.deepcopy(Devices[i].TaskList[0])
-            Devices[i].KeyTsk = [tsk0]
-            Devices[i].KeyReward = [tsk0.get_value(tsk0.init_policy['theta'])]  # Didn't use pg_rl() cause it has one step of update which I don't need here
-            Devices[i].KeyAoI = [tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[0]]
-            Devices[i].KeyCPU = [tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[1]]
-            Devices[i].Keyb = [tsk0.get_AoI_CPU(tsk0.init_policy['theta'])[2]]
-            Devices[i].nonvisitFlag = True  # To indicate the first visit. This device hasn't been visited.
-            Devices[i].rewards = []
-            Devices[i].intervals = []
-            Devices[i].rewards_Regular = []
-            Devices[i].KeyPol_Regular = copy.deepcopy(Devices[i].KeyPol)  # The Key points for Regular learning without warm start
-            Devices[i].KeyTsk_Regular = copy.deepcopy(Devices[i].KeyTsk)
-            Devices[i].KeyReward_Regular = copy.deepcopy(Devices[i].KeyReward)
-            Devices[i].KeyAoI_Regular = copy.deepcopy(Devices[i].KeyAoI)
-            Devices[i].KeyCPU_Regular = copy.deepcopy(Devices[i].KeyCPU)
-            Devices[i].Keyb_Regular = copy.deepcopy(Devices[i].Keyb)
+            #self.KeyReward = [tsk0.get_value(tsk0.init_policy['theta'])]  # Didn't use pg_rl() cause it has one step of update which I don't need here
+            Devices[i].KeyReward = [0]  # Didn't use pg_rl() cause it has one step of update which I don't need here
+            Devices[i].missedTasks.clear()
+            Devices[i].lastTimeMissed = 0
         # Reset state
         state = np.concatenate((# [0 for x in range(self.num_Devices)],  # 1.当前节点总的已访问次数  不是已访问次数
                                 # [0 for x in range(self.num_Devices)],  # 2.当前节点、当前任务的已访问次数（新任务归1或者0，否则+1。其他节点不变
@@ -153,6 +144,7 @@ class Env(object):
             CPU_ += c
             b_ += b
 
+        cur_device.missedTasks.clear()
         cur_device.KeyTime.append(t)
         cur_device.KeyReward.append(reward_)   # should decrease with time
 
@@ -171,7 +163,7 @@ class Env(object):
         self.UAV.CPU.append(CPU_)
         self.UAV.b.append(b_)
 
-        return state, reward_, reward_rest, reward_fair1
+        return state, reward_, reward_rest, reward_
 
     def calculate_reward_since_last_visit(self, device, time):
         reward = 0
@@ -181,19 +173,26 @@ class Env(object):
 
         last_visited_time = device.KeyTime[-1]
         #for i in [i for i in range(len(test_list)) if test_list[i] != None]
-        for i in np.nonzero(device.TaskList)[0]:
-            if i > time:
-                break
-            if i <= last_visited_time:
+        for i in range(device.lastTimeMissed + 1, min(time+1, len(device.TaskList))):
+            if device.TaskList[i] == None:
                 continue
-            cur_task = device.TaskList[i]
-            interval = time - i
-            reward += cur_task.get_value(cur_task.init_policy['theta']) * interval
-            AoI += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[0] * interval
-            CPU += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[1] * interval
-            b += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[2] * interval
+            device.missedTasks[i] = device.TaskList[i].get_value(device.TaskList[i].init_policy['theta']) 
+            #cur_task = device.TaskList[i]
+            #interval = time - i
+            #reward += cur_task.get_value(cur_task.init_policy['theta']) * interval
+            #AoI += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[0] * interval
+            #CPU += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[1] * interval
+            #b += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[2] * interval
             #print("cur time {} index {} updating reward: {} inteval: {}".format(
             #    time, i, cur_task.get_value(cur_task.init_policy['theta']), interval))
+        for t, cur_task in device.missedTasks.items():
+            interval = time - t
+            reward += cur_task * interval
+            #AoI += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[0] * interval
+            #CPU += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[1] * interval
+            #b += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[2] * interval
+
+        device.lastTimeMissed = time
         return reward, AoI, CPU, b
 
     def update(self):
@@ -237,6 +236,7 @@ class Policy(nn.Module):
         """
         forward of both actor and critic
         """
+        x = torch.nn.functional.normalize(torch.tensor(x, dtype=float), dim=0)
         x = F.relu(self.affine1(x))
         x = F.relu(self.affine2(x))
         # x = F.relu(self.affine3(x))

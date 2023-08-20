@@ -56,29 +56,14 @@ class RandomStrategy:
         self.logging_timeline[0][0]['Random_UAV_CPU'] = self.uav.CPU
         self.logging_timeline[0][0]['Random_UAV_b'] = self.uav.b
         for i in range(self.param['num_Devices']):
-            self.logging_timeline[i][0]['Random_intervals'] = self.devices[i].intervals
             self.logging_timeline[i][0]['Random_KeyTime'] = self.devices[i].KeyTime
             self.logging_timeline[i][0]['Random_TaskList'] = self.devices[i].TaskList
             # 记录每一个EPISODE的非REGULAR的数据
-            self.logging_timeline[i][0]['Random_KeyTsk'] = self.devices[i].KeyTsk
-            self.logging_timeline[i][0]['Random_KeyPol'] = self.devices[i].KeyPol
             self.logging_timeline[i][0]['Random_KeyRewards'] = self.devices[i].KeyReward
-            self.logging_timeline[i][0]['Random_KeyAoI'] = self.devices[i].KeyAoI
-            self.logging_timeline[i][0]['Random_KeyCPU'] = self.devices[i].KeyCPU
-            self.logging_timeline[i][0]['Random_Keyb'] = self.devices[i].Keyb
-            # 记录对应的REGULAR的数据
-            self.logging_timeline[i][0]['Random_KeyTsk_Regular'] = self.devices[i].KeyTsk_Regular
-            self.logging_timeline[i][0]['Random_KeyPol_Regular'] = self.devices[i].KeyPol_Regular
-            self.logging_timeline[i][0]['Random_KeyReward_Regular'] = self.devices[i].KeyReward_Regular
-            self.logging_timeline[i][0]['Random_KeyAoI_Regular'] = self.devices[i].KeyAoI_Regular
-            self.logging_timeline[i][0]['Random_KeyCPU_Regular'] = self.devices[i].KeyCPU_Regular
-            self.logging_timeline[i][0]['Random_Keyb_Regular'] = self.devices[i].Keyb_Regular
-            ls1 = [0] + self.logging_timeline[i][0]['Random_intervals']
             ls2 = self.logging_timeline[i][0]['Random_KeyRewards']
             if len(self.logging_timeline[i][0]['Random_KeyTime']) == 1:
                 self.logging_timeline[i][0]['Random_avg_reward'] = None
             else:
-                self.logging_timeline[i][0]['Random_avg_reward'] = sum([x * y for x, y in zip(ls1, ls2)]) / \
-                                                       self.logging_timeline[i][0]['Random_KeyTime'][-1]
+                self.logging_timeline[i][0]['Random_avg_reward'] = sum(ls2)/len(ls2)
         self.ave_Reward_random = ep_reward_random / n
         print('Random: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(1, ep_reward_random, self.ave_Reward_random))

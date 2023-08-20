@@ -66,6 +66,8 @@ class NNStrategy:
             R = r + self.param['gamma'] * R
             returns.insert(0, R)
 
+        print("finish_episode")
+        print("rewards: {}".format(returns))
         returns = torch.tensor(returns)
         returns = (returns - returns.mean()) / (returns.std() + self.eps)
 
@@ -73,15 +75,16 @@ class NNStrategy:
             advantage = R - value.item()
 
             # calculate actor (policy) loss
-            policy_losses.append(-log_prob * advantage - velocity * advantage)
-            # policy_losses.append(-log_prob * advantage)
+            #policy_losses.append(-log_prob * advantage - velocity * advantage)
+            policy_losses.append(-log_prob * advantage)
 
             # calculate critic (value) loss using L1 smooth loss
             value_losses.append(torch.nn.functional.smooth_l1_loss(value, torch.tensor([R])))
+            print("\tR: {} value: {} loss pol: {}, loss value: {}".format(R, value.item(), (-log_prob * advantage),
+                  torch.nn.functional.smooth_l1_loss(value, torch.tensor([R]))))
 
             # 尝试添加速度：没必要，因为上面计算policy_losses的时候，就已经有了velocity的部分
             # velocity_losses.append(F.smooth_l1_loss(velocity, torch.tensor([R])))
-
 
         # reset gradients
         self.optimizer.zero_grad()
@@ -89,6 +92,7 @@ class NNStrategy:
         # sum up all the values of policy_losses and value_losses
         loss = torch.stack(policy_losses).sum() + torch.stack(value_losses).sum()
                # + torch.stack(velocity_losses).sum()
+        print("Loss: {}".format(loss))
 
         # perform backprop
         loss.backward()
@@ -200,23 +204,10 @@ class NNStrategy:
             # FIXME: 这里的KEYREWARD只包含了AOI+CPU，没有包含UAV的能耗PV
             # 这里每一个DEVICE只能这样啊，DEVICE不像UAV一样一下一下飞，DEVICE是每一个时隙的
             # 这里的KEYREWARD是上面step输出reward的一部分，不包括UAV的PV，减200的penalty，不包括reward_rest
-            self.logging_timeline[i][episode]['KeyTsk'] = self.devices[i].KeyTsk
-            self.logging_timeline[i][episode]['KeyPol'] = self.devices[i].KeyPol
             self.logging_timeline[i][episode]['KeyRewards'] = self.devices[i].KeyReward
-            self.logging_timeline[i][episode]['KeyAoI'] = self.devices[i].KeyAoI
-            self.logging_timeline[i][episode]['KeyCPU'] = self.devices[i].KeyCPU
-            self.logging_timeline[i][episode]['Keyb'] = self.devices[i].Keyb
-            # 记录对应的REGULAR的数据
-            self.logging_timeline[i][episode]['KeyTsk_Regular'] = self.devices[i].KeyTsk_Regular
-            self.logging_timeline[i][episode]['KeyPol_Regular'] = self.devices[i].KeyPol_Regular
-            self.logging_timeline[i][episode]['KeyReward_Regular'] = self.devices[i].KeyReward_Regular
-            self.logging_timeline[i][episode]['KeyAoI_Regular'] = self.devices[i].KeyAoI_Regular
-            self.logging_timeline[i][episode]['KeyCPU_Regular'] = self.devices[i].KeyCPU_Regular
-            self.logging_timeline[i][episode]['Keyb_Regular'] = self.devices[i].Keyb_Regular
-
             ls2 = self.logging_timeline[i][episode]['KeyRewards']
             # 这里的avg_reward知识单纯的每一个device的reward均值
             if len(self.logging_timeline[i][episode]['KeyTime']) == 1:
                 self.logging_timeline[i][episode]['avg_reward'] = None
             else:
-                self.logging_timeline[i][episode]['avg_reward'] = sum(ls2)
+                self.logging_timeline[i][episode]['avg_reward'] = sum(ls2)/len(ls2)

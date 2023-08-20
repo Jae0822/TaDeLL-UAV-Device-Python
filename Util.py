@@ -10,9 +10,11 @@ def initialize_fixed_devices(param):
     # for i in range(param['num_Devices']):
     #     Devices.append(Device(random.randint(param['freq_low'], param['freq_high']), random.randint(30, 70), param['field']))
 
+        #40,
+        #40,
     freq_list = [
-        10,
-        70,
+        530,
+        510,
         500,
         485,
         470,
@@ -63,11 +65,8 @@ def painting(avg, param, env_nn, model, env_random, env_force, logging_timeline)
 #
 #    ax.plot(np.arange(1, param['episodes'] + 1), avg['Ave_Reward'],
 #            label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
-#                param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
-#                param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
-#    ax.set_xlabel('Episodes')  # Add an x-label to the axes.
-#    ax.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
-#    ax.set_title("The Ave_Reward, NN:" + str(model.pattern))  # Add a title to the axes.
+#                param['nTimeUnits']) + ' TimeU
+# Add a title to the axes.
 #    ax.axhline(y=max(avg['Ave_Reward']), color='r', linestyle='--', linewidth='0.9', label='Smart: ' + str(max(avg['Ave_Reward'])))
 #    ax.axhline(y=avg['ave_Reward_random'] * len(env_random.UAV.Reward), color='b', linestyle='--', linewidth='0.9',
 #               label='Random:' + str(avg['ave_Reward_random']*len(env_random.UAV.Reward)))
@@ -125,7 +124,7 @@ def painting(avg, param, env_nn, model, env_random, env_force, logging_timeline)
     fig3.supylabel('The Ave Reward')
     fig3.suptitle('The Random')
     for i in range(param['num_Devices']):
-        if len(logging_timeline[i][0]['Random_intervals']) == 0:
+        if logging_timeline[i][0]['Random_KeyTime'][-1] == 0:
             ax3[i].text(0.4, 0.5, 'No Visit by UAV')
         else:
             ax3[i].step(logging_timeline[i][0]['Random_KeyTime'], logging_timeline[i][0]['Random_KeyRewards'], '^-g',
@@ -140,8 +139,8 @@ def painting(avg, param, env_nn, model, env_random, env_force, logging_timeline)
             # if i == 0:
             #     ax1[i].set_title(model.pattern)
             ax3[i].set_title('CPU Capacity: %.0f' % (env_random.Devices[i].cpu_capacity))
-            for vv in range(len(np.where(logging_timeline[i][0]['Random_TimeList'])[0])):
-                ax3[i].axvline(x=np.where(logging_timeline[i][0]['Random_TimeList'])[0][vv], linestyle='--',
+            for vv in range(len(np.where(logging_timeline[i][0]['Random_TaskList'])[0])):
+                ax3[i].axvline(x=np.where(logging_timeline[i][0]['Random_TaskList'])[0][vv], linestyle='--',
                                linewidth='0.9')
 
 
@@ -151,7 +150,7 @@ def painting(avg, param, env_nn, model, env_random, env_force, logging_timeline)
     fig4.supylabel('The Ave Reward')
     fig4.suptitle('The Force')
     for i in range(param['num_Devices']):
-        if len(logging_timeline[i][0]['Force_intervals']) == 0:
+        if logging_timeline[i][0]['Force_KeyTime'][-1] == 0:
             ax4[i].text(0.4, 0.5, 'No Visit by UAV')
         else:
             ax4[i].step(logging_timeline[i][0]['Force_KeyTime'], logging_timeline[i][0]['Force_KeyRewards'], '^-g',
@@ -166,8 +165,8 @@ def painting(avg, param, env_nn, model, env_random, env_force, logging_timeline)
             # if i == 0:
             #     ax1[i].set_title(model.pattern)
             ax4[i].set_title('CPU Capacity: %.0f' % (env_force.Devices[i].cpu_capacity))
-            for vv in range(len(np.where(logging_timeline[i][0]['Force_TimeList'])[0])):
-                ax4[i].axvline(x=np.where(logging_timeline[i][0]['Force_TimeList'])[0][vv], linestyle='--',
+            for vv in range(len(np.where(logging_timeline[i][0]['Force_TaskList'])[0])):
+                ax4[i].axvline(x=np.where(logging_timeline[i][0]['Force_TaskList'])[0][vv], linestyle='--',
                                linewidth='0.9')
 
 
