@@ -69,7 +69,7 @@ class NNStrategy:
         print("finish_episode")
         print("rewards: {}".format(returns))
         returns = torch.tensor(returns)
-        returns = (returns - returns.mean()) / (returns.std() + self.eps)
+        #returns = (returns - returns.mean()) / (returns.std() + self.eps)
 
         for (log_prob, value, velocity), R in zip(saved_actions, returns):
             advantage = R - value.item()
