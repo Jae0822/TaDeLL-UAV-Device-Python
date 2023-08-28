@@ -16,10 +16,10 @@ def main():
     #  V: 72 km/h =  20 m/s
     #  field: 1 km * 1km
     #  dist:
-    length = 2000
-    param = {'episodes': 25, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
-             'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
-             'num_Devices': 25, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16,
+    length = 1000
+    param = {'episodes': 500, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
+             'gamma': 0, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
+             'num_Devices': 3, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16,
              'cpu_capacity' : 50}
 
     random.seed(param['seed'])
@@ -65,18 +65,20 @@ def main():
 
 
     avg = {}
-    avg['Ave_Reward'] = 0
-    avg['Ep_reward'] = 0
+    avg['Ave_reward'] = nn_strategy.Ave_reward
+    avg['Ep_Reward'] = nn_strategy.Ep_reward
     avg['ave_Reward_random'] = random_strategy.ave_Reward_random
     avg['ave_Reward_force'] = forced_strategy.ave_Reward_force
+    avg['Ep_Reward_random'] = random_strategy.Ep_Reward_random
+    avg['Ep_Reward_force'] = forced_strategy.Ep_Reward_force
     # with open('fig_temp.pkl', 'wb') as f:
     #     pickle.dump([model, env, param, avg, logging_timeline], f)
 
     with open('fig_temp.pkl', 'wb') as f:
-        pickle.dump([nn_strategy.model, nn_strategy.env, random_strategy.env, forced_strategy.env, param, avg, logging_timeline], f)
+        pickle.dump([nn_strategy.actor_model, nn_strategy.env, random_strategy.env, forced_strategy.env, param, avg, logging_timeline], f)
 
     # †††††††††††††††††††††††††††††††††††††††Painting††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-    Util.painting(avg, param, nn_strategy.env, nn_strategy.model, random_strategy.env, forced_strategy.env, logging_timeline)
+    Util.painting(avg, param, nn_strategy.env, nn_strategy.actor_model, random_strategy.env, forced_strategy.env, logging_timeline)
     # †††††††††††††††††††††††††††††††††††††††Painting††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
 
 

@@ -72,4 +72,5 @@ class ForcedStrategy:
             else:
                 self.logging_timeline[i][0]['Force_avg_reward'] = sum(ls2)/len(ls2)
         self.ave_Reward_force = ep_reward_force / n
+        self.Ep_Reward_force = ep_reward_force
         print('Force: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(1, ep_reward_force, self.ave_Reward_force))

@@ -133,17 +133,20 @@ class Env(object):
 
         # update reward
         reward_rest = 0
-        reward_ = 0
-        AoI_ = 0
-        CPU_ = 0
-        b_  = 0
+        reward_, AoI_, CPU_, b_ = self.calculate_reward_since_last_visit(cur_device, t)
+
         for dev in self.Devices:
-            r, a, c, b = self.calculate_reward_since_last_visit(dev, t)
-            reward_ += r
+
+            if (dev == cur_device):
+                continue
+
+            r, a, c, b = self.calculate_penalty_since_last_visit(dev, t)
+            reward_rest += r
             AoI_ += a
             CPU_ += c
             b_ += b
 
+        reward_ = reward_ + reward_rest/(len(self.Devices) - 1)
         cur_device.missedTasks.clear()
         cur_device.KeyTime.append(t)
         cur_device.KeyReward.append(reward_)   # should decrease with time
@@ -187,7 +190,41 @@ class Env(object):
             #    time, i, cur_task.get_value(cur_task.init_policy['theta']), interval))
         for t, cur_task in device.missedTasks.items():
             interval = time - t
-            reward += cur_task * interval
+            reward += -cur_task
+            #reward += cur_task * interval #FIXME
+            #AoI += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[0] * interval
+            #CPU += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[1] * interval
+            #b += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[2] * interval
+
+        device.lastTimeMissed = time
+        return reward, AoI, CPU, b
+    
+    def calculate_penalty_since_last_visit(self, device, time):
+        reward = 0
+        AoI = 0
+        CPU = 0
+        b = 0
+
+        last_visited_time = device.KeyTime[-1]
+        if (last_visited_time == 0):
+            reward = -10
+        #for i in [i for i in range(len(test_list)) if test_list[i] != None]
+        for i in range(device.lastTimeMissed + 1, min(time+1, len(device.TaskList))):
+            if device.TaskList[i] == None:
+                continue
+            device.missedTasks[i] = device.TaskList[i].get_value(device.TaskList[i].init_policy['theta']) 
+            #cur_task = device.TaskList[i]
+            #interval = time - i
+            #reward += cur_task.get_value(cur_task.init_policy['theta']) * interval
+            #AoI += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[0] * interval
+            #CPU += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[1] * interval
+            #b += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[2] * interval
+            #print("cur time {} index {} updating reward: {} inteval: {}".format(
+            #    time, i, cur_task.get_value(cur_task.init_policy['theta']), interval))
+        for t, cur_task in device.missedTasks.items():
+            interval = time - t
+            reward += cur_task
+            #reward += cur_task * interval #FIXME
             #AoI += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[0] * interval
             #CPU += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[1] * interval
             #b += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[2] * interval
@@ -255,3 +292,76 @@ class Policy(nn.Module):
         # 1. a list with the probability of each action over the action space
         # 2. the value from state s_t
         return action_prob, state_values, velocity
+
+class ActorPolicy(nn.Module):
+    """
+    implements both actor and critic in one model
+    """
+    def __init__(self, input_size, output_size):
+
+        super(ActorPolicy, self).__init__()
+        self.affine1 = nn.Linear(input_size, 64)
+        self.pattern = [64]
+
+        # actor's layer
+        self.action_head = nn.Linear(64, output_size)
+
+        # action & reward buffer
+        self.saved_actions = []
+        self.actions = []  # To record the actions
+        self.states = []  # To record the states
+        self.rewards = []
+
+        self.double()
+
+    def forward(self, x):
+        """
+        forward of both actor and critic
+        """
+        x = torch.nn.functional.normalize(torch.tensor(x, dtype=float), dim=0)
+        x = F.relu(self.affine1(x))
+        # actor: choses action to take from state s_t
+        # by returning probability of each action
+        # a = F.relu(self.action_affine1(x))
+        action_prob = F.softmax(self.action_head(x), dim=-1)
+        print("action prob {}".format(action_prob))
+
+        return action_prob
+
+class CriticPolicy(nn.Module):
+    """
+    implements both actor and critic in one model
+    """
+    def __init__(self, input_size):
+
+        super(CriticPolicy, self).__init__()
+        self.affine1 = nn.Linear(input_size, 64)
+        # self.affine3 = nn.Linear(64, 128)
+        # self.pattern = [32, 64, 128]
+        self.pattern = [64]
+
+        # critic's layer
+        self.value_head = nn.Linear(64, 1)
+
+        # action & reward buffer
+        self.saved_actions = []
+        self.actions = []  # To record the actions
+        self.states = []  # To record the states
+        self.rewards = []
+
+        self.double()
+
+    def forward(self, x):
+        """
+        forward of both actor and critic
+        """
+        x = torch.nn.functional.normalize(torch.tensor(x, dtype=float), dim=0)
+        x = F.relu(self.affine1(x))
+
+        state_values = self.value_head(x)
+        print("action value {}".format(state_values))
+
+        # return values for both actor and critic as a tuple of 2 values:
+        # 1. a list with the probability of each action over the action space
+        # 2. the value from state s_t
+        return state_values

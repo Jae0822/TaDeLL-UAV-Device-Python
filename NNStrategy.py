@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from collections import namedtuple
 
-from IoTEnv import Uav, Env, Policy
+from IoTEnv import Uav, Env, ActorPolicy, CriticPolicy
 from UAVEnergy import UAV_Energy
 import Util
 
@@ -16,14 +16,21 @@ class NNStrategy:
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits'])
 
-        self.model = Policy(param['num_Devices'], param['num_Devices'], param['V_Lim'])
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=param['learning_rate'])  # lr=3e-2
+        self.actor_model = ActorPolicy(param['num_Devices'], param['num_Devices'])
+        self.critic_model = CriticPolicy(param['num_Devices'])
+        self.actor_optimizer = torch.optim.Adam(self.actor_model.parameters(), lr=param['learning_rate'])  # lr=3e-2
+        self.critic_optimizer = torch.optim.Adam(self.critic_model.parameters(), lr=param['learning_rate'])  # lr=3e-2
         self.eps = np.finfo(np.float32).eps.item()
+        # for plotting
+        self.Ep_reward = []
+        self.Ave_reward = []
 
     def select_action(self, state):
         # state = torch.from_numpy(state).float()
         state = torch.from_numpy(state).double()
-        probs, state_value, velocity = self.model(state)
+        probs = self.actor_model(state)
+        state_value = self.critic_model(state)
+        velocity = 5
 
         # create a categorical distribution over the list of probabilities of actions
         print("select action")
@@ -43,25 +50,27 @@ class NNStrategy:
 
         # save to action buffer
         savedAction = namedtuple('SavedAction', ['log_prob', 'value', 'velocity'])
-        self.model.saved_actions.append(savedAction(
+        self.actor_model.saved_actions.append(savedAction(
+            m.log_prob(action), state_value, velocity))
+        self.critic_model.saved_actions.append(savedAction(
             m.log_prob(action), state_value, velocity))
 
         # the action to take
-        return action.item(), velocity.item()
+        return action.item(), velocity
 
     def finish_episode(self):
         """
         Training code. Calculates actor and critic loss and performs backprop.
         """
         R = 0
-        saved_actions = self.model.saved_actions
+        saved_actions = self.actor_model.saved_actions
         policy_losses = []  # list to save actor (policy) loss
         value_losses = []  # list to save critic (value) loss
         # velocity_losses = []
         returns = []  # list to save the true values
 
         # calculate the true value using rewards returned from the environment
-        for r in self.model.rewards[::-1]:
+        for r in self.actor_model.rewards[::-1]:
             # calculate the discounted value
             R = r + self.param['gamma'] * R
             returns.insert(0, R)
@@ -87,21 +96,28 @@ class NNStrategy:
             # velocity_losses.append(F.smooth_l1_loss(velocity, torch.tensor([R])))
 
         # reset gradients
-        self.optimizer.zero_grad()
+        self.actor_optimizer.zero_grad()
+        self.critic_optimizer.zero_grad()
 
         # sum up all the values of policy_losses and value_losses
-        loss = torch.stack(policy_losses).sum() + torch.stack(value_losses).sum()
+        actor_loss = torch.stack(policy_losses).sum()
+        critic_loss = torch.stack(value_losses).sum()
                # + torch.stack(velocity_losses).sum()
-        print("Loss: {}".format(loss))
+        print("Actor Loss: {}".format(actor_loss))
+        print("Critic Loss: {}".format(critic_loss))
 
         # perform backprop
-        loss.backward()
-        self.optimizer.step()
+        actor_loss.backward()
+        critic_loss.backward()
+        self.actor_optimizer.step()
+        self.critic_optimizer.step()
 
         # reset rewards and action buffer
-        del self.model.rewards[:]
+        del self.actor_model.rewards[:]
+        del self.critic_model.rewards[:]
         # del model.reward_[:]
-        del self.model.saved_actions[:]
+        del self.actor_model.saved_actions[:]
+        del self.critic_model.saved_actions[:]
 
 
     def learning(self):
@@ -113,7 +129,7 @@ class NNStrategy:
             print("----------------------------------------------------------------------------")
             print("       ")
 
-            self.model.states.append(state)
+            self.actor_model.states.append(state)
             ep_reward = 0
             t = 0
             n_fly = 0  # logging fly behaviors
@@ -149,9 +165,9 @@ class NNStrategy:
                 print("reward: {}, reward_rest: {}, reward_: {}".format(reward, reward_rest, reward_))
                 n_fly += 1
 
-                self.model.actions.append(action)
-                self.model.states.append(state)
-                self.model.rewards.append(reward_)
+                self.actor_model.actions.append(action)
+                self.actor_model.states.append(state)
+                self.actor_model.rewards.append(reward_)
                 ep_reward += reward_
 
                 print("Smart: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(i_episode, n_fly, t, action))
@@ -165,6 +181,9 @@ class NNStrategy:
             不除以N，凸起变高
             """
 
+            self.Ave_reward.append(ep_reward/n_fly)
+            self.Ep_reward.append(ep_reward)
+
             # perform backprop
             self.finish_episode()
 
@@ -177,7 +196,7 @@ class NNStrategy:
             print("----------------------------------------------------------------------------")
             print("The percentage to all the devices:")
             for x in range(self.param['num_Devices']):
-                action_list = self.model.actions[(i_episode - 1) * self.param['nTimeUnits']::]
+                action_list = self.actor_model.actions[(i_episode - 1) * self.param['nTimeUnits']::]
                 p = len([ele for ele in action_list if ele == x]) / self.param['nTimeUnits']
                 print(f'{x:2}: {100 * p:5.2f}%')
 

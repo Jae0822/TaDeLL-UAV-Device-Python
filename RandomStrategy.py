@@ -66,4 +66,5 @@ class RandomStrategy:
             else:
                 self.logging_timeline[i][0]['Random_avg_reward'] = sum(ls2)/len(ls2)
         self.ave_Reward_random = ep_reward_random / n
+        self.Ep_Reward_random = ep_reward_random
         print('Random: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(1, ep_reward_random, self.ave_Reward_random))
