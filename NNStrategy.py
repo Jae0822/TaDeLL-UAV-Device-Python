@@ -30,7 +30,7 @@ class NNStrategy:
         state = torch.from_numpy(state).double()
         probs = self.actor_model(state)
         state_value = self.critic_model(state)
-        velocity = 5
+        velocity = 25
 
         # create a categorical distribution over the list of probabilities of actions
         print("select action")
@@ -167,8 +167,8 @@ class NNStrategy:
 
                 self.actor_model.actions.append(action)
                 self.actor_model.states.append(state)
-                self.actor_model.rewards.append(reward_)
-                ep_reward += reward_
+                self.actor_model.rewards.append(reward)
+                ep_reward += reward
 
                 print("Smart: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(i_episode, n_fly, t, action))
 

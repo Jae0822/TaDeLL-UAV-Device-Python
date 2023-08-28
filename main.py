@@ -16,10 +16,10 @@ def main():
     #  V: 72 km/h =  20 m/s
     #  field: 1 km * 1km
     #  dist:
-    length = 1000
-    param = {'episodes': 500, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
-             'gamma': 0, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
-             'num_Devices': 3, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16,
+    length = 3000
+    param = {'episodes': 10, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
+             'gamma': 0, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.2, 'beta': 0.5,
+             'num_Devices': 6, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16,
              'cpu_capacity' : 50}
 
     random.seed(param['seed'])

@@ -12,8 +12,16 @@ def initialize_fixed_devices(param):
 
     freq_list = [
         40,
+        80,
         120,
+        200,
         360,
+        440
+    ]
+    freq_list2 = [
+#        40,
+#        120,
+#        360,
         530,
         510,
         500,
@@ -161,6 +169,8 @@ def painting(avg, param, env_nn, model, env_random, env_force, logging_timeline)
 
     d = 1
     # †††††††††††††††††††††††††††††††††††††††柱状图††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
+    fig2, ax2 = plt.subplots(1)
+
     x = param['episodes']
     fig7, ax7 = plt.subplots(2, sharex=True)
     fig7.suptitle('Devcie and UAV cost')
@@ -173,18 +183,56 @@ def painting(avg, param, env_nn, model, env_random, env_force, logging_timeline)
               np.mean(logging_timeline[0][x]['UAV_Energy'])]
     data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
                np.sum(logging_timeline[0][x]['UAV_Energy'])]
-    ax7[0].bar(type, [k * param['mu'] for k in data111], label='reward')
-    #ax7[0].bar(type, [k * param['mu'] for k in data22], bottom=np.array(data111) * param['mu'], label='energy')
-    ax7[0].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
-    ax7[0].legend(loc="best")
-    ax7[0].set_ylabel('Total Cost')  # Add a y-label to the axes.
-    ax7[0].set_title('The Mean')
-    ax7[1].bar(type, [k * param['mu'] for k in data1111], label='reward')
-    #ax7[1].bar(type, [k * param['mu'] for k in data222], bottom=np.array(data1111) * param['mu'], label='energy')
-    ax7[1].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
-    ax7[1].legend(loc="best")
-    ax7[1].set_ylabel('Total Cost')  # Add a y-label to the axes.
-    ax7[1].set_title('The Sum')
+    data_discount_reward = [np.mean(env_random.UAV.Sum_R_E), np.mean(env_force.UAV.Sum_R_E),
+              np.mean(logging_timeline[0][x]['UAV_R_E'])]
+    data_discount_reward_sum = [np.sum(env_random.UAV.Sum_R_E), np.sum(env_force.UAV.Sum_R_E),
+              np.sum(logging_timeline[0][x]['UAV_R_E'])]
+    
+    type = ("Random", "Force", "Smart")
+    x = np.arange(len(type))  # the label locations
+    width = 0.25  # the width of the bars
+    multiplier = 0
+    value_means = {
+        'Reward': (data111[0], data111[1], data111[2]),
+        'Energy': (data22[0], data22[1], data22[2]),
+        'Reward(discounted)': (data_discount_reward[0], data_discount_reward[1], data_discount_reward[2]),
+    }
+    value_sum = {
+        'Reward': (data1111[0], data1111[1], data1111[2]),
+        'Energy': (data222[0], data222[1], data222[2]),
+        'Reward(discounted)': (data_discount_reward_sum[0], data_discount_reward_sum[1], data_discount_reward_sum[2]),
+    }
+    for attribute, measurement in value_means.items():
+        offset = width * multiplier
+        rects = ax7[0].bar(x + offset, measurement, width, label=attribute)
+        # axs[0,0].bar_label(rects, padding=3)
+        multiplier += 1
+
+    multiplier = 0
+    for attribute, measurement in value_sum.items():
+        offset = width * multiplier
+        rects = ax7[1].bar(x + offset, measurement, width, label=attribute)
+        # axs[0,0].bar_label(rects, padding=3)
+        multiplier += 1
+    ax7[0].set_ylabel('Averaged Reward')
+    ax7[0].set_title('Reward of IoT Devices')
+    ax7[0].set_xticks(x + width, type)
+    ax7[0].legend(loc='best', ncol=2)
+
+    
+    
+#    ax7[0].bar(type, [k * param['mu'] for k in data111], label='reward')
+#    #ax7[0].bar(type, [k * param['mu'] for k in data22], bottom=np.array(data111) * param['mu'], label='energy')
+#    ax7[0].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+#    ax7[0].legend(loc="best")
+#    ax7[0].set_ylabel('Total Cost')  # Add a y-label to the axes.
+#    ax7[0].set_title('The Mean')
+#    ax7[1].bar(type, [k * param['mu'] for k in data1111], label='reward')
+#    #ax7[1].bar(type, [k * param['mu'] for k in data222], bottom=np.array(data1111) * param['mu'], label='energy')
+#    ax7[1].axhline(y=0, color='k', linestyle='-', linewidth='0.6')
+#    ax7[1].legend(loc="best")
+#    ax7[1].set_ylabel('Total Cost')  # Add a y-label to the axes.
+#    ax7[1].set_title('The Sum')
     # plt.show()
 
 

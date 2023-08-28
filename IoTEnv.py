@@ -151,22 +151,20 @@ class Env(object):
         cur_device.KeyTime.append(t)
         cur_device.KeyReward.append(reward_)   # should decrease with time
 
-        reward_final = reward_  # weighted average,  iteration :discounted reward, back discount
         alpha = param['alpha']
-        reward_fair = reward_final
 
         mu = param['mu']
-        reward_fair1 = (1 - mu) * reward_fair - mu * PV  # 添加飞行能量消耗
-        print('reward: ', reward_fair, ', Energy:', PV)
+        reward_fair = (1 - mu) * reward_ - mu * PV  # 添加飞行能量消耗
+        print('reward_: ', reward_, ', Energy:', PV, 'reward fair: ', reward_fair)
 
-        self.UAV.Reward.append(reward_fair)
+        self.UAV.Reward.append(reward_)
         self.UAV.Energy.append(PV)
-        self.UAV.Sum_R_E.append(reward_fair1)
+        self.UAV.Sum_R_E.append(reward_fair)
         self.UAV.AoI.append(AoI_)
         self.UAV.CPU.append(CPU_)
         self.UAV.b.append(b_)
 
-        return state, reward_, reward_rest, reward_
+        return state, reward_, reward_rest, reward_fair
 
     def calculate_reward_since_last_visit(self, device, time):
         reward = 0
