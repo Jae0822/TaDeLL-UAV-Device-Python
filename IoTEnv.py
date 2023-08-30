@@ -295,13 +295,17 @@ class ActorPolicy(nn.Module):
     """
     implements both actor and critic in one model
     """
-    def __init__(self, input_size, output_size):
+    def __init__(self, input_size, output_size, velocity):
 
         super(ActorPolicy, self).__init__()
         self.affine1 = nn.Linear(input_size, 64)
         self.pattern = [64]
+        self.velocity = velocity
 
         # actor's layer
+        if velocity != -1:
+            output_size += 1
+
         self.action_head = nn.Linear(64, output_size)
 
         # action & reward buffer
@@ -321,10 +325,15 @@ class ActorPolicy(nn.Module):
         # actor: choses action to take from state s_t
         # by returning probability of each action
         # a = F.relu(self.action_affine1(x))
-        action_prob = F.softmax(self.action_head(x), dim=-1)
-        print("action prob {}".format(action_prob))
+        x = self.action_head(x)
+        action_prob = F.softmax(x[:-1], dim=-1)
+        velocity = self.velocity
+        if (self.velocity != -1):
+            velocity = torch.clamp(x[-1], 0, 1)
+            velocity = 5 + (self.velocity - 5)*velocity
+        print("action prob {} velocity {}".format(action_prob, x[-1]))
 
-        return action_prob
+        return action_prob, velocity
 
 class CriticPolicy(nn.Module):
     """
