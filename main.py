@@ -1,6 +1,8 @@
 import numpy as np
 import random
 import pickle
+from datetime import datetime
+import os
 
 import torch
 
@@ -16,8 +18,8 @@ def main():
     #  V: 72 km/h =  20 m/s
     #  field: 1 km * 1km
     #  dist:
-    length = 3000
-    param = {'episodes': 10, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
+    length = 300
+    param = {'episodes': 5, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
              'gamma': 0, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.2, 'beta': 0.5,
              'num_Devices': 6, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16,
              'cpu_capacity' : 50}
@@ -74,7 +76,12 @@ def main():
     # with open('fig_temp.pkl', 'wb') as f:
     #     pickle.dump([model, env, param, avg, logging_timeline], f)
 
-    with open('fig_temp.pkl', 'wb') as f:
+    dirname = "output/"+ datetime.now().strftime("%d%m%y") + "-" + str(param["num_Devices"]) + "devices/"
+    os.mkdir(dirname)
+    with open(dirname + 'param.txt', 'w') as f:
+        f.write(str(param))
+
+    with open(dirname + 'output.pkl', 'wb') as f:
         pickle.dump([nn_strategy.actor_model, nn_strategy.env, random_strategy.env, forced_strategy.env, param, avg, logging_timeline], f)
 
     # †††††††††††††††††††††††††††††††††††††††Painting††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
