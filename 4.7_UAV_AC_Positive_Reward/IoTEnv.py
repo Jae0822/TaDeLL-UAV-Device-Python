@@ -191,11 +191,11 @@ class Env(object):
         # 5. 当前任务出现时间长短（需要考虑飞行时间，也存在估计可能），正常情况+1，遇到新任务归0
         # FIXME: 这里的不对，加的FLY TIME要改，不再是1了！！！！
         for i in range(self.num_Devices):  # 对所有的device，包括当前。
-            state[i] = state[i] + Fly_time # 当前flying time为1
-            # state[i] += 1
+            # state[i] = state[i] + Fly_time # 当前flying time为1
+            state[i] += 1
         # UAV的初始位置
         # state[-2:] = np.concatenate(self.UAV.location)
-        state[action] = 0 # 永远重置为0
+        # state[action] = 0 # 永远重置为0
 
 
         device = self.Devices[action]
@@ -268,7 +268,7 @@ class Env(object):
                 device.KeyAoI_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.init_policy['theta'])[0])
                 device.KeyCPU_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.init_policy['theta'])[1])
                 device.Keyb_Regular.append(tsk0_Regular.get_AoI_CPU(tsk0_Regular.init_policy['theta'])[2])
-                # state[action] = t - device.KeyTime[-1]
+                state[action] = t - device.KeyTime[-1]
                 # state[action] = 0
             if VisitTime[-1] == 0:    # 需要再对t做一个TaDeLL的更新
                 device.KeyTime.append(t)
@@ -388,8 +388,8 @@ class Env(object):
         在收敛前，第10个EPISODE的时候，会有一个凸起，不知道与什么有关？
         """
         reward_fair = reward_final
-        if t >= param['nTimeUnits']:  # bonus at the end of one episode
-            reward_fair, PV = self.final_reward(self.Devices, action, param)
+        # if t >= param['nTimeUnits']:  # bonus at the end of one episode
+        #     reward_fair, PV = self.final_reward(self.Devices, action, param)
 
         # FIXME: 不加这个PENALTY这个会收敛吗？
         """
@@ -479,7 +479,7 @@ class Policy(nn.Module):
         """
         forward of both actor and critic
         """
-        x = torch.nn.functional.normalize(torch.tensor(x, dtype=float), dim=0)
+        # x = torch.nn.functional.normalize(torch.tensor(x, dtype=float), dim=0)
         x = F.relu(self.affine1(x))
         x = F.relu(self.affine2(x))
         # x = F.relu(self.affine3(x))

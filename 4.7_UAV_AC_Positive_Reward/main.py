@@ -31,10 +31,10 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value', 'velocity'])
 
 
 # Prepare the environment and devices
-length = 2000
-param = {'episodes': 1500, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
-         'gamma': 0.99, 'learning_rate': 0.001, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
-         'num_Devices': 10, 'V': 25, 'V_Lim': 40, 'field': 500, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+length = 100
+param = {'episodes': 2, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
+         'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
+         'num_Devices': 10, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])
 #torch.device("mps")
@@ -174,16 +174,6 @@ def finish_episode():
     # del model.reward_[:]
     del model.saved_actions[:]
 
-def check_weights(model, model_last):
-    affine1 = torch.equal(model.affine1.weight, model_last.affine1.weight)
-    affine2 = torch.equal(model.affine2.weight, model_last.affine2.weight)
-    action = torch.equal(model.action_head.weight, model_last.action_head.weight)
-    value = torch.equal(model.value_head.weight, model_last.value_head.weight)
-    velocity = torch.equal(model.velocity_head.weight, model_last.velocity_head.weight)
-    if affine1 or affine2 or action or value or velocity:
-        print('Weights Same!')
-    else:
-        print('Weights Changed!')
 
 def learning():
 
@@ -195,7 +185,6 @@ def learning():
     for i_episode in count(1):
 
         state = env.reset(Devices, UAV)
-
         # print("the initial state: ", state)
         print("----------------------------------------------------------------------------")
         print("       ")
@@ -205,7 +194,6 @@ def learning():
         t = 0
         n = 0  # logging fly behaviors
 
-        model_last = copy.deepcopy(model)
 
         while t < param['nTimeUnits']:
 
@@ -213,7 +201,6 @@ def learning():
             print('state:', state)
 
             action, velocity = select_action(state)
-            check_weights(model, model_last)
 
 
             # compute the distance
@@ -229,8 +216,6 @@ def learning():
             # take the action
             # state, reward, reward_Regular, t = env.step(state, action, t)
             t = t + Fly_time
-            if t >= param['nTimeUnits']:
-                print('EP done!')
             state, reward_, reward_rest, reward = env.step(state, action, velocity, t, PV, param, Fly_time)
             print(reward_)
             print(reward_rest)
@@ -292,7 +277,6 @@ def learning():
 
         x = i_episode
         logging_timeline[0][x]['UAV_TimeList'] = UAV.TimeList
-        logging_timeline[0][x]['UAV_Intervals'] = UAV.Intervals
         logging_timeline[0][x]['UAV_PositionList'] = UAV.PositionList
         logging_timeline[0][x]['UAV_PositionCor'] = UAV.PositionCor
         logging_timeline[0][x]['UAV_VelocityList'] = UAV.VelocityList
