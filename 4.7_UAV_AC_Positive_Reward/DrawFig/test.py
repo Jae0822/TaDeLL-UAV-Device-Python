@@ -88,7 +88,6 @@ ax7.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
 ax7.legend(loc="best")
 ax7.set_ylabel('Total Cost')  # Add a y-label to the axes.
 # ax7.set_title('The Mean')
-plt.show()
 
 
 x = 12
@@ -109,7 +108,6 @@ ax8.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
 ax8.legend(loc="best")
 # ax8.set_title('The Mean')
 ax8.set_ylabel('Total Cost')  # Add a y-label to the axes.
-plt.show()
 
 
 # †††††††††††††††††††††††††††††††††††††††上面两幅图的综合柱状图††††††††††††††††††††††††††††††††††††††††††††††††††††††††††

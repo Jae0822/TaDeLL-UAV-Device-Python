@@ -24,7 +24,7 @@ def UAV_Energy(V):
 
     PV = P0 * (1 + 3 * V ** 2 / U_tip ** 2) + Pi * pow(math.sqrt(1 + V ** 4 / (4 * v0 ** 4)) - V ** 2 / (2 * v0 ** 2),
                                                        1 / 2) + (1 / 2) * d0 * rho * s * A * V ** 3
-    return PV/1000
+    return PV
 
 # P = []
 # for V in range(1, 30):

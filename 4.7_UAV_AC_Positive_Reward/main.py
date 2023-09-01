@@ -27,38 +27,14 @@ with open('SourceTask_temp.pkl', 'rb') as f:
 
 
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
-# Press ⌘F8 to toggle the breakpoint.
-
-
-# parser = argparse.ArgumentParser(description='PyTorch actor-critic example')
-# parser.add_argument('--gamma', type=float, default=0.6, metavar='G',
-#                     help='discount factor (default: 0.99)')
-# parser.add_argument('--learning_rate', type=float, default=0.4, metavar='lr',
-#                     help='discount factor (default: 3e-1)')
-# parser.add_argument('--seed', type=int, default=0, metavar='N',
-#                     help='random seed (default: 0)')
-# parser.add_argument('--render', action='store_true',
-#                     help='render the environment')
-# parser.add_argument('--log-interval', type=int, default=1, metavar='N',
-#                     help='interval between training status logs (default: 10)')
-# args = parser.parse_args()
-
 SavedAction = namedtuple('SavedAction', ['log_prob', 'value', 'velocity'])
 
 
-
-
-
 # Prepare the environment and devices
-#  V: 72 km/h =  20 m/s
-#  field: 1 km * 1km
-#  dist:
 length = 2000
-param = {'episodes': 25, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
-         'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
-         'num_Devices': 25, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+param = {'episodes': 1500, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
+         'gamma': 0.99, 'learning_rate': 0.001, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
+         'num_Devices': 10, 'V': 25, 'V_Lim': 40, 'field': 500, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])
 #torch.device("mps")
@@ -66,83 +42,43 @@ torch.set_num_interop_threads(8)
 torch.set_num_threads(8)
 
 Devices = []
-# for i in range(param['num_Devices']):
-#     Devices.append(Device(random.randint(param['freq_low'], param['freq_high']), random.randint(30, 70), param['field']))
 
-Devices.append(Device(530, 50, param['field']))
-Devices.append(Device(510, 50, param['field']))
 Devices.append(Device(500, 50, param['field']))
-Devices.append(Device(485, 50, param['field']))
-Devices.append(Device(470, 50, param['field']))
 Devices.append(Device(450, 50, param['field']))
-Devices.append(Device(430, 50, param['field']))
 Devices.append(Device(400, 50, param['field']))
-Devices.append(Device(380, 50, param['field']))
 Devices.append(Device(350, 50, param['field']))
-Devices.append(Device(370, 50, param['field']))
-Devices.append(Device(340, 50, param['field']))
 Devices.append(Device(330, 50, param['field']))
-Devices.append(Device(315, 50, param['field']))
 Devices.append(Device(300, 50, param['field']))
-Devices.append(Device(275, 50, param['field']))
 Devices.append(Device(250, 50, param['field']))
 Devices.append(Device(230, 50, param['field']))
-Devices.append(Device(215, 50, param['field']))
 Devices.append(Device(200, 50, param['field']))
-Devices.append(Device(180, 50, param['field']))
 Devices.append(Device(150, 50, param['field']))
-Devices.append(Device(130, 50, param['field']))
-Devices.append(Device(115, 50, param['field']))
-Devices.append(Device(100, 50, param['field']))
 
-# Devices.append(Device(290, 50, param['field']))
-# Devices.append(Device(320, 50, param['field']))
-# Devices.append(Device(90, 50, param['field']))
-# Devices.append(Device(70, 50, param['field']))
-# Devices.append(Device(50, 50, param['field']))
-
-
-
-
-
-
+# Devices.append(Device(530, 50, param['field']))
+# Devices.append(Device(510, 50, param['field']))
+# Devices.append(Device(500, 50, param['field']))
+# Devices.append(Device(485, 50, param['field']))
+# Devices.append(Device(470, 50, param['field']))
+# Devices.append(Device(450, 50, param['field']))
+# Devices.append(Device(430, 50, param['field']))
+# Devices.append(Device(400, 50, param['field']))
+# Devices.append(Device(380, 50, param['field']))
+# Devices.append(Device(350, 50, param['field']))
+# Devices.append(Device(370, 50, param['field']))
+# Devices.append(Device(340, 50, param['field']))
+# Devices.append(Device(330, 50, param['field']))
+# Devices.append(Device(315, 50, param['field']))
+# Devices.append(Device(300, 50, param['field']))
+# Devices.append(Device(275, 50, param['field']))
 # Devices.append(Device(250, 50, param['field']))
 # Devices.append(Device(230, 50, param['field']))
+# Devices.append(Device(215, 50, param['field']))
 # Devices.append(Device(200, 50, param['field']))
 # Devices.append(Device(180, 50, param['field']))
-# Devices.append(Device(150,  50, param['field']))
+# Devices.append(Device(150, 50, param['field']))
 # Devices.append(Device(130, 50, param['field']))
+# Devices.append(Device(115, 50, param['field']))
 # Devices.append(Device(100, 50, param['field']))
-# Devices.append(Device(80, 50, param['field']))
-# Devices.append(Device(50, 50, param['field']))
-
-
-
-
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-
-
-
-
 
 UAV = Uav(param['V'], Devices)
 env = Env(Devices, UAV, param['nTimeUnits'])
@@ -156,7 +92,7 @@ Devices_force = copy.deepcopy(Devices)
 UAV_force = copy.deepcopy(UAV)
 env_force = Env(Devices_force, UAV_force, param['nTimeUnits_force'])
 
-model = Policy(1 * param['num_Devices'], param['num_Devices'] + 1, param['V_Lim'])
+model = Policy(param['num_Devices'], param['num_Devices'], param['V_Lim'])
 optimizer = optim.Adam(model.parameters(), lr=param['learning_rate'])  # lr=3e-2
 eps = np.finfo(np.float32).eps.item()
 
@@ -165,14 +101,6 @@ def select_action(state):
     # state = torch.from_numpy(state).float()
     state = torch.from_numpy(state).double()
     probs, state_value, velocity = model(state)
-
-    if torch.isnan(probs).any():
-        luck = 1
-    if torch.isnan(state_value).any():
-        luck = 1
-    if torch.isnan(velocity).any():
-        luck = 1
-
 
     # create a categorical distribution over the list of probabilities of actions
     print(probs)
@@ -230,27 +158,6 @@ def finish_episode():
         # 尝试添加速度：没必要，因为上面计算policy_losses的时候，就已经有了velocity的部分
         # velocity_losses.append(F.smooth_l1_loss(velocity, torch.tensor([R])))
 
-    if any([math.isnan(x) for x in policy_losses]) or any([math.isnan(x) for x in policy_losses]):
-        luck = 1
-    if any([math.isnan(x) for x in value_losses]) or any([math.isinf(x) for x in value_losses]):
-        luck = 1
-    # if any([math.isnan(x) for x in velocity_losses]):
-        luck = 1
-
-
-    # 更新前的weight
-    if torch.isnan(model.affine1.weight).any() or torch.isinf(model.affine1.weight).any():
-        luck = 1
-    if torch.isnan(model.affine2.weight).any() or torch.isinf(model.affine2.weight).any():
-        luck = 1
-    if torch.isnan(model.action_head.weight).any() or torch.isinf(model.action_head.weight).any():
-        luck = 1
-    if torch.isnan(model.value_head.weight).any() or torch.isinf(model.value_head.weight).any():
-        luck = 1
-    if torch.isnan(model.velocity_head.weight).any() or torch.isinf(model.velocity_head.weight).any():
-        luck = 1
-
-
     # reset gradients
     optimizer.zero_grad()
 
@@ -262,23 +169,21 @@ def finish_episode():
     loss.backward()
     optimizer.step()
 
-    # 更新后的weight
-    if torch.isnan(model.affine1.weight).any() or torch.isinf(model.affine1.weight).any():
-        luck = 1
-    if torch.isnan(model.affine2.weight).any() or torch.isinf(model.affine2.weight).any():
-        luck = 1
-    if torch.isnan(model.action_head.weight).any() or torch.isinf(model.action_head.weight).any():
-        luck = 1
-    if torch.isnan(model.value_head.weight).any() or torch.isinf(model.value_head.weight).any():
-        luck = 1
-    if torch.isnan(model.velocity_head.weight).any() or torch.isinf(model.velocity_head.weight).any():
-        luck = 1
-
     # reset rewards and action buffer
     del model.rewards[:]
     # del model.reward_[:]
     del model.saved_actions[:]
 
+def check_weights(model, model_last):
+    affine1 = torch.equal(model.affine1.weight, model_last.affine1.weight)
+    affine2 = torch.equal(model.affine2.weight, model_last.affine2.weight)
+    action = torch.equal(model.action_head.weight, model_last.action_head.weight)
+    value = torch.equal(model.value_head.weight, model_last.value_head.weight)
+    velocity = torch.equal(model.velocity_head.weight, model_last.velocity_head.weight)
+    if affine1 or affine2 or action or value or velocity:
+        print('Weights Same!')
+    else:
+        print('Weights Changed!')
 
 def learning():
 
@@ -290,6 +195,7 @@ def learning():
     for i_episode in count(1):
 
         state = env.reset(Devices, UAV)
+
         # print("the initial state: ", state)
         print("----------------------------------------------------------------------------")
         print("       ")
@@ -298,23 +204,17 @@ def learning():
         ep_reward = 0
         t = 0
         n = 0  # logging fly behaviors
-        # FIXME: when the distance is large or the velocity is small, the Fly_time can be too large to surpass the nTimeUnits
 
+        model_last = copy.deepcopy(model)
 
-        rate1.append([])
-        rate2.append([])
         while t < param['nTimeUnits']:
-        # for t in range(0, param['nTimeUnits']):
 
             # select action from policy
             print('state:', state)
 
-            if np.isnan(state).any():
-                luck = 1
-
             action, velocity = select_action(state)
-            # random action
-            # action = np.random.randint(param['num_Devices'])
+            check_weights(model, model_last)
+
 
             # compute the distance
             CPoint = env.UAV.location  # current location
@@ -329,14 +229,15 @@ def learning():
             # take the action
             # state, reward, reward_Regular, t = env.step(state, action, t)
             t = t + Fly_time
+            if t >= param['nTimeUnits']:
+                print('EP done!')
             state, reward_, reward_rest, reward = env.step(state, action, velocity, t, PV, param, Fly_time)
             print(reward_)
             print(reward_rest)
             print(reward)
             n += 1
 
-            rate1[-1].append(reward_ / reward)
-            rate2[-1].append(reward_rest / reward)
+
 
 
 
@@ -389,13 +290,9 @@ def learning():
         # Running_reward.append(running_reward)
         Ave_Reward.append(ep_reward)
 
-        # for i in range(param['num_Devices']):
-        #     logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['intervals'][0])
-        #     for j in range(1, len(logging_timeline[i][EP]['intervals'])):
-        #         logging_timeline[i][EP]['timeline'].append(logging_timeline[i][EP]['timeline'][j-1] + logging_timeline[i][EP]['intervals'][j])
-        # for x in range(1, EP):
         x = i_episode
         logging_timeline[0][x]['UAV_TimeList'] = UAV.TimeList
+        logging_timeline[0][x]['UAV_Intervals'] = UAV.Intervals
         logging_timeline[0][x]['UAV_PositionList'] = UAV.PositionList
         logging_timeline[0][x]['UAV_PositionCor'] = UAV.PositionCor
         logging_timeline[0][x]['UAV_VelocityList'] = UAV.VelocityList
@@ -512,13 +409,6 @@ def painting(avg):
     ax.axhline(y=avg['ave_Reward_force'] * len(env_force.UAV.Reward), color='g', linestyle='--', linewidth='0.9', label='Forced:' + str(avg['ave_Reward_force']* len(env_force.UAV.Reward)))
     ax.legend(loc="best")
 
-    # ax[1].plot(np.arange(i_episode), [ave_Reward_random]*i_episode, label='Random')
-    # ax[1].set_xlabel('Episodes')  # Add an x-label to the axes.
-    # ax[1].set_ylabel('Ave_Reward')  # Add a y-label to the axes.
-    # ax[1].set_title("The Ave_Reward")  # Add a title to the axes.
-    # plt.legend()
-    # plt.grid(True)
-    # plt.show()
 
     # †††††††††††††††††††††††††††††††††††††††EP_REWARD††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     fig_ep, ax_ep = plt.subplots(1)
@@ -538,27 +428,6 @@ def painting(avg):
                   label='Forced:' + str(avg['ave_Reward_force']))
     ax_ep.legend(loc="best")
 
-    # EP_reward复现SUMMATION
-    # a = []
-    # for x in range(1, param['episodes'] + 1):
-    #     # print(x)
-    #     a.append(len(logging_timeline[0][x]['UAV_Reward']))
-    # fig_re, ax_re = plt.subplots(1)
-    # # ax.plot(np.arange(1, EP+1), Ave_Reward, label='%.0f  Devices, %.0f TimeUnits, %.0f  episodes' %(param['num_Devices'], param['nTimeUnits'], EP, args.gamma, args.learning_rate))
-    # ax_re.plot(np.arange(1, param['episodes'] + 1), [x * y for x, y in zip(a, avg['Ep_reward'])],
-    #         label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
-    #             param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
-    #             param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
-    # ax_re.set_xlabel('Episodes')  # Add an x-label to the axes.
-    # ax_re.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
-    # ax_re.set_title("The Ave_Reward, NN:" + str(model.pattern))  # Add a title to the axes.
-    # # ax.axhline(y=max(avg['Ave_Reward']), color='r', linestyle='--', linewidth='0.9',
-    # #            label='Smart: ' + str(max(avg['Ave_Reward'])))
-    # ax_re.axhline(y=avg['ave_Reward_random'] * len(env_random.UAV.Reward), color='b', linestyle='--', linewidth='0.9',
-    #            label='Random:' + str(avg['ave_Reward_random'] * len(env_random.UAV.Reward)))
-    # ax_re.axhline(y=avg['ave_Reward_force'] * len(env_force.UAV.Reward), color='g', linestyle='--', linewidth='0.9',
-    #            label='Forced:' + str(avg['ave_Reward_force'] * len(env_force.UAV.Reward)))
-    # ax_re.legend(loc="best")
 
     # †††††††††††††††††††††††††††††††††††††††Smart††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     x = param['episodes']
@@ -640,64 +509,6 @@ def painting(avg):
                 ax4[i].axvline(x=np.where(logging_timeline[i][0]['Force_TimeList'])[0][vv], linestyle='--',
                                linewidth='0.9')
 
-
-    # fig2, ax2 = plt.subplots(1)
-    # type = ['Random', 'Force', 'Smart']
-    # # data1 = [np.mean([i for i in Reward_random if i >= -30]), np.mean([i for i in Reward_force if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    # # data2 = [np.mean(PV_random), np.mean(PV_force), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-    # # ax2.bar(type, data1, label = 'reward')
-    # # ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
-    # # data11 = [- np.mean([i for i in env_random.UAV.Reward if i >= -30]),
-    # #           -np.mean([i for i in env_force.UAV.Reward if i >= -30]),
-    # #           -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    # data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward),
-    #            -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    # data1111 = [-np.sum(env_random.UAV.Reward), -np.sum(env_force.UAV.Reward),
-    #             -np.sum(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    # data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
-    #           np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-    # data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
-    #            np.sum(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-    # # [a + b for (a, b) in zip(data111, data22)]
-    # # [a + b for (a, b) in zip(data1111, data222)]
-    # ax2.bar(type, [k * param['mu'] for k in data1111], label='reward')
-    # ax2.bar(type, [k * param['mu'] for k in data222], bottom=np.array(data1111) * param['mu'], label='energy')
-    # ax2.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
-    # ax2.legend(loc="best")
-    # fig2.suptitle('The Sum')
-    # # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
-    # ax2.set_ylabel('Total Cost')  # Add a y-label to the axes.
-    # plt.show()
-    # https: // www.zhihu.com / question / 507977476 / answer / 2283372858  (画叠加柱状图)
-    # https: // juejin.cn / post / 6844903664780328974
-
-    # fig5, ax5 = plt.subplots(1)
-    # type = ['Random', 'Force', 'Smart']
-    # # data1 = [np.mean([i for i in Reward_random if i >= -30]), np.mean([i for i in Reward_force if i >= -30]), np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    # # data2 = [np.mean(PV_random), np.mean(PV_force), np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-    # # ax2.bar(type, data1, label = 'reward')
-    # # ax2.bar(type, data2, bottom=np.array(data1), label = 'energy')
-    # # data11 = [- np.mean([i for i in env_random.UAV.Reward if i >= -30]),
-    # #           -np.mean([i for i in env_force.UAV.Reward if i >= -30]),
-    # #           -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    # data111 = [-np.mean(env_random.UAV.Reward), -np.mean(env_force.UAV.Reward),
-    #            -np.mean(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    # data1111 = [-np.sum(env_random.UAV.Reward), -np.sum(env_force.UAV.Reward),
-    #             -np.sum(logging_timeline[0][param['episodes']]['UAV_Reward'])]
-    # data22 = [np.mean(env_random.UAV.Energy), np.mean(env_force.UAV.Energy),
-    #           np.mean(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-    # data222 = [np.sum(env_random.UAV.Energy), np.sum(env_force.UAV.Energy),
-    #            np.sum(logging_timeline[0][param['episodes']]['UAV_Energy'])]
-    # ax5.bar(type, [k * param['mu'] for k in data111], label='reward')
-    # ax5.bar(type, [k * param['mu'] for k in data22], bottom=np.array(data111) * param['mu'], label='energy')
-    # ax5.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
-    # ax5.legend(loc="best")
-    # fig5.suptitle('The Mean')
-    # # ax2.set_xlabel('Different Types')  # Add an x-label to the axes.
-    # ax5.set_ylabel('Total Cost')  # Add a y-label to the axes.
-    # plt.show()
-
-
     d = 1
     # †††††††††††††††††††††††††††††††††††††††柱状图††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     x = param['episodes']
@@ -724,44 +535,8 @@ def painting(avg):
     ax7[1].legend(loc="best")
     ax7[1].set_ylabel('Total Cost')  # Add a y-label to the axes.
     ax7[1].set_title('The Sum')
-    # plt.show()
 
 
-    # fig6, ax6 = plt.subplots(1)
-    # type = ['Random', 'Force', 'Smart']
-    # dataAoImean = [np.mean(env_random.UAV.AoI), np.mean(env_force.UAV.AoI),
-    #            np.mean(logging_timeline[0][param['episodes']]['UAV_AoI'])]
-    # dataAoIsum = [np.sum(env_random.UAV.AoI), np.sum(env_force.UAV.AoI),
-    #             np.sum(logging_timeline[0][param['episodes']]['UAV_AoI'])]
-    # dataCPUmean = [np.mean(env_random.UAV.CPU), np.mean(env_force.UAV.CPU),
-    #           np.mean(logging_timeline[0][param['episodes']]['UAV_CPU'])]
-    # dataCPUsum = [np.sum(env_random.UAV.CPU), np.sum(env_force.UAV.CPU),
-    #            np.sum(logging_timeline[0][param['episodes']]['UAV_CPU'])]
-    # ax6.bar(type, [k * param['beta'] for k in dataAoImean], label='AoI')
-    # ax6.bar(type, [k * param['beta'] for k in dataCPUmean], bottom=np.array(dataAoImean) * param['beta'], label='CPU')
-    # ax6.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
-    # ax6.legend(loc="best")
-    # fig6.suptitle('The Mean')
-    # ax6.set_ylabel('Total Cost')  # Add a y-label to the axes.
-    # plt.show()
-
-    # fig7, ax7 = plt.subplots(1)
-    # type = ['Random', 'Force', 'Smart']
-    # dataAoImean = [np.mean(env_random.UAV.AoI), np.mean(env_force.UAV.AoI),
-    #            np.mean(logging_timeline[0][param['episodes']]['UAV_AoI'])]
-    # dataAoIsum = [np.sum(env_random.UAV.AoI), np.sum(env_force.UAV.AoI),
-    #             np.sum(logging_timeline[0][param['episodes']]['UAV_AoI'])]
-    # dataCPUmean = [np.mean(env_random.UAV.CPU), np.mean(env_force.UAV.CPU),
-    #           np.mean(logging_timeline[0][param['episodes']]['UAV_CPU'])]
-    # dataCPUsum = [np.sum(env_random.UAV.CPU), np.sum(env_force.UAV.CPU),
-    #            np.sum(logging_timeline[0][param['episodes']]['UAV_CPU'])]
-    # ax7.bar(type, [k * param['beta'] for k in dataAoIsum], label='AoI')
-    # ax7.bar(type, [k * param['beta'] for k in dataCPUsum], bottom=np.array(dataAoIsum) * param['beta'], label='CPU')
-    # ax7.axhline(y=0, color='k', linestyle='-', linewidth='0.6')
-    # ax7.legend(loc="best")
-    # fig7.suptitle('The Sum')
-    # ax7.set_ylabel('Total Cost')  # Add a y-label to the axes.
-    # plt.show()
     x = param['episodes']
     fig8, ax8 = plt.subplots(2, sharex=True)
     fig8.suptitle('AoI and CPU cost')

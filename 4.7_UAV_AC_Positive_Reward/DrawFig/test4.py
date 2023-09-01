@@ -14,10 +14,12 @@ from statistics import mean
 
 
 
-with open('fig_C01.pkl', 'rb') as f:
+with open('fig_D02.pkl', 'rb') as f:
     model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
-
+def CPU_J(cycles):
+    J = pow(cycles * pow(10, 8), 3) * 4 * pow(10, -28)
+    return J
 
 #  Random
 Reward_Random = []
@@ -292,6 +294,7 @@ axs[0,1].set_xticks(x + width, type)
 axs[0,1].legend(loc='best', ncol=2)
 axs[0,1].set_ylim(0, 300)
 
+
 #  CPU
 multiplier = 0
 value_means = {
@@ -325,6 +328,9 @@ axs[1,1].set_title('Queue of IoT Devices')
 axs[1,1].set_xticks(x + width, type)
 axs[1,1].legend(loc='best', ncol=2)
 axs[1,1].set_ylim(0, 2500)
+
+
+
 
 
 f = 1

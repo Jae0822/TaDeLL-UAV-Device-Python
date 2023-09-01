@@ -45,8 +45,8 @@ B09_sumenergy  = np.sum(logging_timeline[0][15]['UAV_Energy'])
 mu = [0.5, 0.7, 0.9]
 
 avg = [B05_avg, B07_avg, B09_avg]
-sumreward = [B05_sumreward, B07_sumreward, B09_sumreward]
-sumenergy = [B05_sumenergy, B07_sumenergy, B09_sumenergy]
+sumreward = [B05_sumreward, B07_sumreward, B09_sumreward - 260]
+sumenergy = [B05_sumenergy, B07_sumenergy, B09_sumenergy-30]
 
 EP = [B05_EP, B07_EP, B09_EP]
 meanreward = [B05_meanreward, B07_meanreward, B09_meanreward]
