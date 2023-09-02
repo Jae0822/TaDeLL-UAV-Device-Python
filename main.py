@@ -3,6 +3,7 @@ import random
 import pickle
 from datetime import datetime
 import os
+import argparse
 
 import torch
 
@@ -18,10 +19,18 @@ def main():
     #  V: 72 km/h =  20 m/s
     #  field: 1 km * 1km
     #  dist:
-    length = 300
-    param = {'episodes': 5, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
+    argParser = argparse.ArgumentParser()
+    argParser.add_argument("-l", "--length", type=int, help="Length of episode")
+    argParser.add_argument("-d", "--devices", type=int, help="Number of devices")
+    argParser.add_argument("-e", "--episodes", type=int, help="Number of episodes")
+    argParser.add_argument("-m", "--model", default='tadell', help="Model name")
+
+
+    args = argParser.parse_args()
+    length = args.length
+    param = {'model' : args.model, 'episodes': args.episodes, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
              'gamma': 0, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.2, 'beta': 0.5,
-             'num_Devices': 6, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16,
+             'num_Devices': args.devices, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16,
              'cpu_capacity' : 50}
 
     random.seed(param['seed'])
@@ -76,7 +85,7 @@ def main():
     # with open('fig_temp.pkl', 'wb') as f:
     #     pickle.dump([model, env, param, avg, logging_timeline], f)
 
-    dirname = "output/"+ datetime.now().strftime("%d%m%y") + "-" + str(param["num_Devices"]) + "devices/"
+    dirname = "output/"+ datetime.now().strftime("%d%m%y-%H:%M") + "-" + str(param["num_Devices"]) + "devices/"
     os.mkdir(dirname)
     with open(dirname + 'param.txt', 'w') as f:
         f.write(str(param))

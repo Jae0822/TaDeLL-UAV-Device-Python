@@ -66,14 +66,16 @@ class Uav(object):
 
 
 class Env(object):
-    def __init__(self, Devices, UAV, nTimeUnits):
+    def __init__(self, Devices, UAV, nTimeUnits, modelName = 'tadell'):
         self.Devices = Devices  # 提供多一层方便，不是形参，每一处的变动都会反映在原始的Devices上。
         self.UAV = UAV
         self.nTimeUnits = nTimeUnits
         self.num_Devices = len(Devices)
-
-        with open('input_files/TaDeLL_result_k_2.pkl', 'rb') as f:
-            _, _, _, self.TaDeLL_Model, _, _, _, _, _ = pickle.load(f)
+        self.model_name = modelName
+        self.TaDeLL_Model = None
+        if (modelName == 'tadell'):
+            with open('input_files/TaDeLL_result_k_2.pkl', 'rb') as f:
+                _, _, _, self.TaDeLL_Model, _, _, _, _, _ = pickle.load(f)
 
         self.initialization(Devices, UAV)
 
@@ -191,8 +193,10 @@ class Env(object):
             #    time, i, cur_task.get_value(cur_task.init_policy['theta']), interval))
         
         i = device.lastMissedTask
-        model.getDictPolicy_Single(device.TaskList[i])
-        #pg_rl(device.TaskList[i])
+        if model:
+            model.getDictPolicy_Single(device.TaskList[i])
+        else:
+            pg_rl(device.TaskList[i])
         improv_val = device.TaskList[i].get_value(device.TaskList[i].policy['theta'])
         device.missedTasks.setdefault(i, 0)
         device.missedTasks[i] += improv_val

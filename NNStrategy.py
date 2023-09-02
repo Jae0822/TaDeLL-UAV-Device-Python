@@ -14,7 +14,7 @@ class NNStrategy:
         self.devices = Util.initialize_fixed_devices(param)
 
         self.uav = Uav(param['V'], self.devices)
-        self.env = Env(self.devices, self.uav, param['nTimeUnits'])
+        self.env = Env(self.devices, self.uav, param['nTimeUnits'], param['model'])
 
         self.actor_model = ActorPolicy(param['num_Devices'], param['num_Devices'], 40)
         self.critic_model = CriticPolicy(param['num_Devices'])
