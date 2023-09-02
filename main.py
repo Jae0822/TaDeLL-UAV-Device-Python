@@ -85,7 +85,7 @@ def main():
     # with open('fig_temp.pkl', 'wb') as f:
     #     pickle.dump([model, env, param, avg, logging_timeline], f)
 
-    dirname = "output/"+ datetime.now().strftime("%d%m%y-%H:%M") + "-" + str(param["num_Devices"]) + "devices/"
+    dirname = "output/"+ datetime.now().strftime("%d%m%y-%H%M") + "-" + str(param["num_Devices"]) + "_devices-" + param["model"] + "_model/"
     os.mkdir(dirname)
     with open(dirname + 'param.txt', 'w') as f:
         f.write(str(param))

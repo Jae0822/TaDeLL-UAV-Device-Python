@@ -181,7 +181,7 @@ class Env(object):
         for i in range(device.lastUavVisit + 1, min(time+1, len(device.TaskList))):
             if device.TaskList[i] == None:
                 continue
-            device.missedTasks[i] = device.TaskList[i].get_value(device.TaskList[i].init_policy['theta']) 
+            device.missedTasks[i] = -device.TaskList[i].get_value(device.TaskList[i].init_policy['theta']) 
             device.lastMissedTask = i
             #cur_task = device.TaskList[i]
             #interval = time - i
@@ -196,14 +196,14 @@ class Env(object):
         if model:
             model.getDictPolicy_Single(device.TaskList[i])
         else:
-            pg_rl(device.TaskList[i])
+            pg_rl(device.TaskList[i], 1)
         improv_val = device.TaskList[i].get_value(device.TaskList[i].policy['theta'])
         device.missedTasks.setdefault(i, 0)
-        device.missedTasks[i] += improv_val
+        device.missedTasks[i] += -improv_val
         print("Improving reward by {} total {}".format(improv_val, device.missedTasks[i]))
 
         for t, cur_task in device.missedTasks.items():
-            reward += -cur_task
+            reward += cur_task
             #reward += cur_task * interval #FIXME
             #AoI += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[0] * interval
             #CPU += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[1] * interval
@@ -225,7 +225,7 @@ class Env(object):
         for i in range(device.lastUavVisit + 1, min(time+1, len(device.TaskList))):
             if device.TaskList[i] == None:
                 continue
-            device.missedTasks[i] = device.TaskList[i].get_value(device.TaskList[i].init_policy['theta']) 
+            device.missedTasks[i] = -device.TaskList[i].get_value(device.TaskList[i].init_policy['theta']) 
             device.lastMissedTask = i
             #cur_task = device.TaskList[i]
             #interval = time - i
@@ -237,7 +237,7 @@ class Env(object):
             #    time, i, cur_task.get_value(cur_task.init_policy['theta']), interval))
         for t, cur_task in device.missedTasks.items():
             interval = time - t
-            reward += cur_task
+            reward += -cur_task
             #reward += cur_task * interval #FIXME
             #AoI += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[0] * interval
             #CPU += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[1] * interval
