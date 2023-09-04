@@ -31,10 +31,10 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value', 'velocity'])
 
 
 # Prepare the environment and devices
-length = 100
-param = {'episodes': 2, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
+length = 3000
+param = {'episodes':25, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
          'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
-         'num_Devices': 10, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+         'num_Devices': 5, 'V': 25, 'V_Lim': 40, 'field': 500, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])
 #torch.device("mps")
@@ -47,12 +47,12 @@ Devices.append(Device(500, 50, param['field']))
 Devices.append(Device(450, 50, param['field']))
 Devices.append(Device(400, 50, param['field']))
 Devices.append(Device(350, 50, param['field']))
-Devices.append(Device(330, 50, param['field']))
 Devices.append(Device(300, 50, param['field']))
-Devices.append(Device(250, 50, param['field']))
-Devices.append(Device(230, 50, param['field']))
-Devices.append(Device(200, 50, param['field']))
-Devices.append(Device(150, 50, param['field']))
+# Devices.append(Device(300, 50, param['field']))
+# Devices.append(Device(250, 50, param['field']))
+# Devices.append(Device(230, 50, param['field']))
+# Devices.append(Device(200, 50, param['field']))
+# Devices.append(Device(150, 50, param['field']))
 
 # Devices.append(Device(530, 50, param['field']))
 # Devices.append(Device(510, 50, param['field']))
