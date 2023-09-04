@@ -1,6 +1,7 @@
 import math
 import torch
 import numpy as np
+import copy
 from collections import namedtuple
 
 from IoTEnv import Uav, Env, ActorPolicy, CriticPolicy
@@ -15,6 +16,7 @@ class NNStrategy:
 
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits'], param['model'])
+        self.env_pgrl = Env(copy.deepcopy(self.devices), copy.deepcopy(self.uav), param['nTimeUnits'], 'pg_rl')
 
         self.actor_model = ActorPolicy(param['num_Devices'], param['num_Devices'], 40)
         self.critic_model = CriticPolicy(param['num_Devices'])
@@ -24,6 +26,8 @@ class NNStrategy:
         # for plotting
         self.Ep_reward = []
         self.Ave_reward = []
+        self.Ep_reward_pgrl = []
+        self.Ave_reward_pgrl = []
 
     def select_action(self, state):
         # state = torch.from_numpy(state).float()
@@ -124,13 +128,15 @@ class NNStrategy:
 
         for i_episode in range(1, self.param['episodes'] + 1):
 
-            state = self.env.reset(self.devices, self.uav)
+            state = self.env.reset()
+            self.env_pgrl.reset()
             # print("the initial state: ", state)
             print("----------------------------------------------------------------------------")
             print("       ")
 
             self.actor_model.states.append(state)
             ep_reward = 0
+            ep_reward_pgrl = 0
             t = 0
             n_fly = 0  # logging fly behaviors
             # FIXME: when the distance is large or the velocity is small, the Fly_time can be too large to surpass the nTimeUnits
@@ -175,6 +181,9 @@ class NNStrategy:
                 print("----------------------------------------------------------------------------")
                 print("       ")
 
+                state, reward_, reward_rest, reward = self.env_pgrl.step(state, action, velocity, t, PV, self.param, Fly_time)
+                ep_reward_pgrl += reward
+
 
             """
             FX3
@@ -183,6 +192,8 @@ class NNStrategy:
 
             self.Ave_reward.append(ep_reward/n_fly)
             self.Ep_reward.append(ep_reward)
+            self.Ave_reward_pgrl.append(ep_reward_pgrl/n_fly)
+            self.Ep_reward_pgrl.append(ep_reward_pgrl)
 
             # perform backprop
             self.finish_episode()
@@ -211,6 +222,7 @@ class NNStrategy:
         self.logging_timeline[0][episode]['UAV_PositionCor'] = self.uav.PositionCor
         self.logging_timeline[0][episode]['UAV_VelocityList'] = self.uav.VelocityList
         self.logging_timeline[0][episode]['UAV_Reward'] = self.uav.Reward  # 设备的COST(AOI+CPU)，负数，绝对值越小越好
+        self.logging_timeline[0][episode]['UAV_Reward_pgrl'] = self.env_pgrl.UAV.Reward  # 设备的COST(AOI+CPU)，负数，绝对值越小越好
         self.logging_timeline[0][episode]['UAV_Energy'] = self.uav.Energy  # UAV的飞行能量，正数，绝对值越小越好
         self.logging_timeline[0][episode]['UAV_R_E'] = self.uav.Sum_R_E  # 上面两项（REWARD+ENERGY）的和，负数，绝对值越小越好（这个是STEP输出的最后一个REWARD，优化目标本标，优化的是每个EPISODE的均值：Ep_reward）
         self.logging_timeline[0][episode]['UAV_AoI'] = self.uav.AoI  # 设备的AOI，正数，绝对值越小越好

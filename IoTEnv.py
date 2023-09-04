@@ -77,7 +77,7 @@ class Env(object):
             with open('input_files/TaDeLL_result_k_2.pkl', 'rb') as f:
                 _, _, _, self.TaDeLL_Model, _, _, _, _, _ = pickle.load(f)
 
-        self.initialization(Devices, UAV)
+        self.initialization(self.Devices, self.UAV)
 
 
     def seed(self):
@@ -86,28 +86,29 @@ class Env(object):
     def initialization(self, Devices, UAV):
         # initialize for each device
         for i in range(len(Devices)):
-            Devices[i].TaskList = Devices[i].gen_TimeTaskList_set(self.nTimeUnits)   # The list of time that indicates the arrival of a new task
+            Devices[i].TaskList_original = Devices[i].gen_TimeTaskList_set(self.nTimeUnits)   # The list of time that indicates the arrival of a new task
 
-    def reset(self, Devices, UAV):
+    def reset(self):
         # Reset Devices and UAV
-        UAV.TimeList = [0]
-        UAV.location = UAV.init_location
-        UAV.PositionCor = [UAV.init_location]
-        UAV.PositionList = [0]
-        UAV.VelocityList = []
-        UAV.Reward = []
-        UAV.Energy = []
-        UAV.Sum_R_E = []
-        UAV.AoI = []
-        UAV.CPU = []
-        UAV.b = []
-        for i in range(len(Devices)):
-            Devices[i].KeyTime = [0]  # The list of key time at which the policy changes (1. UAV visits 2. new task arrival)
+        self.UAV.TimeList = [0]
+        self.UAV.location = self.UAV.init_location
+        self.UAV.PositionCor = [self.UAV.init_location]
+        self.UAV.PositionList = [0]
+        self.UAV.VelocityList = []
+        self.UAV.Reward = []
+        self.UAV.Energy = []
+        self.UAV.Sum_R_E = []
+        self.UAV.AoI = []
+        self.UAV.CPU = []
+        self.UAV.b = []
+        for i in range(len(self.Devices)):
+            self.Devices[i].TaskList = copy.deepcopy(self.Devices[i].TaskList_original)
+            self.Devices[i].KeyTime = [0]  # The list of key time at which the policy changes (1. UAV visits 2. new task arrival)
             #self.KeyReward = [tsk0.get_value(tsk0.init_policy['theta'])]  # Didn't use pg_rl() cause it has one step of update which I don't need here
-            Devices[i].KeyReward = [0]  # Didn't use pg_rl() cause it has one step of update which I don't need here
-            Devices[i].missedTasks.clear()
-            Devices[i].lastUavVisit = -1
-            Devices[i].lastMissedTask = 0
+            self.Devices[i].KeyReward = [0]  # Didn't use pg_rl() cause it has one step of update which I don't need here
+            self.Devices[i].missedTasks.clear()
+            self.Devices[i].lastUavVisit = -1
+            self.Devices[i].lastMissedTask = 0
         # Reset state
         state = np.concatenate((# [0 for x in range(self.num_Devices)],  # 1.当前节点总的已访问次数  不是已访问次数
                                 # [0 for x in range(self.num_Devices)],  # 2.当前节点、当前任务的已访问次数（新任务归1或者0，否则+1。其他节点不变
@@ -151,11 +152,8 @@ class Env(object):
             b_ += b
 
         reward_ = reward_ + reward_rest/(len(self.Devices) - 1)
-        cur_device.missedTasks.clear()
         cur_device.KeyTime.append(t)
         cur_device.KeyReward.append(reward_)   # should decrease with time
-
-        alpha = param['alpha']
 
         mu = param['mu']
         reward_fair = (1 - mu) * reward_ - mu * PV  # 添加飞行能量消耗
@@ -167,6 +165,8 @@ class Env(object):
         self.UAV.AoI.append(AoI_)
         self.UAV.CPU.append(CPU_)
         self.UAV.b.append(b_)
+
+        cur_device.missedTasks.clear()
 
         return state, reward_, reward_rest, reward_fair
 
@@ -181,7 +181,7 @@ class Env(object):
         for i in range(device.lastUavVisit + 1, min(time+1, len(device.TaskList))):
             if device.TaskList[i] == None:
                 continue
-            device.missedTasks[i] = -device.TaskList[i].get_value(device.TaskList[i].init_policy['theta']) 
+            device.missedTasks[i] = device.TaskList[i].get_value(device.TaskList[i].init_policy['theta']) + 10
             device.lastMissedTask = i
             #cur_task = device.TaskList[i]
             #interval = time - i
@@ -199,8 +199,8 @@ class Env(object):
             pg_rl(device.TaskList[i], 1)
         improv_val = device.TaskList[i].get_value(device.TaskList[i].policy['theta'])
         device.missedTasks.setdefault(i, 0)
-        device.missedTasks[i] += -improv_val
-        print("Improving reward by {} total {}".format(improv_val, device.missedTasks[i]))
+        device.missedTasks[i] += (improv_val + 10)
+        print("Improving model {} reward by {} total {}".format(model, improv_val, device.missedTasks[i]))
 
         for t, cur_task in device.missedTasks.items():
             reward += cur_task
@@ -225,7 +225,7 @@ class Env(object):
         for i in range(device.lastUavVisit + 1, min(time+1, len(device.TaskList))):
             if device.TaskList[i] == None:
                 continue
-            device.missedTasks[i] = -device.TaskList[i].get_value(device.TaskList[i].init_policy['theta']) 
+            device.missedTasks[i] = device.TaskList[i].get_value(device.TaskList[i].init_policy['theta']) + 10
             device.lastMissedTask = i
             #cur_task = device.TaskList[i]
             #interval = time - i

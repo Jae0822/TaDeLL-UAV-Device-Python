@@ -16,7 +16,7 @@ class RandomStrategy:
 
     def learning(self):
         print("Random trajectory: One Episode Only")
-        state_random = self.env.reset(self.devices, self.uav)
+        state_random = self.env.reset()
         ep_reward_random = 0
         t = 0
         n = 0  # logging fly behaviors

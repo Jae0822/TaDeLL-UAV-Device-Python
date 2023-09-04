@@ -16,7 +16,7 @@ class ForcedStrategy:
 
     def learning(self):
         print("Forced trajectory: One Episode Only")
-        state_force = self.env.reset(self.devices, self.uav)
+        state_force = self.env.reset()
         ep_reward_force = 0
         t = 0
         n = 0

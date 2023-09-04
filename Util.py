@@ -76,6 +76,8 @@ def painting(avg, param, env_nn, model, env_random, env_force, logging_timeline)
                label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
                    param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
                    param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
+
+    ax_ep.plot(np.arange(1, param['episodes'] + 1), avg['Ave_reward_pgrl'], label = 'pg_rl')
     ax_ep.set_xlabel('Episodes')  # Add an x-label to the axes.
     ax_ep.set_ylabel('Ave_Reward')  # Add a y-label to the axes.
     ax_ep.set_title("The reward divided by number of flights, NN:" + str(model.pattern))  # Add a title to the axes.
@@ -274,6 +276,8 @@ def painting(avg, param, env_nn, model, env_random, env_force, logging_timeline)
             label=str(param['num_Devices']) + ' Devices,' + str(param['episodes']) + ' episodes,' + str(
                 param['nTimeUnits']) + ' TimeUnits,' + str(param['gamma']) + ' gamma,' + str(
                 param['learning_rate']) + ' lr,' + str(param['alpha']) + ' alpha, ' + str(param['mu']) + ' mu')
+    
+    ax.plot(np.arange(1, param['episodes'] + 1), avg['Ep_Reward_pgrl'], label = 'pg_rl')
     ax.set_xlabel('Episodes')  # Add an x-label to the axes.
     ax.set_ylabel('Ep_Reward')  # Add a y-label to the axes.
     ax.set_title("The Ep_Reward, NN:" + str(model.pattern))  # Add a title to the axes.

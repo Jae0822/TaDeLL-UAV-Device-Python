@@ -78,6 +78,8 @@ def main():
     avg = {}
     avg['Ave_reward'] = nn_strategy.Ave_reward
     avg['Ep_Reward'] = nn_strategy.Ep_reward
+    avg['Ave_reward_pgrl'] = nn_strategy.Ave_reward_pgrl
+    avg['Ep_Reward_pgrl'] = nn_strategy.Ep_reward_pgrl
     avg['ave_Reward_random'] = random_strategy.ave_Reward_random
     avg['ave_Reward_force'] = forced_strategy.ave_Reward_force
     avg['Ep_Reward_random'] = random_strategy.Ep_Reward_random
