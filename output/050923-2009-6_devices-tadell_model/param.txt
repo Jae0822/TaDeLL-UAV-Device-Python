@@ -1,0 +1,1 @@
+{'model': 'tadell', 'episodes': 500, 'nTimeUnits': 3000, 'nTimeUnits_random': 3000, 'nTimeUnits_force': 3000, 'gamma': 0, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.2, 'beta': 0.5, 'num_Devices': 6, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.04, 'freq_low': 8, 'freq_high': 16, 'cpu_capacity': 50}
