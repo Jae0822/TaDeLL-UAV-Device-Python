@@ -35,7 +35,7 @@ y = [data111(1), data22(1), dataAoImean(1), dataCPUmean(1);
 bar(x,y, 1)
 plot(x, data111_data22, 'ro-', 'DisplayName','Reward of Devices', 'LineWidth', 1.5) %,'Color', colorMat(7,:))
 plot(x, dataAoImean_dataCPUmean, 'kx-','DisplayName','AoI of Devices', 'LineWidth', 1.5) %, 'Color', colorMat(6,:))
-ylabel('Different Measures')
+ylabel('Performance Values')
 
 box on; 
 grid on;
