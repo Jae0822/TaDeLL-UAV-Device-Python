@@ -28,6 +28,9 @@ class Device(object):
 
         self.KeyTime = [0]  # The list of key time at which the policy changes (1. UAV visits 2. new task arrival)
         self.KeyReward = [0]  # Didn't use pg_rl() cause it has one step of update which I don't need here
+        self.KeyAoI = [0]
+        self.KeyCPU = [0]
+        self.Keyb = [0]
         #self.KeyReward = [tsk0.get_value(tsk0.init_policy['theta'])]  # Didn't use pg_rl() cause it has one step of update which I don't need here
 
         self.TaskList = []
@@ -106,6 +109,9 @@ class Env(object):
             self.Devices[i].KeyTime = [0]  # The list of key time at which the policy changes (1. UAV visits 2. new task arrival)
             #self.KeyReward = [tsk0.get_value(tsk0.init_policy['theta'])]  # Didn't use pg_rl() cause it has one step of update which I don't need here
             self.Devices[i].KeyReward = [0]  # Didn't use pg_rl() cause it has one step of update which I don't need here
+            self.Devices[i].KeyAoI = [0]
+            self.Devices[i].KeyCPU = [0]
+            self.Devices[i].Keyb = [0]
             self.Devices[i].missedTasks.clear()
             self.Devices[i].lastUavVisit = -1
             self.Devices[i].lastMissedTask = 0
@@ -139,6 +145,9 @@ class Env(object):
         # update reward
         reward_rest = 0
         reward_, AoI_, CPU_, b_ = self.calculate_reward_since_last_visit(cur_device, t, self.TaDeLL_Model)
+        cur_device.KeyAoI.append(AoI_)
+        cur_device.KeyCPU.append(CPU_)
+        cur_device.Keyb.append(b_)
 
         for dev in self.Devices:
 
@@ -147,9 +156,9 @@ class Env(object):
 
             r, a, c, b = self.calculate_penalty_since_last_visit(dev, t)
             reward_rest += r
-            AoI_ += a
-            CPU_ += c
-            b_ += b
+            dev.KeyAoI.append(a)
+            dev.KeyCPU.append(c)
+            dev.Keyb.append(b)
 
         reward_ = reward_ + reward_rest/(len(self.Devices) - 1)
         cur_device.KeyTime.append(t)
@@ -176,27 +185,33 @@ class Env(object):
         CPU = 0
         b = 0
 
-        last_visited_time = device.KeyTime[-1]
         #for i in [i for i in range(len(test_list)) if test_list[i] != None]
         for i in range(device.lastUavVisit + 1, min(time+1, len(device.TaskList))):
             if device.TaskList[i] == None:
                 continue
+            interval = i - max(device.lastUavVisit, device.lastMissedTask)
+            dataTask = device.TaskList[device.lastMissedTask].get_AoI_CPU(
+                device.TaskList[device.lastMissedTask].policy['theta'])
+            AoI += dataTask[0] * interval
+            CPU += dataTask[1] * interval
+            b += dataTask[2] * interval
+
             device.missedTasks[i] = device.TaskList[i].get_value(device.TaskList[i].init_policy['theta']) + 10
             device.lastMissedTask = i
-            #cur_task = device.TaskList[i]
-            #interval = time - i
-            #reward += cur_task.get_value(cur_task.init_policy['theta']) * interval
-            #AoI += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[0] * interval
-            #CPU += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[1] * interval
-            #b += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[2] * interval
-            #print("cur time {} index {} updating reward: {} inteval: {}".format(
-            #    time, i, cur_task.get_value(cur_task.init_policy['theta']), interval))
         
         i = device.lastMissedTask
+        interval = time - max(device.lastUavVisit, device.lastMissedTask)
+        dataTask = device.TaskList[device.lastMissedTask].get_AoI_CPU(
+            device.TaskList[device.lastMissedTask].policy['theta'])
+        AoI += dataTask[0] * interval
+        CPU += dataTask[1] * interval
+        b += dataTask[2] * interval
+
         if model:
             model.getDictPolicy_Single(device.TaskList[i])
         else:
             pg_rl(device.TaskList[i], 1)
+        
         improv_val = device.TaskList[i].get_value(device.TaskList[i].policy['theta'])
         device.missedTasks.setdefault(i, 0)
         device.missedTasks[i] += (improv_val + 10)
@@ -221,10 +236,19 @@ class Env(object):
         last_visited_time = device.KeyTime[-1]
         if (last_visited_time == 0):
             reward = -10
+        
         #for i in [i for i in range(len(test_list)) if test_list[i] != None]
         for i in range(device.lastUavVisit + 1, min(time+1, len(device.TaskList))):
             if device.TaskList[i] == None:
                 continue
+
+            interval = i - max(device.lastUavVisit, device.lastMissedTask)
+            dataTask = device.TaskList[device.lastMissedTask].get_AoI_CPU(
+                device.TaskList[device.lastMissedTask].policy['theta'])
+            AoI += dataTask[0] * interval
+            CPU += dataTask[1] * interval
+            b += dataTask[2] * interval
+
             device.missedTasks[i] = device.TaskList[i].get_value(device.TaskList[i].init_policy['theta']) + 10
             device.lastMissedTask = i
             #cur_task = device.TaskList[i]
@@ -235,6 +259,14 @@ class Env(object):
             #b += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[2] * interval
             #print("cur time {} index {} updating reward: {} inteval: {}".format(
             #    time, i, cur_task.get_value(cur_task.init_policy['theta']), interval))
+
+        interval = time - max(device.lastUavVisit, device.lastMissedTask)
+        dataTask = device.TaskList[device.lastMissedTask].get_AoI_CPU(
+            device.TaskList[device.lastMissedTask].policy['theta'])
+        AoI += dataTask[0] * interval
+        CPU += dataTask[1] * interval
+        b += dataTask[2] * interval
+
         for t, cur_task in device.missedTasks.items():
             interval = time - t
             reward += -cur_task

@@ -33,7 +33,7 @@ def main():
     param = {'model' : args.model, 'episodes': args.episodes, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
              'gamma': 0, 'learning_rate': args.learningRate, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': args.mu, 'beta': 0.5,
              'num_Devices': args.devices, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16,
-             'cpu_capacity' : 50, 'pg_rl_reward' : False}
+             'cpu_capacity' : 50, 'pg_rl_reward' : True}
 
     random.seed(param['seed'])
     np.random.seed(param['seed'])

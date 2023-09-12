@@ -66,6 +66,9 @@ class ForcedStrategy:
             self.logging_timeline[i][0]['Force_TaskList'] = self.devices[i].TaskList
             # 记录每一个EPISODE的非REGULAR的数据
             self.logging_timeline[i][0]['Force_KeyRewards'] = self.devices[i].KeyReward
+            self.logging_timeline[i][0]['Force_KeyAoI'] = self.devices[i].KeyAoI
+            self.logging_timeline[i][0]['Force_KeyCPU'] = self.devices[i].KeyCPU
+            self.logging_timeline[i][0]['Force_Keyb'] = self.devices[i].Keyb
             ls2 = self.logging_timeline[i][0]['Force_KeyRewards']
             if len(self.logging_timeline[i][0]['Force_KeyTime']) == 1:
                 self.logging_timeline[i][0]['Force_avg_reward'] = None

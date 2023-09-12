@@ -235,6 +235,9 @@ class NNStrategy:
         for i in range(self.param['num_Devices']):
             self.logging_timeline[i][episode]['TaskList'] = self.devices[i].TaskList
             self.logging_timeline[i][episode]['KeyTime'] = self.devices[i].KeyTime
+            self.logging_timeline[i][episode]['KeyAoI'] = self.devices[i].KeyAoI
+            self.logging_timeline[i][episode]['KeyCPU'] = self.devices[i].KeyCPU
+            self.logging_timeline[i][episode]['Keyb'] = self.devices[i].Keyb
             # 记录每一个EPISODE的非REGULAR的数据
             # FIXME: 这里的KEYREWARD只包含了AOI+CPU，没有包含UAV的能耗PV
             # 这里每一个DEVICE只能这样啊，DEVICE不像UAV一样一下一下飞，DEVICE是每一个时隙的
