@@ -21,17 +21,19 @@ def main():
     #  dist:
     argParser = argparse.ArgumentParser()
     argParser.add_argument("-l", "--length", type=int, help="Length of episode")
+    argParser.add_argument("-lr", "--learningRate", type=float, default=0.07, help="Learning rate")
     argParser.add_argument("-d", "--devices", type=int, help="Number of devices")
     argParser.add_argument("-e", "--episodes", type=int, help="Number of episodes")
     argParser.add_argument("-m", "--model", default='tadell', help="Model name")
+    argParser.add_argument("-mu", "--mu", type=float, default=0.2, help="mu")
 
 
     args = argParser.parse_args()
     length = args.length
     param = {'model' : args.model, 'episodes': args.episodes, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
-             'gamma': 0, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.2, 'beta': 0.5,
+             'gamma': 0, 'learning_rate': args.learningRate, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': args.mu, 'beta': 0.5,
              'num_Devices': args.devices, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16,
-             'cpu_capacity' : 50}
+             'cpu_capacity' : 50, 'pg_rl_reward' : False}
 
     random.seed(param['seed'])
     np.random.seed(param['seed'])

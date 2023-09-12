@@ -16,8 +16,10 @@ class NNStrategy:
 
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits'], param['model'])
-        self.env_pgrl = Env(copy.deepcopy(self.devices), copy.deepcopy(self.uav), param['nTimeUnits'], 'pg_rl')
-
+        if param['pg_rl_reward']:
+            self.env_pgrl = Env(copy.deepcopy(self.devices), copy.deepcopy(self.uav), param['nTimeUnits'], 'pg_rl')
+        else:
+            self.env_pgrl = self.env
         self.actor_model = ActorPolicy(param['num_Devices'], param['num_Devices'], 40)
         self.critic_model = CriticPolicy(param['num_Devices'])
         self.actor_optimizer = torch.optim.Adam(self.actor_model.parameters(), lr=param['learning_rate'])  # lr=3e-2
@@ -129,7 +131,8 @@ class NNStrategy:
         for i_episode in range(1, self.param['episodes'] + 1):
 
             state = self.env.reset()
-            self.env_pgrl.reset()
+            if self.param['pg_rl_reward']:
+                self.env_pgrl.reset()
             # print("the initial state: ", state)
             print("----------------------------------------------------------------------------")
             print("       ")
@@ -181,7 +184,8 @@ class NNStrategy:
                 print("----------------------------------------------------------------------------")
                 print("       ")
 
-                state, reward_, reward_rest, reward = self.env_pgrl.step(state, action, velocity, t, PV, self.param, Fly_time)
+                if self.param['pg_rl_reward']:
+                    state, reward_, reward_rest, reward = self.env_pgrl.step(state, action, velocity, t, PV, self.param, Fly_time)
                 ep_reward_pgrl += reward
 
 
