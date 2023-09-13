@@ -95,7 +95,7 @@ def main():
         f.write(str(param))
 
     with open(dirname + 'output.pkl', 'wb') as f:
-        pickle.dump([nn_strategy.actor_model, nn_strategy.env, random_strategy.env, forced_strategy.env, param, avg, logging_timeline], f)
+        pickle.dump([nn_strategy.actor_model, nn_strategy, random_strategy, forced_strategy, param, avg, logging_timeline], f)
 
     # †††††††††††††††††††††††††††††††††††††††Painting††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     Util.painting(avg, param, nn_strategy.env, nn_strategy.actor_model, random_strategy.env, forced_strategy.env, logging_timeline)

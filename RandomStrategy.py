@@ -1,5 +1,9 @@
 import numpy as np
 import math
+import copy
+from collections import namedtuple
+
+
 
 from IoTEnv import Uav, Env, Policy
 from UAVEnergy import UAV_Energy
@@ -12,12 +16,22 @@ class RandomStrategy:
         self.devices = Util.initialize_fixed_devices(param)
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits_random'])
+        if param['pg_rl_reward']:
+            self.env_pgrl = Env(copy.deepcopy(self.devices), copy.deepcopy(self.uav), param['nTimeUnits'], 'pg_rl')
+        else:
+            self.env_pgrl = self.env
         self.ave_Reward_random = 0.0
+        self.Ep_Reward_random = 0.0
+        self.ave_Reward_random_pgrl = 0.0
+        self.Ep_Reward_random_pgrl = 0.0
 
     def learning(self):
         print("Random trajectory: One Episode Only")
         state_random = self.env.reset()
+        if self.param['pg_rl_reward']:
+            self.env_pgrl.reset()
         ep_reward_random = 0
+        ep_reward_random_pgrl = 0
         t = 0
         n = 0  # logging fly behaviors
         Reward_random = []
@@ -44,6 +58,10 @@ class RandomStrategy:
             print("Random: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(1, n,
                                                                                                                        t,
                                                                                                                        action_random))
+            if self.param['pg_rl_reward']:
+                state, reward_, reward_rest, reward = self.env_pgrl.step(state_random, action_random, self.param['V'], t, PV, self.param,
+                                                                         Fly_time)
+            ep_reward_random_pgrl += reward
 
         self.logging_timeline[0][0]['Reward_random'] = Reward_random
         self.logging_timeline[0][0]['Random_UAV_PositionList'] = self.uav.PositionList
@@ -68,6 +86,20 @@ class RandomStrategy:
                 self.logging_timeline[i][0]['Random_avg_reward'] = None
             else:
                 self.logging_timeline[i][0]['Random_avg_reward'] = sum(ls2)/len(ls2)
+            #####################  REGULAR ########################################
+            self.logging_timeline[i][0]['Random_TaskList_Regular'] = self.env_pgrl.Devices[i].TaskList
+            self.logging_timeline[i][0]['Random_KeyTime_Regular'] = self.env_pgrl.Devices[i].KeyTime
+            self.logging_timeline[i][0]['Random_KeyAoI_Regular'] = self.env_pgrl.Devices[i].KeyAoI
+            self.logging_timeline[i][0]['Random_KeyCPU_Regular'] = self.env_pgrl.Devices[i].KeyCPU
+            self.logging_timeline[i][0]['Random_Keyb_Regular'] = self.env_pgrl.Devices[i].Keyb
+            self.logging_timeline[i][0]['Random_KeyReward_Regular'] = self.env_pgrl.Devices[i].KeyReward
+            ls2 = self.logging_timeline[i][0]['Random_KeyReward_Regular']
+            if len(self.logging_timeline[i][0]['Random_KeyTime_Regular']) == 1:
+                self.logging_timeline[i][0]['Random_avg_reward_Regular'] = None
+            else:
+                self.logging_timeline[i][0]['Random_avg_reward_Regular'] = sum(ls2)/len(ls2)
         self.ave_Reward_random = ep_reward_random / n
         self.Ep_Reward_random = ep_reward_random
+        self.ave_Reward_random_pgrl = ep_reward_random_pgrl / n
+        self.Ep_Reward_random_pgrl = ep_reward_random_pgrl
         print('Random: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(1, ep_reward_random, self.ave_Reward_random))

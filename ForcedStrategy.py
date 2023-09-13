@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import copy
 
 from IoTEnv import Uav, Env, Policy
 from UAVEnergy import UAV_Energy
@@ -12,12 +13,23 @@ class ForcedStrategy:
         self.devices = Util.initialize_fixed_devices(param)
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits_force'])
+        if param['pg_rl_reward']:
+            self.env_pgrl = Env(copy.deepcopy(self.devices), copy.deepcopy(self.uav), param['nTimeUnits'], 'pg_rl')
+        else:
+            self.env_pgrl = self.env
         self.ave_Reward_force = 0.0
+        self.Ep_Reward_force = 0.0
+        self.ave_Reward_force_Regular = 0.0
+        self.Ep_Reward_force_Regular = 0.0
+
 
     def learning(self):
         print("Forced trajectory: One Episode Only")
         state_force = self.env.reset()
+        if self.param['pg_rl_reward']:
+            self.env_pgrl.reset()
         ep_reward_force = 0
+        ep_reward_force_pgrl = 0
         t = 0
         n = 0
         Reward_force = []
@@ -51,6 +63,10 @@ class ForcedStrategy:
             Reward_force.append(reward_force)
             ep_reward_force += reward_force
             print("Force: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(1, n,t,action_force))
+            if self.param['pg_rl_reward']:
+                state, reward_, reward_rest, reward = self.env_pgrl.step(state_force, action_force, self.param['V'], t, PV, self.param,
+                                                                         Fly_time)
+            ep_reward_force_pgrl += reward
         self.logging_timeline[0][0]['Reward_force'] = Reward_force
         self.logging_timeline[0][0]['Force_UAV_PositionList'] = self.uav.PositionList
         self.logging_timeline[0][0]['Force_UAV_PositionCor'] = self.uav.PositionCor
@@ -74,6 +90,20 @@ class ForcedStrategy:
                 self.logging_timeline[i][0]['Force_avg_reward'] = None
             else:
                 self.logging_timeline[i][0]['Force_avg_reward'] = sum(ls2)/len(ls2)
+            #####################  REGULAR ########################################
+            self.logging_timeline[i][0]['Force_TaskList_Regular'] = self.env_pgrl.Devices[i].TaskList
+            self.logging_timeline[i][0]['Force_KeyTime_Regular'] = self.env_pgrl.Devices[i].KeyTime
+            self.logging_timeline[i][0]['Force_KeyAoI_Regular'] = self.env_pgrl.Devices[i].KeyAoI
+            self.logging_timeline[i][0]['Force_KeyCPU_Regular'] = self.env_pgrl.Devices[i].KeyCPU
+            self.logging_timeline[i][0]['Force_Keyb_Regular'] = self.env_pgrl.Devices[i].Keyb
+            self.logging_timeline[i][0]['Force_KeyReward_Regular'] = self.env_pgrl.Devices[i].KeyReward
+            ls2 = self.logging_timeline[i][0]['Force_KeyReward_Regular']
+            if len(self.logging_timeline[i][0]['Force_KeyTime_Regular']) == 1:
+                self.logging_timeline[i][0]['Force_avg_reward_Regular'] = None
+            else:
+                self.logging_timeline[i][0]['Force_avg_reward_Regular'] = sum(ls2)/len(ls2)
         self.ave_Reward_force = ep_reward_force / n
         self.Ep_Reward_force = ep_reward_force
+        self.ave_Reward_force_Regular = ep_reward_force / n
+        self.Ep_Reward_force_Regular = ep_reward_force
         print('Force: Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(1, ep_reward_force, self.ave_Reward_force))

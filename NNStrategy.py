@@ -226,7 +226,7 @@ class NNStrategy:
         self.logging_timeline[0][episode]['UAV_PositionCor'] = self.uav.PositionCor
         self.logging_timeline[0][episode]['UAV_VelocityList'] = self.uav.VelocityList
         self.logging_timeline[0][episode]['UAV_Reward'] = self.uav.Reward  # 设备的COST(AOI+CPU)，负数，绝对值越小越好
-        self.logging_timeline[0][episode]['UAV_Reward_pgrl'] = self.env_pgrl.UAV.Reward  # 设备的COST(AOI+CPU)，负数，绝对值越小越好
+        self.logging_timeline[0][episode]['UAV_Reward_Regular'] = self.env_pgrl.UAV.Reward  # 设备的COST(AOI+CPU)，负数，绝对值越小越好
         self.logging_timeline[0][episode]['UAV_Energy'] = self.uav.Energy  # UAV的飞行能量，正数，绝对值越小越好
         self.logging_timeline[0][episode]['UAV_R_E'] = self.uav.Sum_R_E  # 上面两项（REWARD+ENERGY）的和，负数，绝对值越小越好（这个是STEP输出的最后一个REWARD，优化目标本标，优化的是每个EPISODE的均值：Ep_reward）
         self.logging_timeline[0][episode]['UAV_AoI'] = self.uav.AoI  # 设备的AOI，正数，绝对值越小越好
@@ -249,3 +249,15 @@ class NNStrategy:
                 self.logging_timeline[i][episode]['avg_reward'] = None
             else:
                 self.logging_timeline[i][episode]['avg_reward'] = sum(ls2)/len(ls2)
+            #####################  REGULAR ########################################
+            self.logging_timeline[i][episode]['TaskList_Regular'] = self.env_pgrl.Devices[i].TaskList
+            self.logging_timeline[i][episode]['KeyTime_Regular'] = self.env_pgrl.Devices[i].KeyTime
+            self.logging_timeline[i][episode]['KeyAoI_Regular'] = self.env_pgrl.Devices[i].KeyAoI
+            self.logging_timeline[i][episode]['KeyCPU_Regular'] = self.env_pgrl.Devices[i].KeyCPU
+            self.logging_timeline[i][episode]['Keyb_Regular'] = self.env_pgrl.Devices[i].Keyb
+            self.logging_timeline[i][episode]['KeyReward_Regular'] = self.env_pgrl.Devices[i].KeyReward
+            ls2 = self.logging_timeline[i][episode]['KeyReward_Regular']
+            if len(self.logging_timeline[i][episode]['KeyTime_Regular']) == 1:
+                self.logging_timeline[i][episode]['avg_reward_Regular'] = None
+            else:
+                self.logging_timeline[i][episode]['avg_reward_Regular'] = sum(ls2)/len(ls2)
