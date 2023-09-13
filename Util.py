@@ -1,11 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from statistics import mean
+import pickle
 
 
-from IoTEnv import Device
+from IoTEnv import Device, TaskCache
 
-def initialize_fixed_devices(param):
+def initialize_fixed_devices(param, modelName = 'tadell'):
     devices = []
     # for i in range(param['num_Devices']):
     #     Devices.append(Device(random.randint(param['freq_low'], param['freq_high']), random.randint(30, 70), param['field']))
@@ -48,8 +49,20 @@ def initialize_fixed_devices(param):
         115,
         100]
 
+    taskList_set = None
+    with open('input_files/SourceTask_temp.pkl', 'rb') as f:
+        taskList_set, _ = pickle.load(f)
+
+    model = None
+    if (modelName == 'tadell'):
+        with open('input_files/TaDeLL_result_k_2.pkl', 'rb') as f:
+            _, _, _, model, _, _, _, _, _ = pickle.load(f)
+
+    taskBase = TaskCache(taskList_set[1])
+    taskBase.populate(model)
+
     for i in range(param['num_Devices']):
-        devices.append(Device(freq_list[i%len(freq_list)], param['cpu_capacity'], param['field']))
+        devices.append(Device(freq_list[i%len(freq_list)], param['cpu_capacity'], param['field'], taskBase))
     return devices
 
 

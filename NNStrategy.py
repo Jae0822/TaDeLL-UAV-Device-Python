@@ -12,12 +12,12 @@ class NNStrategy:
     def __init__(self, param, logging_timeline) -> None:
         self.param = param
         self.logging_timeline = logging_timeline
-        self.devices = Util.initialize_fixed_devices(param)
+        self.devices = Util.initialize_fixed_devices(param, 'tadell')
 
         self.uav = Uav(param['V'], self.devices)
-        self.env = Env(self.devices, self.uav, param['nTimeUnits'], param['model'])
+        self.env = Env(self.devices, self.uav, param['nTimeUnits'])
         if param['pg_rl_reward']:
-            self.env_pgrl = Env(copy.deepcopy(self.devices), copy.deepcopy(self.uav), param['nTimeUnits'], 'pg_rl')
+            self.env_pgrl = Env(Util.initialize_fixed_devices(param, 'pg_rl'), copy.deepcopy(self.uav), param['nTimeUnits'])
         else:
             self.env_pgrl = self.env
         self.actor_model = ActorPolicy(param['num_Devices'], param['num_Devices'], 40)

@@ -12,7 +12,7 @@ from associations import pg_rl
 from env import Task
 
 class Device(object):
-    def __init__(self, frequency, cpu_capacity, field):
+    def __init__(self, frequency, cpu_capacity, field, taskBase):
 
         # Static Attributes
         self.frequency = frequency
@@ -25,6 +25,8 @@ class Device(object):
 
         with open('input_files/SourceTask_temp.pkl', 'rb') as f:
             self.taskList_set, _ = pickle.load(f)
+
+        self.taskBase = taskBase
 
         self.KeyTime = [0]  # The list of key time at which the policy changes (1. UAV visits 2. new task arrival)
         self.KeyReward = [0]  # Didn't use pg_rl() cause it has one step of update which I don't need here
@@ -43,9 +45,9 @@ class Device(object):
         TaskList = [None]*nTimeUnits
         mean = self.frequency
         t = int(np.random.normal(mean, mean / 10))
-        TaskList[0] = self.taskList_set[1]
+        TaskList[0] = copy.deepcopy(self.taskBase)
         while t < nTimeUnits:
-            TaskList[t] = self.taskList_set[1]
+            TaskList[t] = copy.deepcopy(self.taskBase)
             t = t + mean
         return TaskList
 
@@ -66,19 +68,44 @@ class Uav(object):
         self.AoI = []
         self.CPU = []
 
+class TaskCache():
+    def __init__(self, task):
+        self.task = copy.deepcopy(task)
+        self.value = []
+        self.AoI_CPU = []
+        self.idx = 0
+
+    def populate(self, model):
+        print("Building TaskCache")
+        self.value.append(self.task.get_value(self.task.init_policy['theta']))
+        self.AoI_CPU.append(self.task.get_AoI_CPU(self.task.init_policy['theta']))
+
+        for i in range(1, 25):
+            if model:
+                model.getDictPolicy_Single(self.task)
+            else:
+                pg_rl(self.task, 1)
+        
+            self.value.append(self.task.get_value(self.task.policy['theta']))
+            self.AoI_CPU.append(self.task.get_AoI_CPU(self.task.policy['theta']))
+        print("Building TaskCache DONE, model: {} value {} AoI {}".format(model, self.value, self.AoI_CPU))
+    
+    def get_value(self):
+        return self.value[self.idx]
+
+    def get_AoI_CPU(self):
+        return self.AoI_CPU[self.idx]
+
+    def visit(self):
+        self.idx += 1
 
 
 class Env(object):
-    def __init__(self, Devices, UAV, nTimeUnits, modelName = 'tadell'):
+    def __init__(self, Devices, UAV, nTimeUnits):
         self.Devices = Devices  # 提供多一层方便，不是形参，每一处的变动都会反映在原始的Devices上。
         self.UAV = UAV
         self.nTimeUnits = nTimeUnits
         self.num_Devices = len(Devices)
-        self.model_name = modelName
-        self.TaDeLL_Model = None
-        if (modelName == 'tadell'):
-            with open('input_files/TaDeLL_result_k_2.pkl', 'rb') as f:
-                _, _, _, self.TaDeLL_Model, _, _, _, _, _ = pickle.load(f)
 
         self.initialization(self.Devices, self.UAV)
 
@@ -144,7 +171,7 @@ class Env(object):
 
         # update reward
         reward_rest = 0
-        reward_, AoI_, CPU_, b_ = self.calculate_reward_since_last_visit(cur_device, t, self.TaDeLL_Model)
+        reward_, AoI_, CPU_, b_ = self.calculate_reward_since_last_visit(cur_device, t)
         cur_device.KeyAoI.append(AoI_)
         cur_device.KeyCPU.append(CPU_)
         cur_device.Keyb.append(b_)
@@ -179,7 +206,7 @@ class Env(object):
 
         return state, reward_, reward_rest, reward_fair
 
-    def calculate_reward_since_last_visit(self, device, time, model):
+    def calculate_reward_since_last_visit(self, device, time):
         reward = 0
         AoI = 0
         CPU = 0
@@ -190,32 +217,27 @@ class Env(object):
             if device.TaskList[i] == None:
                 continue
             interval = i - max(device.lastUavVisit, device.lastMissedTask)
-            dataTask = device.TaskList[device.lastMissedTask].get_AoI_CPU(
-                device.TaskList[device.lastMissedTask].policy['theta'])
+            dataTask = device.TaskList[device.lastMissedTask].get_AoI_CPU()
             AoI += dataTask[0] * interval
             CPU += dataTask[1] * interval
             b += dataTask[2] * interval
 
-            device.missedTasks[i] = device.TaskList[i].get_value(device.TaskList[i].init_policy['theta']) + 10
+            device.missedTasks[i] = device.TaskList[i].get_value() + 10
             device.lastMissedTask = i
         
         i = device.lastMissedTask
         interval = time - max(device.lastUavVisit, device.lastMissedTask)
-        dataTask = device.TaskList[device.lastMissedTask].get_AoI_CPU(
-            device.TaskList[device.lastMissedTask].policy['theta'])
+        dataTask = device.TaskList[device.lastMissedTask].get_AoI_CPU()
         AoI += dataTask[0] * interval
         CPU += dataTask[1] * interval
         b += dataTask[2] * interval
 
-        if model:
-            model.getDictPolicy_Single(device.TaskList[i])
-        else:
-            pg_rl(device.TaskList[i], 1)
-        
-        improv_val = device.TaskList[i].get_value(device.TaskList[i].policy['theta'])
+        device.TaskList[i].visit()
+
+        improv_val = device.TaskList[i].get_value()
         device.missedTasks.setdefault(i, 0)
         device.missedTasks[i] += (improv_val + 10)
-        print("Improving model {} reward by {} total {}".format(model, improv_val, device.missedTasks[i]))
+        print("Improving reward by {} total {}".format(improv_val, device.missedTasks[i]))
 
         for t, cur_task in device.missedTasks.items():
             reward += cur_task
@@ -243,13 +265,12 @@ class Env(object):
                 continue
 
             interval = i - max(device.lastUavVisit, device.lastMissedTask)
-            dataTask = device.TaskList[device.lastMissedTask].get_AoI_CPU(
-                device.TaskList[device.lastMissedTask].policy['theta'])
+            dataTask = device.TaskList[device.lastMissedTask].get_AoI_CPU()
             AoI += dataTask[0] * interval
             CPU += dataTask[1] * interval
             b += dataTask[2] * interval
 
-            device.missedTasks[i] = device.TaskList[i].get_value(device.TaskList[i].init_policy['theta']) + 10
+            device.missedTasks[i] = device.TaskList[i].get_value() + 10
             device.lastMissedTask = i
             #cur_task = device.TaskList[i]
             #interval = time - i
@@ -261,8 +282,7 @@ class Env(object):
             #    time, i, cur_task.get_value(cur_task.init_policy['theta']), interval))
 
         interval = time - max(device.lastUavVisit, device.lastMissedTask)
-        dataTask = device.TaskList[device.lastMissedTask].get_AoI_CPU(
-            device.TaskList[device.lastMissedTask].policy['theta'])
+        dataTask = device.TaskList[device.lastMissedTask].get_AoI_CPU()
         AoI += dataTask[0] * interval
         CPU += dataTask[1] * interval
         b += dataTask[2] * interval
