@@ -17,7 +17,7 @@ class RandomStrategy:
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits_random'])
         if param['pg_rl_reward']:
-            self.env_pgrl = Env(copy.deepcopy(self.devices), copy.deepcopy(self.uav), param['nTimeUnits'], 'pg_rl')
+            self.env_pgrl = Env(Util.initialize_fixed_devices(param, 'pg_rl'), copy.deepcopy(self.uav), param['nTimeUnits'])
         else:
             self.env_pgrl = self.env
         self.ave_Reward_random = 0.0
