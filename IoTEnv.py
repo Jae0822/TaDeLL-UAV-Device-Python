@@ -73,7 +73,7 @@ class TaskCache():
         self.task = copy.deepcopy(task)
         self.value = []
         self.AoI_CPU = []
-        self.idx = 1
+        self.idx = 0
 
     def populate(self, model):
         print("Building TaskCache")
@@ -91,7 +91,7 @@ class TaskCache():
         print("Building TaskCache DONE, model: {} value {} AoI {}".format(model, self.value, self.AoI_CPU))
     
     def get_value(self):
-        return self.value[self.idx]
+        return self.value[1]
 
     def get_AoI_CPU(self):
         return self.AoI_CPU[self.idx]
@@ -233,7 +233,7 @@ class Env(object):
         CPU += dataTask[1] * interval
         b += dataTask[2] * interval
 
-        #device.TaskList[i].visit()
+        device.TaskList[i].visit()
 
         #improv_val = device.TaskList[i].get_value()
         #device.missedTasks.setdefault(i, 0)
@@ -242,10 +242,7 @@ class Env(object):
 
         for t, cur_task in device.missedTasks.items():
             reward += cur_task
-            #reward += cur_task * interval #FIXME
-            #AoI += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[0] * interval
-            #CPU += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[1] * interval
-            #b += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[2] * interval
+            #reward += cur_task*(max(0,(device.frequency - (time - t)))/device.frequency)
 
         device.lastUavVisit = time
         return reward, AoI, CPU, b
