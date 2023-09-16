@@ -8,7 +8,7 @@ pysys.append('/Library/Frameworks/Python.framework/Versions/3.9/lib/python3.9/si
 numpy = py.importlib.import_module('numpy');
 pickle = py.importlib.import_module('pickle');
 
-fh = py.open('output/050923-2009-6_devices-tadell_model/output.pkl', 'rb');
+fh = py.open('output/150923-2101-6_devices-tadell_model_FullRun/output.pkl', 'rb');
 P = pickle.load(fh);
 % model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(fh); 
 fh.close();

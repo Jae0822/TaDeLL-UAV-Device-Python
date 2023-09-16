@@ -14,7 +14,7 @@ from statistics import mean
 
 
 
-with open('../output/140923-0043-6_devices-tadell_model/output.pkl', 'rb') as f:
+with open('../output/160923-1050-6_devices-tadell_model/output.pkl', 'rb') as f:
     model, nn_strategy, random_strategy, forced_strategy, param, avg, logging_timeline = pickle.load(f)
 
 
@@ -205,8 +205,8 @@ width = 0.25  # the width of the bars
 # Reward
 multiplier = 0
 value_means = {
-    'LLRL': (-mean(Reward_Random), -mean(Reward_Force), -mean(Reward_Samrt)),
-    'PG': (-mean(Reward_Random_Regular), -mean(Reward_Force_Regular), -mean(Reward_Samrt_Regular)),
+    'LLRL': (mean(Reward_Random), mean(Reward_Force), mean(Reward_Samrt)),
+    'PG': (mean(Reward_Random_Regular), mean(Reward_Force_Regular), mean(Reward_Samrt_Regular)),
 }
 for attribute, measurement in value_means.items():
     offset = width * multiplier
@@ -217,7 +217,8 @@ axs[0,0].set_ylabel('Averaged Reward')
 axs[0,0].set_title('Reward of IoT Devices')
 axs[0,0].set_xticks(x + width, type)
 axs[0,0].legend(loc='best', ncol=2)
-axs[0,0].set_ylim(0, 2)
+# axs[0,0].set_ylim(0, 2)
+axs[0,0].autoscale(axis = 'y')
 
 # AoI
 multiplier = 0
@@ -234,7 +235,9 @@ axs[0,1].set_ylabel('Averaged AoI')
 axs[0,1].set_title('AoI of IoT Devices')
 axs[0,1].set_xticks(x + width, type)
 axs[0,1].legend(loc='best', ncol=2)
-axs[0,1].set_ylim(0, 100)
+# axs[0,1].set_ylim(0, 100)
+axs[0,1].autoscale(axis = 'y')
+
 
 #  CPU
 multiplier = 0
@@ -251,7 +254,9 @@ axs[1,0].set_ylabel('Averaged CPU')
 axs[1,0].set_title('CPU of IoT Devices')
 axs[1,0].set_xticks(x + width, type)
 axs[1,0].legend(loc='best', ncol=2)
-axs[1,0].set_ylim(0, 4)
+# axs[1,0].set_ylim(0, 4)
+axs[1,0].autoscale(axis = 'y')
+
 
 #  b
 multiplier = 0
@@ -268,7 +273,8 @@ axs[1,1].set_ylabel('Averaged Queue')
 axs[1,1].set_title('Queue of IoT Devices')
 axs[1,1].set_xticks(x + width, type)
 axs[1,1].legend(loc='best', ncol=2)
-axs[1,1].set_ylim(0, 100)
+# axs[1,1].set_ylim(0, 100)
+axs[1,1].autoscale(axis = 'y')
 
 
 
@@ -287,8 +293,8 @@ width = 0.25  # the width of the bars
 # Reward
 multiplier = 0
 value_means = {
-    'LLRL': (-sum(Reward_Random), -sum(Reward_Force), -sum(Reward_Samrt)),
-    'PG': (-sum(Reward_Random_Regular), -sum(Reward_Force_Regular), -sum(Reward_Samrt_Regular)),
+    'LLRL': (sum(Reward_Random), sum(Reward_Force), sum(Reward_Samrt)),
+    'PG': (sum(Reward_Random_Regular), sum(Reward_Force_Regular), sum(Reward_Samrt_Regular)),
 }
 for attribute, measurement in value_means.items():
     offset = width * multiplier
@@ -299,7 +305,9 @@ axs[0,0].set_ylabel('Averaged Reward')
 axs[0,0].set_title('Reward of IoT Devices')
 axs[0,0].set_xticks(x + width, type)
 axs[0,0].legend(loc='best', ncol=2)
-axs[0,0].set_ylim(0, 7)
+# axs[0,0].set_ylim(0, 7)
+axs[0,0].autoscale(axis = 'y')
+
 
 # AoI
 multiplier = 0
@@ -316,7 +324,9 @@ axs[0,1].set_ylabel('Averaged AoI')
 axs[0,1].set_title('AoI of IoT Devices')
 axs[0,1].set_xticks(x + width, type)
 axs[0,1].legend(loc='best', ncol=2)
-axs[0,1].set_ylim(0, 500)
+# axs[0,1].set_ylim(0, 500)
+axs[0,1].autoscale(axis = 'y')
+
 
 
 #  CPU
@@ -334,7 +344,9 @@ axs[1,0].set_ylabel('Averaged CPU')
 axs[1,0].set_title('CPU of IoT Devices')
 axs[1,0].set_xticks(x + width, type)
 axs[1,0].legend(loc='best', ncol=2)
-axs[1,0].set_ylim(0, 80)
+# axs[1,0].set_ylim(0, 80)
+axs[1,0].autoscale(axis = 'y')
+
 
 #  b
 multiplier = 0
@@ -351,7 +363,8 @@ axs[1,1].set_ylabel('Averaged Queue')
 axs[1,1].set_title('Queue of IoT Devices')
 axs[1,1].set_xticks(x + width, type)
 axs[1,1].legend(loc='best', ncol=2)
-axs[1,1].set_ylim(0, 5000)
+# axs[1,1].set_ylim(0, 5000)
+axs[1,1].autoscale(axis = 'y')
 
 
 
