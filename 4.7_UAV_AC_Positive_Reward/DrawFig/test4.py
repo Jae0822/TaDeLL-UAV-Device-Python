@@ -14,7 +14,7 @@ from statistics import mean
 
 
 
-with open('fig_C01.pkl', 'rb') as f:
+with open('fig_temp.pkl', 'rb') as f:
     model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
 
@@ -191,7 +191,8 @@ axs[0,0].set_ylabel('Averaged Reward')
 axs[0,0].set_title('Reward of IoT Devices')
 axs[0,0].set_xticks(x + width, type)
 axs[0,0].legend(loc='best', ncol=2)
-axs[0,0].set_ylim(0, 7)
+# axs[0,0].set_ylim(0, 7)
+axs[0,0].autoscale(axis = 'y')
 
 # AoI
 multiplier = 0
@@ -208,7 +209,8 @@ axs[0,1].set_ylabel('Averaged AoI')
 axs[0,1].set_title('AoI of IoT Devices')
 axs[0,1].set_xticks(x + width, type)
 axs[0,1].legend(loc='best', ncol=2)
-axs[0,1].set_ylim(0, 12)
+# axs[0,1].set_ylim(0, 12)
+axs[0,1].autoscale(axis = 'y')
 
 #  CPU
 multiplier = 0
@@ -225,7 +227,8 @@ axs[1,0].set_ylabel('Averaged CPU')
 axs[1,0].set_title('CPU of IoT Devices')
 axs[1,0].set_xticks(x + width, type)
 axs[1,0].legend(loc='best', ncol=2)
-axs[1,0].set_ylim(0, 4)
+# axs[1,0].set_ylim(0, 4)
+axs[1,0].autoscale(axis = 'y')
 
 #  b
 multiplier = 0
@@ -242,7 +245,8 @@ axs[1,1].set_ylabel('Averaged Queue')
 axs[1,1].set_title('Queue of IoT Devices')
 axs[1,1].set_xticks(x + width, type)
 axs[1,1].legend(loc='best', ncol=2)
-axs[1,1].set_ylim(0, 100)
+# axs[1,1].set_ylim(0, 100)
+axs[1,1].autoscale(axis = 'y')
 
 
 
@@ -273,7 +277,8 @@ axs[0,0].set_ylabel('Averaged Reward')
 axs[0,0].set_title('Reward of IoT Devices')
 axs[0,0].set_xticks(x + width, type)
 axs[0,0].legend(loc='best', ncol=2)
-axs[0,0].set_ylim(0, 180)
+# axs[0,0].set_ylim(0, 180)
+axs[0,0].autoscale(axis = 'y')
 
 # AoI
 multiplier = 0
@@ -290,7 +295,8 @@ axs[0,1].set_ylabel('Averaged AoI')
 axs[0,1].set_title('AoI of IoT Devices')
 axs[0,1].set_xticks(x + width, type)
 axs[0,1].legend(loc='best', ncol=2)
-axs[0,1].set_ylim(0, 300)
+# axs[0,1].set_ylim(0, 300)
+axs[0,1].autoscale(axis = 'y')
 
 #  CPU
 multiplier = 0
@@ -307,7 +313,8 @@ axs[1,0].set_ylabel('Averaged CPU')
 axs[1,0].set_title('CPU of IoT Devices')
 axs[1,0].set_xticks(x + width, type)
 axs[1,0].legend(loc='best', ncol=2)
-axs[1,0].set_ylim(0, 80)
+# axs[1,0].set_ylim(0, 80)
+axs[1,0].autoscale(axis = 'y')
 
 #  b
 multiplier = 0
@@ -324,7 +331,8 @@ axs[1,1].set_ylabel('Averaged Queue')
 axs[1,1].set_title('Queue of IoT Devices')
 axs[1,1].set_xticks(x + width, type)
 axs[1,1].legend(loc='best', ncol=2)
-axs[1,1].set_ylim(0, 2500)
+# axs[1,1].set_ylim(0, 2500)
+axs[1,1].autoscale(axis = 'y')
 
 
 f = 1
