@@ -16,10 +16,7 @@ class RandomStrategy:
         self.devices = Util.initialize_fixed_devices(param)
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits_random'])
-        if param['pg_rl_reward']:
-            self.env_pgrl = Env(Util.initialize_fixed_devices(param, 'pg_rl'), copy.deepcopy(self.uav), param['nTimeUnits'])
-        else:
-            self.env_pgrl = self.env
+        self.env_pgrl = Env(Util.initialize_fixed_devices(param, 'pg_rl'), copy.deepcopy(self.uav), param['nTimeUnits'])
         self.ave_Reward_random = 0.0
         self.Ep_Reward_random = 0.0
         self.ave_Reward_random_pgrl = 0.0
@@ -28,8 +25,7 @@ class RandomStrategy:
     def learning(self):
         print("Random trajectory: One Episode Only")
         state_random = self.env.reset()
-        if self.param['pg_rl_reward']:
-            self.env_pgrl.reset()
+        self.env_pgrl.reset()
         ep_reward_random = 0
         ep_reward_random_pgrl = 0
         t = 0
@@ -58,8 +54,7 @@ class RandomStrategy:
             print("Random: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(1, n,
                                                                                                                        t,
                                                                                                                        action_random))
-            if self.param['pg_rl_reward']:
-                state, reward_, reward_rest, reward = self.env_pgrl.step(state_random, action_random, self.param['V'], t, PV, self.param,
+            state, reward_, reward_rest, reward = self.env_pgrl.step(state_random, action_random, self.param['V'], t, PV, self.param,
                                                                          Fly_time)
             ep_reward_random_pgrl += reward
 

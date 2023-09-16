@@ -13,10 +13,7 @@ class ForcedStrategy:
         self.devices = Util.initialize_fixed_devices(param)
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits_force'])
-        if param['pg_rl_reward']:
-            self.env_pgrl = Env(Util.initialize_fixed_devices(param, 'pg_rl'), copy.deepcopy(self.uav), param['nTimeUnits'])
-        else:
-            self.env_pgrl = self.env
+        self.env_pgrl = Env(Util.initialize_fixed_devices(param, 'pg_rl'), copy.deepcopy(self.uav), param['nTimeUnits'])
         self.ave_Reward_force = 0.0
         self.Ep_Reward_force = 0.0
         self.ave_Reward_force_Regular = 0.0
@@ -26,8 +23,7 @@ class ForcedStrategy:
     def learning(self):
         print("Forced trajectory: One Episode Only")
         state_force = self.env.reset()
-        if self.param['pg_rl_reward']:
-            self.env_pgrl.reset()
+        self.env_pgrl.reset()
         ep_reward_force = 0
         ep_reward_force_pgrl = 0
         t = 0
@@ -63,10 +59,10 @@ class ForcedStrategy:
             Reward_force.append(reward_force)
             ep_reward_force += reward_force
             print("Force: The {} episode" " and the {} fly" " at the end of {} time slots. " "Visit device {}".format(1, n,t,action_force))
-            if self.param['pg_rl_reward']:
-                state, reward_, reward_rest, reward = self.env_pgrl.step(state_force, action_force, self.param['V'], t, PV, self.param,
+            state, reward_, reward_rest, reward = self.env_pgrl.step(state_force, action_force, self.param['V'], t, PV, self.param,
                                                                          Fly_time)
             ep_reward_force_pgrl += reward
+
         self.logging_timeline[0][0]['Reward_force'] = Reward_force
         self.logging_timeline[0][0]['Force_UAV_PositionList'] = self.uav.PositionList
         self.logging_timeline[0][0]['Force_UAV_PositionCor'] = self.uav.PositionCor

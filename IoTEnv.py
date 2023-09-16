@@ -73,7 +73,7 @@ class TaskCache():
         self.task = copy.deepcopy(task)
         self.value = []
         self.AoI_CPU = []
-        self.idx = 0
+        self.idx = 1
 
     def populate(self, model):
         print("Building TaskCache")
@@ -97,7 +97,8 @@ class TaskCache():
         return self.AoI_CPU[self.idx]
 
     def visit(self):
-        self.idx += 1
+        if self.idx < len(self.value) - 1:
+            self.idx += 1
 
 
 class Env(object):
@@ -232,12 +233,12 @@ class Env(object):
         CPU += dataTask[1] * interval
         b += dataTask[2] * interval
 
-        device.TaskList[i].visit()
+        #device.TaskList[i].visit()
 
-        improv_val = device.TaskList[i].get_value()
-        device.missedTasks.setdefault(i, 0)
-        device.missedTasks[i] += (improv_val + 10)
-        print("Improving reward by {} total {}".format(improv_val, device.missedTasks[i]))
+        #improv_val = device.TaskList[i].get_value()
+        #device.missedTasks.setdefault(i, 0)
+        #device.missedTasks[i] += (improv_val + 10)
+        #print("Improving reward by {} total {}".format(improv_val, device.missedTasks[i]))
 
         for t, cur_task in device.missedTasks.items():
             reward += cur_task
