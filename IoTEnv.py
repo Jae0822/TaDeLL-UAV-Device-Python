@@ -188,7 +188,7 @@ class Env(object):
             dev.KeyCPU.append(c)
             dev.Keyb.append(b)
 
-        reward_ = reward_ + reward_rest/(len(self.Devices) - 1)
+        reward_ = reward_ + reward_rest#/(len(self.Devices) - 1)
         cur_device.KeyTime.append(t)
         cur_device.KeyReward.append(reward_)   # should decrease with time
 
@@ -243,6 +243,9 @@ class Env(object):
         for t, cur_task in device.missedTasks.items():
             reward += cur_task
             #reward += cur_task*(max(0,(device.frequency - (time - t)))/device.frequency)
+            #reward += cur_task*np.exp(-(time-t)/device.frequency)
+            #reward += 5*cur_task*np.exp(-(time-t))
+            #reward += cur_task*min(1,np.exp(-5*(time-t)/device.frequency)) not so good
 
         device.lastUavVisit = time
         return reward, AoI, CPU, b
