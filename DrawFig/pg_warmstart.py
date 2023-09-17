@@ -14,7 +14,7 @@ from statistics import mean
 
 
 
-with open('../output/160923-1050-6_devices-tadell_model/output.pkl', 'rb') as f:
+with open('./output/170923-2137-6_devices/output.pkl', 'rb') as f:
     model, nn_strategy, random_strategy, forced_strategy, param, avg, logging_timeline = pickle.load(f)
 
 
@@ -49,43 +49,29 @@ b_Smart_Regular = []
 j = param['episodes']
 # j = 20  # logging_timeline记录了所有EPISODE中的所有细节，所以可以放心引用
 for i in range(param['num_Devices']):
-    # if not logging_timeline[i][j]['intervals']:
-    #     print(i)
-    #     continue
-    # KeyInterval = logging_timeline[i][j]['intervals'] + [param['nTimeUnits'] - logging_timeline[i][j]['intervals'][-1]]
-    KeyInterval = keytime2intervals(env.Devices[i].KeyTime) #+ [param['nTimeUnits'] - env.Devices[i].KeyTime[-1]]
-
     #  Reward
     KeyReward = logging_timeline[i][j]['KeyRewards']
     KeyReward_Regular = logging_timeline[i][j]['KeyReward_Regular']
-    reward = [KeyReward[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    Reward_Samrt.append(sum(reward) / param['nTimeUnits'])
-    reward_Regular = [KeyReward_Regular[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    Reward_Samrt_Regular.append(sum(reward_Regular) / param['nTimeUnits'])
+    Reward_Samrt.append(sum(KeyReward) / param['nTimeUnits'])
+    Reward_Samrt_Regular.append(sum(KeyReward_Regular) / param['nTimeUnits'])
 
     # AoI
     KeyAoI = logging_timeline[i][j]['KeyAoI']
     KeyAoI_Regular = logging_timeline[i][j]['KeyAoI_Regular']
-    AoI = [KeyAoI[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    AoI_Smart.append(sum(AoI) / param['nTimeUnits'])
-    AoI_Regular = [KeyAoI_Regular[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    AoI_Smart_Regular.append(sum(AoI_Regular) / param['nTimeUnits'])
+    AoI_Smart.append(sum(KeyAoI) / param['nTimeUnits'])
+    AoI_Smart_Regular.append(sum(KeyAoI_Regular) / param['nTimeUnits'])
 
     # CPU
     KeyCPU = logging_timeline[i][j]['KeyCPU']
     KeyCPU_Regular = logging_timeline[i][j]['KeyCPU_Regular']
-    CPU = [KeyCPU[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    CPU_Smart.append(sum(CPU) / param['nTimeUnits'])
-    CPU_Regular = [KeyCPU_Regular[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    CPU_Smart_Regular.append(sum(CPU_Regular) / param['nTimeUnits'])
+    CPU_Smart.append(sum(KeyCPU) / param['nTimeUnits'])
+    CPU_Smart_Regular.append(sum(KeyCPU_Regular) / param['nTimeUnits'])
 
     # b/queue
     Keyb = logging_timeline[i][j]['Keyb']
     Keyb_Regular = logging_timeline[i][j]['Keyb_Regular']
-    b = [Keyb[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    b_Smart.append(sum(b) / param['nTimeUnits'])
-    b_Regular = [Keyb_Regular[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    b_Smart_Regular.append(sum(b_Regular) / param['nTimeUnits'])
+    b_Smart.append(sum(Keyb) / param['nTimeUnits'])
+    b_Smart_Regular.append(sum(Keyb_Regular) / param['nTimeUnits'])
 
 
 #  Random
@@ -98,40 +84,30 @@ CPU_Random_Regular = []
 b_Random = []
 b_Random_Regular = []
 for i in range(param['num_Devices']):
-    # KeyInterval = env_random.Devices[i].intervals + [param['nTimeUnits_random'] - env_random.Devices[i].KeyTime[-1]]
-    KeyInterval = keytime2intervals(env_random.Devices[i].KeyTime) #+ [param['nTimeUnits_random'] - env_random.Devices[i].KeyTime[-1]]
 
     # Reward ( = AoI + CPU)
     KeyReward = logging_timeline[i][0]['Random_KeyRewards']
     KeyReward_Regular = env_random_regular.Devices[i].KeyReward
-    reward = [KeyReward[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    Reward_Random.append(sum(reward) / param['nTimeUnits_random'])
-    reward_Regular = [KeyReward_Regular[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    Reward_Random_Regular.append(sum(reward_Regular) / param['nTimeUnits_random'])
+    Reward_Random.append(sum(KeyReward) / param['nTimeUnits_random'])
+    Reward_Random_Regular.append(sum(KeyReward_Regular) / param['nTimeUnits_random'])
 
     # AoI
     KeyAoI = logging_timeline[i][0]['Random_KeyAoI']
     KeyAoI_Regular = env_random_regular.Devices[i].KeyAoI
-    AoI = [KeyAoI[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    AoI_Random.append(sum(AoI) / param['nTimeUnits_random'])
-    AoI_Regular = [KeyAoI_Regular[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    AoI_Random_Regular.append(sum(AoI_Regular) / param['nTimeUnits_random'])
+    AoI_Random.append(sum(KeyAoI) / param['nTimeUnits_random'])
+    AoI_Random_Regular.append(sum(KeyAoI_Regular) / param['nTimeUnits_random'])
 
     # CPU
     KeyCPU = logging_timeline[i][0]['Random_KeyCPU']
     KeyCPU_Regular = env_random_regular.Devices[i].KeyCPU
-    CPU = [KeyCPU[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    CPU_Random.append(sum(CPU) / param['nTimeUnits_random'])
-    CPU_Regular = [KeyCPU_Regular[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    CPU_Random_Regular.append(sum(CPU_Regular) / param['nTimeUnits_random'])
+    CPU_Random.append(sum(KeyCPU) / param['nTimeUnits_random'])
+    CPU_Random_Regular.append(sum(KeyCPU_Regular) / param['nTimeUnits_random'])
 
     # b
     Keyb = logging_timeline[i][0]['Random_Keyb']
     Keyb_Regular = env_random_regular.Devices[i].Keyb
-    b = [Keyb[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    b_Random.append(sum(b) / param['nTimeUnits_random'])
-    b_Regular = [Keyb_Regular[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    b_Random_Regular.append(sum(b_Regular) / param['nTimeUnits_random'])
+    b_Random.append(sum(Keyb) / param['nTimeUnits_random'])
+    b_Random_Regular.append(sum(Keyb_Regular) / param['nTimeUnits_random'])
 
 
 
@@ -146,43 +122,30 @@ CPU_Force_Regular = []
 b_Force = []
 b_Force_Regular = []
 for i in range(param['num_Devices']):
-    # KeyInterval = env_force.Devices[i].intervals + [param['nTimeUnits_force'] - env_force.Devices[i].KeyTime[-1]]
-    KeyInterval = keytime2intervals(env_force.Devices[i].KeyTime) #+ [param['nTimeUnits_random'] - env_random.Devices[i].KeyTime[-1]]
-    if not KeyInterval:
-        print(i)
-        continue
 
     # Reward
     KeyReward = logging_timeline[i][0]['Force_KeyRewards']
     KeyReward_Regular = env_force_regular.Devices[i].KeyReward
-    reward = [KeyReward[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    Reward_Force.append(sum(reward) / param['nTimeUnits_force'])
-    reward_Regular = [KeyReward_Regular[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    Reward_Force_Regular.append(sum(reward_Regular) / param['nTimeUnits_force'])
+    Reward_Force.append(sum(KeyReward) / param['nTimeUnits_force'])
+    Reward_Force_Regular.append(sum(KeyReward_Regular) / param['nTimeUnits_force'])
 
     # AoI
     KeyAoI = logging_timeline[i][0]['Force_KeyAoI']
     KeyAoI_Regular = env_force_regular.Devices[i].KeyAoI
-    AoI = [KeyAoI[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    AoI_Force.append(sum(AoI) / param['nTimeUnits_force'])
-    AoI_Regular = [KeyAoI_Regular[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    AoI_Force_Regular.append(sum(AoI_Regular) / param['nTimeUnits_force'])
+    AoI_Force.append(sum(KeyAoI) / param['nTimeUnits_force'])
+    AoI_Force_Regular.append(sum(KeyAoI_Regular) / param['nTimeUnits_force'])
 
     # CPU
     KeyCPU = logging_timeline[i][0]['Force_KeyCPU']
     KeyCPU_Regular = env_force_regular.Devices[i].KeyCPU
-    CPU = [KeyCPU[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    CPU_Force.append(sum(CPU) / param['nTimeUnits_force'])
-    CPU_Regular = [KeyCPU_Regular[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    CPU_Force_Regular.append(sum(CPU_Regular) / param['nTimeUnits_force'])
+    CPU_Force.append(sum(KeyCPU) / param['nTimeUnits_force'])
+    CPU_Force_Regular.append(sum(KeyCPU_Regular) / param['nTimeUnits_force'])
 
     # b
     Keyb = logging_timeline[i][0]['Force_Keyb']
     Keyb_Regular = env_force_regular.Devices[i].Keyb
-    b = [Keyb[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    b_Force.append(sum(b) / param['nTimeUnits_force'])
-    b_Regular = [Keyb_Regular[x] * KeyInterval[x] for x in range(len(KeyInterval))]
-    b_Force_Regular.append(sum(b_Regular) / param['nTimeUnits_force'])
+    b_Force.append(sum(Keyb) / param['nTimeUnits_force'])
+    b_Force_Regular.append(sum(Keyb_Regular) / param['nTimeUnits_force'])
 
 
 
@@ -366,7 +329,7 @@ axs[1,1].legend(loc='best', ncol=2)
 # axs[1,1].set_ylim(0, 5000)
 axs[1,1].autoscale(axis = 'y')
 
-
+plt.show()
 
 
 
