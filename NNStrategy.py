@@ -16,7 +16,7 @@ class NNStrategy:
 
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits'])
-        self.env_pgrl = Env(Util.initialize_fixed_devices(param, 'pg_rl'), copy.deepcopy(self.uav), param['nTimeUnits'])
+        self.env_pgrl = Env(Util.initialize_fixed_devices(param, 'pg_rl'), copy.deepcopy(self.uav), param['nTimeUnits'], 'pg_rl')
         self.actor_model = ActorPolicy(param['num_Devices'], param['num_Devices'], 40)
         self.critic_model = CriticPolicy(param['num_Devices'])
         self.actor_optimizer = torch.optim.Adam(self.actor_model.parameters(), lr=param['learning_rate'])  # lr=3e-2

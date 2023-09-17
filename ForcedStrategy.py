@@ -13,7 +13,7 @@ class ForcedStrategy:
         self.devices = Util.initialize_fixed_devices(param)
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits_force'])
-        self.env_pgrl = Env(Util.initialize_fixed_devices(param, 'pg_rl'), copy.deepcopy(self.uav), param['nTimeUnits'])
+        self.env_pgrl = Env(Util.initialize_fixed_devices(param, 'pg_rl'), copy.deepcopy(self.uav), param['nTimeUnits'], 'pg_rl')
         self.ave_Reward_force = 0.0
         self.Ep_Reward_force = 0.0
         self.ave_Reward_force_Regular = 0.0

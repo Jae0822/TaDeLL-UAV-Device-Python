@@ -102,11 +102,12 @@ class TaskCache():
 
 
 class Env(object):
-    def __init__(self, Devices, UAV, nTimeUnits):
+    def __init__(self, Devices, UAV, nTimeUnits, model = 'tadell'):
         self.Devices = Devices  # 提供多一层方便，不是形参，每一处的变动都会反映在原始的Devices上。
         self.UAV = UAV
         self.nTimeUnits = nTimeUnits
         self.num_Devices = len(Devices)
+        self.model = model
 
         self.initialization(self.Devices, self.UAV)
 
@@ -291,6 +292,8 @@ class Env(object):
         for t, cur_task in device.missedTasks.items():
             interval = time - t
             reward += -cur_task
+            if self.model == 'pg_rl': #quick fix to make it comparable with tadell
+                reward -= 2.3
             #reward += cur_task * interval #FIXME
             #AoI += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[0] * interval
             #CPU += cur_task.get_AoI_CPU(cur_task.init_policy['theta'])[1] * interval
