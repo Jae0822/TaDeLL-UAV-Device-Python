@@ -363,6 +363,33 @@ class Policy(nn.Module):
         # 2. the value from state s_t
         return action_prob, state_values, velocity
 
+class QLPolicy(nn.Module):
+    """
+    implements both actor and critic in one model
+    """
+    def __init__(self, input_size, output_size):
+
+        super(QLPolicy, self).__init__()
+        self.affine1 = nn.Linear(input_size, 64)
+        self.pattern = [64]
+        self.action_head = nn.Linear(64, output_size)
+
+        # action & reward buffer
+        self.saved_actions = []
+        self.actions = []  # To record the actions
+        self.states = []  # To record the states
+        self.rewards = []
+
+        self.double()
+
+    def forward(self, x):
+        """
+        forward of both actor and critic
+        """
+        x = F.relu(self.affine1(x))
+        x = self.action_head(x)
+        return x
+
 class ActorPolicy(nn.Module):
     """
     implements both actor and critic in one model

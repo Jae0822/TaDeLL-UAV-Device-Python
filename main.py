@@ -7,6 +7,7 @@ import argparse
 
 import torch
 
+from QLearning import QLearning
 from NNStrategy import NNStrategy
 from RandomStrategy import RandomStrategy
 from ForcedStrategy import ForcedStrategy
@@ -25,6 +26,7 @@ def main():
     argParser.add_argument("-d", "--devices", type=int, help="Number of devices")
     argParser.add_argument("-e", "--episodes", type=int, help="Number of episodes")
     argParser.add_argument("-mu", "--mu", type=float, default=0.2, help="mu")
+    argParser.add_argument("-lm", "--learningModel", type=str, default="NN", help="Learning model")
 
 
     args = argParser.parse_args()
@@ -32,7 +34,7 @@ def main():
     param = {'episodes': args.episodes, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
              'gamma': 0, 'learning_rate': args.learningRate, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': args.mu, 'beta': 0.5,
              'num_Devices': args.devices, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16,
-             'cpu_capacity' : 50}
+             'cpu_capacity' : 50, 'learningModel' : args.learningModel}
 
     random.seed(param['seed'])
     np.random.seed(param['seed'])
@@ -56,7 +58,10 @@ def main():
     print(param)
 
     # †††††††††††††††††††††††††††††††††††††††Smart Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-    nn_strategy = NNStrategy(param, logging_timeline)
+    if (param['learningModel'] == 'qlearning'):
+        nn_strategy = QLearning(param, logging_timeline)
+    else:
+        nn_strategy = NNStrategy(param, logging_timeline)
     nn_strategy.learning()
     # †††††††††††††††††††††††††††††††††††††††Smart Trajectory††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
 
