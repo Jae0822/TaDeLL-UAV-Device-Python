@@ -14,7 +14,7 @@ from statistics import mean
 
 
 
-with open('fig_temp.pkl', 'rb') as f:
+with open('fig_P02.pkl', 'rb') as f:
     model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
 
