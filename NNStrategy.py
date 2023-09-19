@@ -13,11 +13,12 @@ class NNStrategy:
         self.param = param
         self.logging_timeline = logging_timeline
         self.devices = Util.initialize_fixed_devices(param, 'tadell')
+        self.velocity = param["V"]
 
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits'])
         self.env_pgrl = Env(Util.initialize_fixed_devices(param, 'pg_rl'), copy.deepcopy(self.uav), param['nTimeUnits'], 'pg_rl')
-        self.actor_model = ActorPolicy(param['num_Devices'], param['num_Devices'], 40)
+        self.actor_model = ActorPolicy(param['num_Devices'], param['num_Devices'], -1)
         self.critic_model = CriticPolicy(param['num_Devices'])
         self.actor_optimizer = torch.optim.Adam(self.actor_model.parameters(), lr=param['learning_rate'])  # lr=3e-2
         self.critic_optimizer = torch.optim.Adam(self.critic_model.parameters(), lr=param['learning_rate'])  # lr=3e-2
@@ -33,7 +34,8 @@ class NNStrategy:
         state = torch.from_numpy(state).double()
         probs, velocity = self.actor_model(state)
         state_value = self.critic_model(state)
-        velocity = velocity.item()
+        # velocity = velocity.item()
+        velocity = self.velocity
 
         # create a categorical distribution over the list of probabilities of actions
         print("select action")

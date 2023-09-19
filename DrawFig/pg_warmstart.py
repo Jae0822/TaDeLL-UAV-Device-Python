@@ -14,8 +14,10 @@ from statistics import mean
 
 
 
-with open('./output/170923-2137-6_devices/output.pkl', 'rb') as f:
-    model, nn_strategy, random_strategy, forced_strategy, param, avg, logging_timeline = pickle.load(f)
+# with open('./output/170923-2137-6_devices/output.pkl', 'rb') as f:
+#     model, nn_strategy, random_strategy, forced_strategy, param, avg, logging_timeline = pickle.load(f)
+with open('../output/180923-1648-6_devices-500_episodes-20.0_Velocity-NN/output.pkl', 'rb') as f:
+    nn_strategy, random_strategy, forced_strategy, param, avg, logging_timeline = pickle.load(f)
 
 
 env = nn_strategy.env

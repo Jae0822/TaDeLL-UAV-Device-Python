@@ -28,6 +28,7 @@ class QLearning:
         self.param = param
         self.logging_timeline = logging_timeline
         self.devices = Util.initialize_fixed_devices(param, 'tadell')
+        self.velocity = param["V"]
 
         self.uav = Uav(param['V'], self.devices)
         self.env = Env(self.devices, self.uav, param['nTimeUnits'])
@@ -52,12 +53,12 @@ class QLearning:
         # state = torch.from_numpy(state).float()
         if np.random.rand() < eps_threshold:
             action = random.randrange(len(self.devices))
-            velocity = 25
+            velocity = self.velocity
             return action, velocity
 
         with torch.no_grad():
             probs = self.actor_model(state)
-            velocity = 25
+            velocity = self.velocity
             action = torch.argmax(probs)
 
             # create a categorical distribution over the list of probabilities of actions
@@ -129,6 +130,7 @@ class QLearning:
                 print('state:', state)
 
                 action, velocity = self.select_action(state)
+                velocity = self.velocity
                 CPoint = self.env.UAV.location  # current location
                 NPoint = self.env.Devices[action].location  # next location
                 distance = np.linalg.norm(CPoint - NPoint)  # Compute the distance of two points

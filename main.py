@@ -26,6 +26,7 @@ def main():
     argParser.add_argument("-d", "--devices", type=int, help="Number of devices")
     argParser.add_argument("-e", "--episodes", type=int, help="Number of episodes")
     argParser.add_argument("-mu", "--mu", type=float, default=0.2, help="mu")
+    argParser.add_argument("-v", "--v", type=float, default=25, help="velocity")
     argParser.add_argument("-lm", "--learningModel", type=str, default="NN", help="Learning model")
 
 
@@ -33,7 +34,7 @@ def main():
     length = args.length
     param = {'episodes': args.episodes, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
              'gamma': 0, 'learning_rate': args.learningRate, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': args.mu, 'beta': 0.5,
-             'num_Devices': args.devices, 'V': 25, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16,
+             'num_Devices': args.devices, 'V': args.v, 'V_Lim': 40, 'field': 1000, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16,
              'cpu_capacity' : 50, 'learningModel' : args.learningModel}
 
     random.seed(param['seed'])
@@ -93,13 +94,14 @@ def main():
     # with open('fig_temp.pkl', 'wb') as f:
     #     pickle.dump([model, env, param, avg, logging_timeline], f)
 
-    dirname = "output/"+ datetime.now().strftime("%d%m%y-%H%M") + "-" + str(param["num_Devices"]) + "_devices/"
+    dirname = "output/"+ datetime.now().strftime("%d%m%y-%H%M") + "-" + str(param["num_Devices"]) + "_devices" + "-"+ str(param["episodes"]) + "_episodes" + "-" + str(param["V"]) + "_Velocity" + "-" + str(param["learningModel"]) + "/"
+    # dirname = "output/"+ datetime.now().strftime("%d%m%y") + "-" + str(param["num_Devices"]) + "_devices" + "-" + str(param["V"]) + "_Velocity" + "-" + str(param["learningModel"]) + "/"
     os.mkdir(dirname)
     with open(dirname + 'param.txt', 'w') as f:
         f.write(str(param))
 
     with open(dirname + 'output.pkl', 'wb') as f:
-        pickle.dump([nn_strategy.actor_model, nn_strategy, random_strategy, forced_strategy, param, avg, logging_timeline], f)
+        pickle.dump([nn_strategy, random_strategy, forced_strategy, param, avg, logging_timeline], f)
 
     # †††††††††††††††††††††††††††††††††††††††Painting††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
     Util.painting(avg, param, nn_strategy.env, nn_strategy.actor_model, random_strategy.env, forced_strategy.env, logging_timeline)
