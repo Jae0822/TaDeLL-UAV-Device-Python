@@ -11,7 +11,7 @@ FIG_4:DEVICE的AOI和CPU柱状图
 FIG_5:上面两幅图的综合
 # 
 注意：
-FIG3, FIG4, FIG5都是采用UAV的REWAR，energy数据来画图，UAV的REWARD是每一个飞行时的️当前IOT DEVICE的时段REWARD，
+FIG3, FIG4, FIG5都是采用UAV的REWARD，energy数据来画图，UAV的REWARD是每一个飞行时的️当前IOT DEVICE的时段REWARD，
 只有Devices[i].KeyReward才是全部的都考虑的，也就是test4.py里面的计算方式。
 # 
 """
@@ -30,12 +30,20 @@ from scipy.ndimage.filters import gaussian_filter1d
 
 
 
-
-
-with open('fig_A19.pkl', 'rb') as f:
+# fig_A19.pkl
+# fig_P02.pkl
+#
+with open('fig_P02.pkl', 'rb') as f:
     model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
+ep = 25
+def CPU_J(cycles):
+    # IoT device cycles into J
+    J = pow(cycles * pow(10, 8), 3) * 4 * pow(10, -28)
+    return J
 
+
+# start painting
 V_avg = []
 for x in range(1, param['episodes']):
     V_avg.append(mean(logging_timeline[0][x]['UAV_VelocityList']))
@@ -70,7 +78,7 @@ ax.legend(loc = "center left")
 
 
 # †††††††††††††††††††††††††††††††††††††††柱状图††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-x = 12
+x = ep
 fig7, ax7 = plt.subplots(1)
 fig7.suptitle('The mean cost of devcies and UAV')
 type = ['Random', 'Force', 'Smart']
@@ -90,7 +98,7 @@ ax7.set_ylabel('Total Cost')  # Add a y-label to the axes.
 # ax7.set_title('The Mean')
 
 
-x = 12
+x = ep
 fig8, ax8 = plt.subplots(1)
 fig8.suptitle('The mean cost of AoI and CPU')
 type = ['Random', 'Force', 'Smart']
@@ -100,6 +108,7 @@ dataAoIsum = [np.sum(env_random.UAV.AoI), np.sum(env_force.UAV.AoI),
               np.sum(logging_timeline[0][x]['UAV_AoI'])]
 dataCPUmean = [np.mean(env_random.UAV.CPU), np.mean(env_force.UAV.CPU),
                np.mean(logging_timeline[0][x]['UAV_CPU'])]
+dataCPUmean_J = [CPU_J(j)*1000 for j in dataCPUmean]
 dataCPUsum = [np.sum(env_random.UAV.CPU), np.sum(env_force.UAV.CPU),
               np.sum(logging_timeline[0][x]['UAV_CPU'])]
 ax8.bar(type, [k * param['beta'] for k in dataAoImean], label='AoI')
@@ -109,49 +118,105 @@ ax8.legend(loc="best")
 # ax8.set_title('The Mean')
 ax8.set_ylabel('Total Cost')  # Add a y-label to the axes.
 
+# Data preparation for b
+
+x = ep
+databmean = [np.mean(env_random.UAV.b), np.mean(env_force.UAV.b),
+               np.mean(logging_timeline[0][x]['UAV_b'])]
+databsum = [np.sum(env_random.UAV.b), np.sum(env_force.UAV.b),
+              np.sum(logging_timeline[0][x]['UAV_b'])]
+
+
 
 # †††††††††††††††††††††††††††††††††††††††上面两幅图的综合柱状图††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
-fig, ax = plt.subplots()
+# fig, ax = plt.subplots()
+# n_groups = 3
+# index = np.arange(n_groups)
+# bar_width = 0.20
+# opacity = 1  #透明度，可以改成0.4
+# error_config = {'ecolor': '0.3'}
+#
+# rects1 = plt.bar(index - bar_width , data111, bar_width,
+#                  alpha=opacity,
+#                  color='b',
+#                  # yerr=std_men,
+#                  error_kw=error_config,
+#                  label='Cost of System')
+# rects2 = plt.bar(index, data22, bar_width,
+#                  alpha=opacity,
+#                  color='r',
+#                  # yerr=std_women,
+#                  error_kw=error_config,
+#                  label='Energy of System')
+# rects3 = plt.bar(index + bar_width, dataAoImean, bar_width,
+#                  alpha=opacity,
+#                  color='g',
+#                  # yerr=std_women,
+#                  error_kw=error_config,
+#                  label='AoI of Devices')
+# rects4 = plt.bar(index + bar_width * 2, dataCPUmean, bar_width,
+#                  alpha=opacity,
+#                  color='y',
+#                  # yerr=std_women,
+#                  error_kw=error_config,
+#                  label='CPU of Devices')
+# # plt.xlabel('Group')
+# plt.ylabel('Mean Cost')
+# plt.title('The Comparison Between Different Methods')
+# plt.xticks(index + bar_width / 2, ('Random', 'Force', 'Smart'))
+# plt.plot(index + bar_width / 4, [sum(x) for x in zip(data111, data22)], 'o-', label='System Cost')
+# plt.plot(index + bar_width / 4, [sum(x) for x in zip(dataAoImean, dataCPUmean)], '^-', label='Device Cost')
+# plt.legend(loc = 'upper right')
+# # plt.legend(loc = 'upper right',ncols=3)
+# plt.tight_layout()
+# plt.show()
+
+
+# †††††††††††††††††††††††††††††††††††††††综合柱状图之新面貌††††††††††††††††††††††††††††††††††††††††††††††††††††††††††
+figx, axx = plt.subplots()
 n_groups = 3
 index = np.arange(n_groups)
 bar_width = 0.20
 opacity = 1  #透明度，可以改成0.4
 error_config = {'ecolor': '0.3'}
-
-rects1 = plt.bar(index - bar_width , data111, bar_width,
-                 alpha=opacity,
-                 color='b',
-                 # yerr=std_men,
-                 error_kw=error_config,
-                 label='Cost of System')
-rects2 = plt.bar(index, data22, bar_width,
-                 alpha=opacity,
-                 color='r',
-                 # yerr=std_women,
-                 error_kw=error_config,
-                 label='Energy of System')
-rects3 = plt.bar(index + bar_width, dataAoImean, bar_width,
+rects33 = plt.bar(index + bar_width, dataAoImean, bar_width,
                  alpha=opacity,
                  color='g',
                  # yerr=std_women,
                  error_kw=error_config,
                  label='AoI of Devices')
-rects4 = plt.bar(index + bar_width * 2, dataCPUmean, bar_width,
+rects44 = plt.bar(index + bar_width * 2, dataCPUmean_J, bar_width,
                  alpha=opacity,
                  color='y',
                  # yerr=std_women,
                  error_kw=error_config,
                  label='CPU of Devices')
 # plt.xlabel('Group')
+rects22 = plt.bar(index, data22, bar_width,
+                 alpha=opacity,
+                 color='r',
+                 # yerr=std_women,
+                 error_kw=error_config,
+                 label='Energy of System')
 plt.ylabel('Mean Cost')
 plt.title('The Comparison Between Different Methods')
 plt.xticks(index + bar_width / 2, ('Random', 'Force', 'Smart'))
 plt.plot(index + bar_width / 4, [sum(x) for x in zip(data111, data22)], 'o-', label='System Cost')
 plt.plot(index + bar_width / 4, [sum(x) for x in zip(dataAoImean, dataCPUmean)], '^-', label='Device Cost')
 plt.legend(loc = 'upper right')
+axx1 = axx.twinx()
+rects11 = plt.bar(index - bar_width , databmean, bar_width,
+                 alpha=opacity,
+                 color='b',
+                 # yerr=std_men,
+                 error_kw=error_config,
+                 label='Queue length')
+
+plt.legend(loc = 'upper right')
 # plt.legend(loc = 'upper right',ncols=3)
 plt.tight_layout()
 plt.show()
+
 
 
 d = 1

@@ -36,12 +36,12 @@ L{1} = 'Proposed Algorithm';
 LH(2) = plot(nan, nan, 'r-.^','Linewidth',1);
 L{2} = 'Regular Policy Gradient';
 legend(LH, L);
-legend('Location','best', 'FontSize', 12)
+legend('Location','best', 'FontSize', 12,  'interpreter','latex')
 hold off
 
 
-xlabel('Time','FontSize', 14)
-ylabel('Average Reward', 'FontSize', 14)
+xlabel('Time','FontSize', 18,  'interpreter','latex')
+ylabel('Average Reward', 'FontSize', 18,  'interpreter','latex')
 title('(a)')
 %--------------------------------------------------------------------------
 clear
@@ -77,11 +77,11 @@ L{1} = 'Proposed Algorithm';
 LH(2) = plot(nan, nan, 'r-.^','Linewidth',1);
 L{2} = 'Regular Policy Gradient';
 legend(LH, L);
-legend('Location','best', 'FontSize', 12)
+legend('Location','best', 'FontSize', 12,  'interpreter','latex')
 hold off
 
-xlabel('Time','FontSize', 14)
-ylabel('Average Reward','FontSize', 14)
+xlabel('Time','FontSize', 18,  'interpreter','latex')
+ylabel('Average Reward','FontSize', 18,  'interpreter','latex')
 title('(b)')
 %--------------------------------------------------------------------------
 clear
@@ -117,11 +117,11 @@ L{1} = 'Proposed Algorithm';
 LH(2) = plot(nan, nan, 'r-.^','Linewidth',1);
 L{2} = 'Regular Policy Gradient';
 legend(LH, L);
-legend('Location','best', 'FontSize', 12)
+legend('Location','best', 'FontSize', 12,  'interpreter','latex')
 hold off
 
-xlabel('Time','FontSize', 14)
-ylabel('Average Reward','FontSize', 14)
+xlabel('Time','FontSize', 18,  'interpreter','latex')
+ylabel('Average Reward','FontSize', 18,  'interpreter','latex')
 title('Subplot 1: sin(x)')
 title('(c)')
 %--------------------------------------------------------------------------
@@ -159,9 +159,9 @@ L{1} = 'Proposed Algorithm';
 LH(2) = plot(nan, nan, 'r-.^','Linewidth',1);
 L{2} = 'Regular Policy Gradient';
 legend(LH, L);
-legend('Location','best', 'FontSize', 12)
+legend('Location','best', 'FontSize', 12,  'interpreter','latex')
 hold off
 
-xlabel('Time','FontSize', 14)
-ylabel('Average Reward','FontSize', 14)
+xlabel('Time','FontSize', 18,  'interpreter','latex')
+ylabel('Average Reward','FontSize', 18, 'interpreter','latex')
 title('(d)')

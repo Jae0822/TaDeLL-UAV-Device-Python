@@ -43,19 +43,19 @@ x_axis = 10:5:40;
 yyaxis left
 plot(x_axis, UAV_AoI, 'ro-', 'DisplayName','AoI of Devices', 'LineWidth', 3, 'MarkerSize',10) %,'Color', colorMat(7,:)); 
 plot(x_axis, UAV_AoI_CPU, 'bx-','DisplayName','Reward of Devices', 'LineWidth', 3, 'MarkerSize',10) % 'Color', colorMat(1,:));
-xlabel('UAV Velocity (km/h)', 'Fontsize',16)
-ylabel('Average AoI and Reward', 'Fontsize',16)
+xlabel('UAV Velocity (m/s)', 'Fontsize',20, 'interpreter','latex')
+ylabel('Average AoI and Reward of Devices', 'Fontsize',20, 'interpreter','latex')
 % title('Performance of Devices')
 
 yyaxis right
-plot(x_axis, UAV_CPU_J, 'K*-','DisplayName','CPU of Devices', 'LineWidth', 3, 'MarkerSize',10) % 'Color', colorMat(3,:))
-ylabel('Devices Energy Consumption (mJ)', 'Fontsize',16)
+plot(x_axis, UAV_CPU_J, 'K*-','DisplayName','CPU Energy of Devices', 'LineWidth', 3, 'MarkerSize',10) % 'Color', colorMat(3,:))
+ylabel('Devices CPU Energy Consumption (mJ)', 'Fontsize',20, 'interpreter','latex')
 
 
 hold off
 box on
 grid on
-legend('Location','best', 'Fontsize',14)
+legend('Location','best', 'Fontsize',18, 'interpreter','latex')
 
 
 %% 数据准备
@@ -114,29 +114,30 @@ figure
 hold on
 x_axis = 10:5:40;
 yyaxis left
-bar(x_axis, UAV_Energy,'DisplayName','Energy of UAV')
-xlabel('UAV Velocity (km/h)', 'Fontsize',16)
-ylabel('Average Reward and Energy', 'Fontsize',16)
+bar(x_axis, (UAV_Energy * 1000),'DisplayName','Energy of UAV')
+xlabel('UAV Velocity (m/s)', 'Fontsize',20, 'interpreter','latex')
+ylabel('Energy of UAV (kJ)', 'Fontsize',20, 'interpreter','latex')
 % title('Performance of UAV')
 xlim([6,44])
-ylim([0, 8])
+% ylim([0, 8])
+ylim('auto')
 
 yyaxis right
-plot(x_axis, UAV_Reward, 'o-', 'DisplayName','Reward of UAV', 'LineWidth', 2,'Color', colorMat(7,:)); 
-plot(x_axis, UAV_Reward_Random, '^-', 'DisplayName','Random Reward of UAV', 'LineWidth', 2,'Color', colorMat(5,:)); 
-plot(x_axis, UAV_Reward_Force, '*-', 'DisplayName','Force Reward of UAV', 'LineWidth', 2,'Color', colorMat(3,:)); 
+plot(x_axis, UAV_Reward, 'o-', 'DisplayName','Reward of Devices', 'LineWidth', 2,'Color', colorMat(7,:)); 
+plot(x_axis, UAV_Reward_Random, '^-', 'DisplayName','Random Reward of Devices', 'LineWidth', 2,'Color', colorMat(5,:)); 
+plot(x_axis, UAV_Reward_Force, '*-', 'DisplayName','Force Reward of Devices', 'LineWidth', 2,'Color', colorMat(3,:)); 
 
 plot(x_axis, UAV_R_E, 'o--', 'DisplayName','Reward of System', 'LineWidth', 2,'Color', colorMat(7,:)); 
 plot(x_axis, UAV_R_E_Random, '^--', 'DisplayName','Random Reward of System', 'LineWidth', 2,'Color', colorMat(5,:)); 
 plot(x_axis, UAV_R_E_Force, '*--', 'DisplayName','Force Reward of System', 'LineWidth', 2,'Color', colorMat(3,:)); 
 
 
-ylabel('UAV Energy (mJ)', 'Fontsize',16)
+ylabel('Reward of System and Devices', 'Fontsize',20, 'interpreter','latex')
 
 hold off
 box on
 grid on
 
-legend('Location','best', 'Fontsize',12)
+legend('Location','best', 'Fontsize',14, 'interpreter','latex')
 
 brave = 1;

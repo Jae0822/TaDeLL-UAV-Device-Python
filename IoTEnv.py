@@ -66,7 +66,7 @@ class TaskCache():
 
         print("Building TaskCache DONE, model: PG value {} AoI {}".format(self.value, self.AoI_CPU))
 
-with open('TaskCached.pkl', 'rb') as f:
+with open('../taskCached.pkl', 'rb') as f:
     [taskBase] = pickle.load(f)
 
 # taskBase = TaskCache(copy.deepcopy(TaskList_set[1]))

@@ -2,7 +2,8 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-def UAV_Energy(V):
+def UAV_Energy(V):  # m/s
+    # energy(kJ) = power(kW) * time(s)
     W = 20
     rho = 1.225
     R = 0.4
@@ -24,7 +25,7 @@ def UAV_Energy(V):
 
     PV = P0 * (1 + 3 * V ** 2 / U_tip ** 2) + Pi * pow(math.sqrt(1 + V ** 4 / (4 * v0 ** 4)) - V ** 2 / (2 * v0 ** 2),
                                                        1 / 2) + (1 / 2) * d0 * rho * s * A * V ** 3
-    return PV/1000
+    return PV/1000  # 这里是KJ除以1000
 
 # P = []
 # for V in range(1, 30):

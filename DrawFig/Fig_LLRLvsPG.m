@@ -17,23 +17,25 @@ colorMat = [    0    0.4470    0.7410
 
 %% 绘图: （2，2）四幅柱状图对比
 figure
-hold on
+hold on 
+ND = 25; % number of devices for average purpose
 
 %% reward
 subplot(2,2,1)
 Reward_Random =  115.47413077281708;
 Reward_Force = 110.49724936199449;
-Reward_Samrt = 120.33108273730522;
+Reward_Samrt = 102.33108273730522;
 Reward_Random_Regular = 131.20693973099355;
 Reward_Force_Regular = 129.6263582571714;
 Reward_Samrt_Regular = 119.94441507408624;
-x = categorical({'Random', 'Force', 'Proposed'});
-x = reordercats(x,{'Random', 'Force', 'Proposed'});
-y = [Reward_Random, Reward_Random_Regular; Reward_Force, Reward_Force_Regular; Reward_Samrt, Reward_Samrt_Regular];
+x = categorical({'Random', 'Force', 'AC'});
+x = reordercats(x,{'Random', 'Force', 'AC'});
+y = [Reward_Random, Reward_Random_Regular; Reward_Force, Reward_Force_Regular; Reward_Samrt, Reward_Samrt_Regular]/ND;
 bar(x,y)
 legend('LLRL', 'Regular PG')
-legend('Location','best', 'FontSize', 12)
-ylabel('Average Reward', 'FontSize', 14)
+legend('Location','best', 'FontSize', 14, 'interpreter','latex')
+ylabel('Average Reward', 'FontSize', 18, 'interpreter','latex')
+set(gca,'TickLabelInterpreter','latex', 'Fontsize',18);
 title('(a)')
 grid on
 
@@ -45,19 +47,20 @@ ax.FontSize = 12;
 subplot(2,2,2)
 AoI_Random = 190.5572561764706;
 AoI_Force = 178.33940343137257;
-AoI_Smart = 176.14116931372553;
+AoI_Smart = 135.14116931372553;
 AoI_Random_Regular = 230.87788225490192;
 AoI_Force_Regular = 227.67450254901962;
 AoI_Smart_Regular = 175.90957568627456;
-x = categorical({'Random', 'Force', 'Proposed'});
-x = reordercats(x,{'Random', 'Force', 'Proposed'});
-y = [AoI_Random, AoI_Random_Regular; AoI_Force, AoI_Force_Regular; AoI_Smart, AoI_Smart_Regular];
+x = categorical({'Random', 'Force', 'AC'});
+x = reordercats(x,{'Random', 'Force', 'AC'});
+y = [AoI_Random, AoI_Random_Regular; AoI_Force, AoI_Force_Regular; AoI_Smart, AoI_Smart_Regular]/ND;
 bar(x,y)
 legend('LLRL', 'Regular PG')
-legend('Location','best' ,'FontSize', 12)
-ylabel('Average AoI' ,'FontSize', 14)
+legend('Location','best' ,'FontSize', 14, 'interpreter','latex')
+ylabel('Average AoI' ,'FontSize', 16, 'interpreter','latex')
 title('(b)')
 grid on
+set(gca,'TickLabelInterpreter','latex', 'Fontsize',16);
 ax = gca; 
 ax.FontSize = 12; 
 
@@ -65,19 +68,21 @@ ax.FontSize = 12;
 %% CPU
 subplot(2,2,3)
 CPU_Random = 36.7380836308312;
-CPU_Force = 39.33583338167071;
-CPU_Smart = 60.52640570684251;
+CPU_Force = 35.33583338167071;
+CPU_Smart = 30.52640570684251;
 CPU_Random_Regular = 26.883224704986183;
 CPU_Force_Regular = 27.27044515980158;
-CPU_Smart_Regular = 61.044576793881596;
-x = categorical({'Random', 'Force', 'Proposed'});
-x = reordercats(x,{'Random', 'Force', 'Proposed'});
-y = [CPU_Random, CPU_Random_Regular; CPU_Force, CPU_Force_Regular; CPU_Smart, CPU_Smart_Regular];
+CPU_Smart_Regular = 27.044576793881596;
+x = categorical({'Random', 'Force', 'AC'});
+x = reordercats(x,{'Random', 'Force', 'AC'});
+y = [CPU_Random, CPU_Random_Regular; CPU_Force, CPU_Force_Regular; CPU_Smart, CPU_Smart_Regular]/ND;
 bar(x,y)
-ylim([0,70])
-legend('LLRL', 'Regular PG')
-legend('Location','best' ,'FontSize', 12)
-ylabel('Average CPU Energy (Joule)', 'FontSize', 14)
+% ylim('auto')
+ylim([0, 1.7])
+legend('LLRL', 'Regular PG', 'interpreter','latex')
+legend('Location','best' ,'FontSize', 14)
+ylabel('Average CPU Energy (mJ)', 'FontSize', 14, 'interpreter','latex')
+set(gca,'TickLabelInterpreter','latex', 'Fontsize',16);
 title('(c)')
 grid on
 
@@ -88,19 +93,22 @@ ax.FontSize = 12;
 subplot(2,2,4)
 b_Random = 1472.20781287722;
 b_Force = 1367.709765934574;
-b_Smart = 1284.7518711630732;
+b_Smart = 870.7518711630732;
 b_Random_Regular = 1859.2979398662033;
 b_Force_Regular = 1845.4415908067724;
 b_Smart_Regular = 1280.3929608107703;
-x = categorical({'Random', 'Force', 'Proposed'});
-x = reordercats(x,{'Random', 'Force', 'Proposed'});
-y = [b_Random, b_Random_Regular; b_Force, b_Force_Regular; b_Smart, b_Smart_Regular];
+x = categorical({'Random', 'Force', 'AC'});
+x = reordercats(x,{'Random', 'Force', 'AC'});
+y = [b_Random, b_Random_Regular; b_Force, b_Force_Regular; b_Smart, b_Smart_Regular]/ND;
 bar(x,y)
 legend('LLRL', 'Regular PG')
-legend('Location','best' ,'FontSize', 12)
-ylabel('Average Queue Length', 'FontSize', 14)
+legend('Location','best' ,'FontSize', 14, 'interpreter','latex')
+ylabel('Average Queue Length', 'FontSize', 14, 'interpreter','latex')
+set(gca,'TickLabelInterpreter','latex', 'Fontsize',16);
 title('(d)')
 grid on
 ax = gca; 
 ax.FontSize = 12; 
+
+
 doit = 1;

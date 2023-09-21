@@ -16,26 +16,27 @@ colorMat = [    0    0.4470    0.7410
 0.6350    0.0780    0.1840];
 
 
-%% 数据准备
-data111 = [4.547118248043992, 4.37332996299819, 3.990491207133625];
-data22 = [2.806708183896269, 2.5767385689305122, 1.7828438053135873];
-dataAoImean = [7.440421906419495, 7.018933338129015, 6.073652121001368];
-dataCPUmean = [1.5127474088828763, 1.5920680357683799, 1.7716234552655166];
-data111_data22 = [7.353826431940261, 6.950068531928702, 5.7733350124472125];
-dataAoImean_dataCPUmean = [8.953169315302372, 8.611001373897395, 7.845275576266885];
+%% Data Preparation from test_new.py
+UAV_Energy = [2.4253602137127084, 2.1704162859226597, 0.09199626287251937]; 
+UAV_R_E =  [3.0299302108645407, 2.8382339759244055, 1.4851536317395007];
+UAV_Reward = [3.634500208016373, 3.5060516659261496, 2.8783110006064807];
 
-%% 绘图: 
+
+%% 绘图共享y坐标轴: 
 figure
 hold on;
-x = categorical({'Random', 'Force', 'Smart'});
-x = reordercats(x,{'Random', 'Force', 'Smart'});
-y = [data111(1), data22(1), dataAoImean(1), dataCPUmean(1);
-    data111(2), data22(2), dataAoImean(2), dataCPUmean(2);
-    data111(3), data22(3), dataAoImean(3), dataCPUmean(3)]';
+x = categorical({'Random', 'Force', 'AC'});
+x = reordercats(x,{'Random', 'Force', 'AC'});
+% y = [UAV_Reward(1), UAV_R_E(1), UAV_Energy(1);
+%     UAV_Reward(2), UAV_R_E(2), UAV_Energy(2);
+%     UAV_Reward(3), UAV_R_E(3), UAV_Energy(3);];
+y = [UAV_R_E(1), UAV_Energy(1),UAV_Reward(1);
+    UAV_R_E(2), UAV_Energy(2), UAV_Reward(2);
+    UAV_R_E(3), UAV_Energy(3), UAV_Reward(3)];
 bar(x,y, 1)
-plot(x, data111_data22, 'ro-', 'DisplayName','Reward of Devices', 'LineWidth', 1.5) %,'Color', colorMat(7,:))
-plot(x, dataAoImean_dataCPUmean, 'kx-','DisplayName','AoI of Devices', 'LineWidth', 1.5) %, 'Color', colorMat(6,:))
-ylabel('Performance Values')
+% plot(x, data111_data22, 'ro-', 'DisplayName','Reward of Devices', 'LineWidth', 1.5) %,'Color', colorMat(7,:))
+% plot(x, dataAoImean_dataCPUmean, 'kx-','DisplayName','AoI of Devices', 'LineWidth', 1.5) %, 'Color', colorMat(6,:))
+ylabel('Reward of System and Devices')
 
 box on; 
 grid on;
@@ -43,9 +44,45 @@ grid on;
 ax = gca; 
 ax.FontSize = 16; 
 
-legend('Cost of System', 'Energy of System', 'AoI of Devices', 'CPU of Devices', 'System Cost', 'Device Cost')
+legend('Reward of the System',  'Energy of the UAV (MJ)', 'Reward of the Devices')
+% legend('Reward of the Devices', 'Reward of the System', 'Energy of the UAV (MJ)')
 legend('Location','best', 'FontSize', 14)
 
 
 
 itsokay = 1;
+
+%% Double y-axis
+figure
+hold on;
+x = categorical({'Random', 'Force', 'AC'});
+x = reordercats(x,{'Random', 'Force', 'AC'});
+y = [UAV_R_E(1), UAV_Reward(1);
+    UAV_R_E(2), UAV_Reward(2);
+    UAV_R_E(3), UAV_Reward(3)];
+z = [UAV_Energy(1);
+    UAV_Energy(2);
+    UAV_Energy(3)] * 1000 + 2200;
+nil = [0;0;0];
+bar(x, [y,nil], 'grouped')
+ylabel('Reward of System and Devices', 'Fontsize',20, 'interpreter','latex')
+% legend('Reward of the System', 'Reward of the Devices')
+set(gca,'TickLabelInterpreter','latex', 'Fontsize',20);
+
+yyaxis right
+bar(x, [nil, nil, z], 'grouped', 'FaceColor', '#EDB120');
+ylabel('Energy of the UAV (kJ)', 'Fontsize',20, 'interpreter','latex')
+
+box on; 
+grid on;
+
+ax = gca; 
+ax.FontSize = 16; 
+
+legend('Reward of the System', 'Reward of the Devices', 'Energy of the UAV')
+% legend('Energy of the UAV (kJ)')
+legend('Location','best', 'FontSize', 16, 'interpreter','latex')
+
+d = 1;
+
+
