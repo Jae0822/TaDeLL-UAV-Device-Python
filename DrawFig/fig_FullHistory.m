@@ -36,7 +36,7 @@ for x  =  1:double(param{'num_Devices'})
     c = cell(logging_timeline{x}{ep}{'TaskList'});
     xline(find(cell2mat(c) == 1), '-.b')
     % The average reward in horizontal
-    yline(logging_timeline{x}{ep}{'avg_reward'}, 'Color', "#D95319", 'LineWidth', 1.5, 'LineStyle', '-.', 'Label', 'Averaged Values', 'LabelVerticalAlignment','bottom')
+    yline(logging_timeline{x}{ep}{'avg_reward'}, 'Color', "#D95319", 'LineWidth', 1.5, 'LineStyle', '-.','FontSize', 14, 'Label', 'Averaged Values', 'LabelVerticalAlignment','bottom', 'interpreter','latex')
     % Look better
     xlim([0, numel(cell(logging_timeline{x}{ep}{'TaskList'}))])
     ylim([-inf, inf])
@@ -45,8 +45,8 @@ for x  =  1:double(param{'num_Devices'})
 end
 % Specify common title, X and Y labels
 % title(t, 'Common title')
-xlabel(t, 'Number of Time Slots', 'FontSize', 16)
-ylabel(t, 'Averaged Reward','FontSize', 16)
+xlabel(t, 'Number of Time Slots', 'FontSize', 20, 'interpreter','latex')
+ylabel(t, 'Averaged Reward','FontSize', 20, 'interpreter','latex')
 
 
 
