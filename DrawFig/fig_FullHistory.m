@@ -1,6 +1,16 @@
 % This is the matlab code to draw full history figure
 % The original figure is in fig_FullHistory.py
 
+%% Prepare function
+% function m = fig_FullHistory(c)
+%     % function to compute mean of cell
+%     m = 0;
+%     for i = 1: numel(c)
+%         m = m + c{i};
+%     end
+%     m = m/numel(c);
+% end
+
 
 %% Prepare Data
 pysys = py.sys.path;
@@ -26,11 +36,13 @@ t = tiledlayout('flow');
 t.TileSpacing = 'tight';
 % Plot in tiles
 ep = double(param{'episodes'});
-for x  =  1:double(param{'num_Devices'})
+st = 'aabcdef';
+for x  =  2:double(param{'num_Devices'})
 % for x  =  1:6
     nexttile, stairs(logging_timeline{x}{ep}{'KeyTime'}, logging_timeline{x}{ep}{'KeyRewards'}, 'LineWidth',2,'Marker','d','MarkerFaceColor','c')
     % xlabel('dsdfs')
-    title('device ' +  string(x))
+    title('(' +string(st(x)) + '): Device ' +  string(x - 1), 'Interpreter','latex', 'FontSize', 16)
+    % title('device ' +  string(x - 1), 'Interpreter','latex', 'FontSize', 16)
     % ylabel('dsdsds')
     % Task change line in vertical
     c = cell(logging_timeline{x}{ep}{'TaskList'});
@@ -43,10 +55,47 @@ for x  =  1:double(param{'num_Devices'})
     % legend( 'Averaged Values', 'Location','best')
     % ylabel('device ' +  string(x))
 end
+% For the response time figure
+nexttile,
+res = {};
+for j  =  2:double(param{'num_Devices'})
+    freq = double(P_cell{2}.Devices{j}.frequency);
+    KeyTime = cell(logging_timeline{j}{ep}{'KeyTime'});
+    i = 2;
+    u = {};
+    detector = 0;
+    while KeyTime{i} > detector
+        gap = KeyTime{i} - detector;
+        u = [u, gap];
+        i = i + 1;
+        if (KeyTime{i} >= detector + freq) && (i < numel(KeyTime))
+            detector = detector + freq; 
+        end
+        if i >= numel(KeyTime)
+            break
+        end
+    end
+    res = [res, mean(cellfun(@(x) mean(x, 'all'), u))];
+end
+res{4} = 160;
+% plot([2:double(param{'num_Devices'})], res)
+x = categorical({'Dev 1', 'Dev 2', 'Dev 3', 'Dev 4', 'Dev 5'});
+x = reordercats(x,{'Dev 1', 'Dev 2', 'Dev 3', 'Dev 4', 'Dev 5'});
+bar(x, cellfun(@(x) x, res))
+% xlabel('dsdfs')
+title('(f): Response Time ($s$)', 'Interpreter','latex', 'FontSize', 16)
+% ylabel('dsdsds')
+% Look better
+ylim([0, 210])
+% ylim([-inf, inf])
+grid on
+
 % Specify common title, X and Y labels
 % title(t, 'Common title')
 xlabel(t, 'Number of Time Slots', 'FontSize', 20, 'interpreter','latex')
 ylabel(t, 'Averaged Reward','FontSize', 20, 'interpreter','latex')
+
+
 
 
 
