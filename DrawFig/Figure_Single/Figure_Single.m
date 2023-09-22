@@ -32,9 +32,9 @@ grid on
 % legend('Location','best')
 
 LH(1) = plot(nan, nan, 'b--o','Linewidth',1);
-L{1} = 'Proposed Algorithm';
+L{1} = 'Lifelong RL';
 LH(2) = plot(nan, nan, 'r-.^','Linewidth',1);
-L{2} = 'Regular Policy Gradient';
+L{2} = 'Regular PG';
 legend(LH, L);
 legend('Location','best', 'FontSize', 12,  'interpreter','latex')
 hold off
@@ -73,9 +73,9 @@ grid on
 % legend('Location','best')
 
 LH(1) = plot(nan, nan, 'b--o','Linewidth',1);
-L{1} = 'Proposed Algorithm';
+L{1} = 'Lifelong RL';
 LH(2) = plot(nan, nan, 'r-.^','Linewidth',1);
-L{2} = 'Regular Policy Gradient';
+L{2} = 'Regular PG';
 legend(LH, L);
 legend('Location','best', 'FontSize', 12,  'interpreter','latex')
 hold off
@@ -113,9 +113,9 @@ grid on
 % legend('Location','best')
 
 LH(1) = plot(nan, nan, 'b--o','Linewidth',1);
-L{1} = 'Proposed Algorithm';
+L{1} = 'Lifelong RL';
 LH(2) = plot(nan, nan, 'r-.^','Linewidth',1);
-L{2} = 'Regular Policy Gradient';
+L{2} = 'Regular PG';
 legend(LH, L);
 legend('Location','best', 'FontSize', 12,  'interpreter','latex')
 hold off
@@ -155,9 +155,9 @@ grid on
 % legend('Location','best')
 
 LH(1) = plot(nan, nan, 'b--o','Linewidth',1);
-L{1} = 'Proposed Algorithm';
+L{1} = 'Lifelong RL';
 LH(2) = plot(nan, nan, 'r-.^','Linewidth',1);
-L{2} = 'Regular Policy Gradient';
+L{2} = 'Regular PG';
 legend(LH, L);
 legend('Location','best', 'FontSize', 12,  'interpreter','latex')
 hold off

@@ -28,19 +28,19 @@ Reward_Samrt = 102.33108273730522;
 Reward_Random_Regular = 131.20693973099355;
 Reward_Force_Regular = 129.6263582571714;
 Reward_Samrt_Regular = 119.94441507408624;
-x = categorical({'Random', 'Force', 'AC'});
-x = reordercats(x,{'Random', 'Force', 'AC'});
+x = categorical({'Random', 'Force', 'Proposed'});
+x = reordercats(x,{'Random', 'Force', 'Proposed'});
 y = [Reward_Random, Reward_Random_Regular; Reward_Force, Reward_Force_Regular; Reward_Samrt, Reward_Samrt_Regular]/ND;
 bar(x,y)
-legend('LLRL', 'Regular PG')
+legend('Lifelong RL', 'Regular PG')
 legend('Location','best', 'FontSize', 14, 'interpreter','latex')
-ylabel('Average Reward', 'FontSize', 18, 'interpreter','latex')
-set(gca,'TickLabelInterpreter','latex', 'Fontsize',18);
+ylabel('Average Reward', 'FontSize', 14, 'interpreter','latex')
+set(gca,'TickLabelInterpreter','latex', 'Fontsize',13);
 title('(a)')
 grid on
 
-ax = gca; 
-ax.FontSize = 12; 
+% ax = gca; 
+% ax.FontSize = 12; 
 
 
 %% AoI
@@ -51,18 +51,18 @@ AoI_Smart = 135.14116931372553;
 AoI_Random_Regular = 230.87788225490192;
 AoI_Force_Regular = 227.67450254901962;
 AoI_Smart_Regular = 175.90957568627456;
-x = categorical({'Random', 'Force', 'AC'});
-x = reordercats(x,{'Random', 'Force', 'AC'});
+x = categorical({'Random', 'Force', 'Proposed'});
+x = reordercats(x,{'Random', 'Force', 'Proposed'});
 y = [AoI_Random, AoI_Random_Regular; AoI_Force, AoI_Force_Regular; AoI_Smart, AoI_Smart_Regular]/ND;
 bar(x,y)
-legend('LLRL', 'Regular PG')
+legend('Lifelong RL', 'Regular PG')
 legend('Location','best' ,'FontSize', 14, 'interpreter','latex')
-ylabel('Average AoI' ,'FontSize', 16, 'interpreter','latex')
+ylabel('Average AoI' ,'FontSize', 14, 'interpreter','latex')
 title('(b)')
 grid on
-set(gca,'TickLabelInterpreter','latex', 'Fontsize',16);
-ax = gca; 
-ax.FontSize = 12; 
+set(gca,'TickLabelInterpreter','latex', 'Fontsize',13);
+% ax = gca; 
+% ax.FontSize = 12; 
 
 
 %% CPU
@@ -73,21 +73,21 @@ CPU_Smart = 30.52640570684251;
 CPU_Random_Regular = 26.883224704986183;
 CPU_Force_Regular = 27.27044515980158;
 CPU_Smart_Regular = 27.044576793881596;
-x = categorical({'Random', 'Force', 'AC'});
-x = reordercats(x,{'Random', 'Force', 'AC'});
+x = categorical({'Random', 'Force', 'Proposed'});
+x = reordercats(x,{'Random', 'Force', 'Proposed'});
 y = [CPU_Random, CPU_Random_Regular; CPU_Force, CPU_Force_Regular; CPU_Smart, CPU_Smart_Regular]/ND;
 bar(x,y)
 % ylim('auto')
 ylim([0, 1.7])
-legend('LLRL', 'Regular PG', 'interpreter','latex')
+legend('Lifelong RL', 'Regular PG', 'interpreter','latex')
 legend('Location','best' ,'FontSize', 14)
-ylabel('Average CPU Energy (mJ)', 'FontSize', 14, 'interpreter','latex')
-set(gca,'TickLabelInterpreter','latex', 'Fontsize',16);
+ylabel('Average CPU Energy ($mJ$)', 'FontSize', 14, 'interpreter','latex')
+set(gca,'TickLabelInterpreter','latex', 'Fontsize',13);
 title('(c)')
 grid on
 
-ax = gca; 
-ax.FontSize = 12; 
+% ax = gca; 
+% ax.FontSize = 12; 
 
 %% b
 subplot(2,2,4)
@@ -97,18 +97,18 @@ b_Smart = 870.7518711630732;
 b_Random_Regular = 1859.2979398662033;
 b_Force_Regular = 1845.4415908067724;
 b_Smart_Regular = 1280.3929608107703;
-x = categorical({'Random', 'Force', 'AC'});
-x = reordercats(x,{'Random', 'Force', 'AC'});
+x = categorical({'Random', 'Force', 'Proposed'});
+x = reordercats(x,{'Random', 'Force', 'Proposed'});
 y = [b_Random, b_Random_Regular; b_Force, b_Force_Regular; b_Smart, b_Smart_Regular]/ND;
 bar(x,y)
-legend('LLRL', 'Regular PG')
+legend('Lifelong RL', 'Regular PG')
 legend('Location','best' ,'FontSize', 14, 'interpreter','latex')
 ylabel('Average Queue Length', 'FontSize', 14, 'interpreter','latex')
-set(gca,'TickLabelInterpreter','latex', 'Fontsize',16);
+set(gca,'TickLabelInterpreter','latex', 'Fontsize',13);
 title('(d)')
 grid on
-ax = gca; 
-ax.FontSize = 12; 
+% ax = gca; 
+% ax.FontSize = 12; 
 
 
 doit = 1;

@@ -30,10 +30,10 @@ grid on
 xlabel('Number of Time Slots', 'FontSize', 20, 'interpreter','latex')
 ylabel('Average Reward of Devices', 'FontSize', 20, 'interpreter','latex')
 
-annotation('textarrow',[0.21,0.15],[0.25,0.4],'String','Environment 1 ', 'FontSize', 12, 'interpreter','latex')
-annotation('textarrow',[0.4,0.32],[0.3,0.2],'String','Environment 2 ', 'FontSize', 12, 'interpreter','latex')
-annotation('textarrow',[0.68,0.62],[0.55,0.7],'String','Environment 3 ', 'FontSize', 12, 'interpreter','latex')
-annotation('textarrow',[0.8,0.75],[0.3,0.48],'String','Environment 4 ', 'FontSize', 12, 'interpreter','latex')
+annotation('textarrow',[0.21,0.15],[0.25,0.4],'String','Environment $1$ ', 'FontSize', 12, 'interpreter','latex')
+annotation('textarrow',[0.4,0.32],[0.3,0.2],'String','Environment $2$ ', 'FontSize', 12, 'interpreter','latex')
+annotation('textarrow',[0.68,0.62],[0.55,0.7],'String','Environment $3$ ', 'FontSize', 12, 'interpreter','latex')
+annotation('textarrow',[0.8,0.75],[0.3,0.48],'String','Environment $4$ ', 'FontSize', 12, 'interpreter','latex')
 
-legend('Proposed Algorithm','Regular PG')  %,'AbPG-ELLA')PGInterELLA
+legend('Lifelong RL','Regular PG')  %,'AbPG-ELLA')PGInterELLA
 legend('Location','southeast', 'FontSize', 16, 'interpreter','latex')

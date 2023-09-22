@@ -42,8 +42,8 @@ hold on
 x_axis = 5:5:30;
 
 yyaxis left
-plot(x_axis, Device_Reward_1, 'ro-', 'DisplayName','Reward of Devices', 'LineWidth', 3, 'MarkerSize',10) %'Color', colorMat(7,:)); 
-plot(x_axis, Device_AoI_1, 'bx-','DisplayName','AoI of Devices', 'LineWidth', 3, 'MarkerSize',10) % 'Color', colorMat(1,:));
+plot(x_axis, Device_Reward_1, 'bo--', 'DisplayName','Reward of Devices', 'LineWidth', 2, 'MarkerSize',15) %'Color', colorMat(7,:)); 
+plot(x_axis, Device_AoI_1, 'rs--','DisplayName','AoI of Devices', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
 xlabel('Number of Devices', 'Fontsize',20, 'interpreter','latex')
 ylabel('Average AoI and Reward of Devices', 'Fontsize',20, 'interpreter','latex')
 % title('Performance of Devices')
@@ -51,12 +51,12 @@ ylabel('Average AoI and Reward of Devices', 'Fontsize',20, 'interpreter','latex'
 
 
 yyaxis right
-plot(x_axis, Device_CPU_J, 'k*-','DisplayName','CPU of Devices', 'LineWidth', 3, 'MarkerSize',10) % 'Color', colorMat(3,:))
-ylabel('Devices CPU Energy Consumption (mJ)', 'Fontsize',20, 'interpreter','latex')
+plot(x_axis, Device_CPU_J, 'k*--','DisplayName','CPU of Devices', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(3,:))
+ylabel('Devices CPU Energy Consumption ($mJ$)', 'Fontsize',20, 'interpreter','latex')
 hold off
 box on
 grid on
 
-legend('Location','best', 'FontSize',18, 'interpreter','latex')
+legend('Location','best', 'FontSize',22, 'interpreter','latex')
 
 brave = 1;

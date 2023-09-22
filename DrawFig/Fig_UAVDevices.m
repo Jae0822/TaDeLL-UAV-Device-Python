@@ -55,8 +55,8 @@ itsokay = 1;
 %% Double y-axis
 figure
 hold on;
-x = categorical({'Random', 'Force', 'AC'});
-x = reordercats(x,{'Random', 'Force', 'AC'});
+x = categorical({'Random', 'Force', 'Proposed'});
+x = reordercats(x,{'Random', 'Force', 'Proposed'});
 y = [UAV_R_E(1), UAV_Reward(1);
     UAV_R_E(2), UAV_Reward(2);
     UAV_R_E(3), UAV_Reward(3)];
@@ -71,7 +71,7 @@ set(gca,'TickLabelInterpreter','latex', 'Fontsize',20);
 
 yyaxis right
 bar(x, [nil, nil, z], 'grouped', 'FaceColor', '#EDB120');
-ylabel('Energy of the UAV (kJ)', 'Fontsize',20, 'interpreter','latex')
+ylabel('Energy of the UAV ($kJ$)', 'Fontsize',20, 'interpreter','latex')
 
 box on; 
 grid on;
