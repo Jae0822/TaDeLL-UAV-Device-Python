@@ -40,7 +40,7 @@ legend('Location','best', 'FontSize', 12,  'interpreter','latex')
 hold off
 
 
-xlabel('Time','FontSize', 18,  'interpreter','latex')
+xlabel('Number of Time Slots','FontSize', 18,  'interpreter','latex')
 ylabel('Average Reward', 'FontSize', 18,  'interpreter','latex')
 title('(a)')
 %--------------------------------------------------------------------------
@@ -80,7 +80,7 @@ legend(LH, L);
 legend('Location','best', 'FontSize', 12,  'interpreter','latex')
 hold off
 
-xlabel('Time','FontSize', 18,  'interpreter','latex')
+xlabel('Number of Time Slots','FontSize', 18,  'interpreter','latex')
 ylabel('Average Reward','FontSize', 18,  'interpreter','latex')
 title('(b)')
 %--------------------------------------------------------------------------
@@ -120,7 +120,7 @@ legend(LH, L);
 legend('Location','best', 'FontSize', 12,  'interpreter','latex')
 hold off
 
-xlabel('Time','FontSize', 18,  'interpreter','latex')
+xlabel('Number of Time Slots','FontSize', 18,  'interpreter','latex')
 ylabel('Average Reward','FontSize', 18,  'interpreter','latex')
 title('Subplot 1: sin(x)')
 title('(c)')
@@ -162,6 +162,6 @@ legend(LH, L);
 legend('Location','best', 'FontSize', 12,  'interpreter','latex')
 hold off
 
-xlabel('Time','FontSize', 18,  'interpreter','latex')
+xlabel('Number of Time Slots','FontSize', 18,  'interpreter','latex')
 ylabel('Average Reward','FontSize', 18, 'interpreter','latex')
 title('(d)')
