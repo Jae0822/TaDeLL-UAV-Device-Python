@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="11cc273d-3bbb-4984-80b5-6175c7b6b600" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/DrawFig/Velocity.py" beforeDir="false" afterPath="$PROJECT_DIR$/DrawFig/Velocity.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrawFig/fig_FullHistory.m" beforeDir="false" afterPath="$PROJECT_DIR$/DrawFig/fig_FullHistory.m" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
