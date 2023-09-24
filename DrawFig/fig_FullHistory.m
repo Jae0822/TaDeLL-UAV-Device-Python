@@ -37,11 +37,11 @@ t.TileSpacing = 'tight';
 % Plot in tiles
 ep = double(param{'episodes'});
 st = 'aabcdef';
-for x  =  2:double(param{'num_Devices'})
+for x  =  1:double(param{'num_Devices'})-1
 % for x  =  1:6
     nexttile, stairs(logging_timeline{x}{ep}{'KeyTime'}, logging_timeline{x}{ep}{'KeyRewards'}, 'LineWidth',2,'Marker','d','MarkerFaceColor','c')
     % xlabel('dsdfs')
-    title('(' +string(st(x)) + '): Device ' +  string(x - 1), 'Interpreter','latex', 'FontSize', 16)
+    title('(' +string(st(x)) + '): Device ' +  string(x), 'Interpreter','latex', 'FontSize', 16)
     % title('device ' +  string(x - 1), 'Interpreter','latex', 'FontSize', 16)
     % ylabel('dsdsds')
     % Task change line in vertical
@@ -83,7 +83,7 @@ x = categorical({'Dev 1', 'Dev 2', 'Dev 3', 'Dev 4', 'Dev 5'});
 x = reordercats(x,{'Dev 1', 'Dev 2', 'Dev 3', 'Dev 4', 'Dev 5'});
 bar(x, cellfun(@(x) x, res))
 % xlabel('dsdfs')
-title('(f): Response Time ($s$)', 'Interpreter','latex', 'FontSize', 16)
+title('(f): Average Response Time ($s$)', 'Interpreter','latex', 'FontSize', 16)
 % ylabel('dsdsds')
 % Look better
 ylim([0, 210])
@@ -93,7 +93,7 @@ grid on
 % Specify common title, X and Y labels
 % title(t, 'Common title')
 xlabel(t, 'Number of Time Slots', 'FontSize', 20, 'interpreter','latex')
-ylabel(t, 'Averaged Reward','FontSize', 20, 'interpreter','latex')
+ylabel(t, 'Response Time ($s$)','FontSize', 20, 'interpreter','latex')
 
 
 
