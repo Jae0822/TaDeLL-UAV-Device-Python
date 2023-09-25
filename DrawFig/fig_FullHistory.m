@@ -53,10 +53,12 @@ for x  =  1:double(param{'num_Devices'})-1
     xlim([0, numel(cell(logging_timeline{x}{ep}{'TaskList'}))])
     ylim([-inf, inf])
     % legend( 'Averaged Values', 'Location','best')
-    % ylabel('device ' +  string(x))
+    ylabel('Average Reward', 'Interpreter','latex', 'FontSize', 13)
+    xlabel('Number of Time Slots', 'Interpreter','latex', 'FontSize', 13)
 end
 % For the response time figure
 nexttile,
+yyaxis left
 res = {};
 for j  =  2:double(param{'num_Devices'})
     freq = double(P_cell{2}.Devices{j}.frequency);
@@ -83,17 +85,28 @@ x = categorical({'Dev 1', 'Dev 2', 'Dev 3', 'Dev 4', 'Dev 5'});
 x = reordercats(x,{'Dev 1', 'Dev 2', 'Dev 3', 'Dev 4', 'Dev 5'});
 bar(x, cellfun(@(x) x, res))
 % xlabel('dsdfs')
-title('(f): Average Response Time ($s$)', 'Interpreter','latex', 'FontSize', 16)
+ylabel('Time ($s$)', 'Interpreter','latex', 'FontSize', 13)
+title('(f): Average Response Time', 'Interpreter','latex', 'FontSize', 16)
 % ylabel('dsdsds')
 % Look better
 ylim([0, 210])
 % ylim([-inf, inf])
 grid on
+yyaxis right
+perc = [res{1}/80, res{2}/120, res{3}/200, res{4}/360, res{5}/450] * 100;
+p1 = plot(x, perc, 'rd-', 'Color', "#D95319", 'LineWidth', 1.5, 'LineStyle', '-', 'DisplayName', 'Response Time (\%)');
+% legend('Percentage \%', 'interpreter','latex', 'FontSize', 14)
+ylabel('Portion of Period (\%)', 'interpreter','latex', 'FontSize', 12)
+legend(p1, 'Location','best', 'Fontsize',10, 'interpreter','latex')
+ylim([0, 100])
+% text(0.6,40, '54.03\%', 'Interpreter', 'latex', 'FontSize', 10, 'Color', 'r')
+% text(4.7,30, '44.44\% ', 'Interpreter', 'latex', 'FontSize', 10, 'Color', 'r')
+% set(gca,'YTickLabel',[]);
 
 % Specify common title, X and Y labels
 % title(t, 'Common title')
-xlabel(t, 'Number of Time Slots', 'FontSize', 20, 'interpreter','latex')
-ylabel(t, 'Response Time ($s$)','FontSize', 20, 'interpreter','latex')
+% xlabel(t, 'Number of Time Slots', 'FontSize', 20, 'interpreter','latex')
+% ylabel(t, 'Reward','FontSize', 20, 'interpreter','latex')
 
 
 
