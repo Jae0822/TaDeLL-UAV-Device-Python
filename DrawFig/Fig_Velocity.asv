@@ -164,14 +164,14 @@ plot(x_axis, Device_AoI_QL, 'bs--', 'DisplayName','AoI (Value Based)', 'LineWidt
 % plot(x_axis, Device_Reward_QL + 8, 'bo--','DisplayName','Reward (Value Based)', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
 ax = gca; 
 ax.FontSize = 20; 
-xlabel('UAV Velocity ($m/s$)', 'Fontsize',28, 'interpreter','latex')
-ylabel('Average AoI of Devices', 'Fontsize',28, 'interpreter','latex')
+xlabel('UAV Velocity ($m/s$)', 'Fontsize',24, 'interpreter','latex')
+ylabel('Average AoI of Devices', 'Fontsize',24, 'interpreter','latex')
 % title('Performance of Devices')
 
 yyaxis right
 plot(x_axis, UAV_CPU_J, 'ro:','DisplayName','CPU Energy (Proposed)', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(3,:))
 plot(x_axis, Device_CPU_QL - 0.3, 'ro--','DisplayName','CPU Energy (Value Based)', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(3,:))
-ylabel('CPU Energy of Devices ($mJ$)', 'Fontsize',28, 'interpreter','latex')
+ylabel('CPU Energy of Devices ($mJ$)', 'Fontsize',24, 'interpreter','latex')
 
 
 hold off

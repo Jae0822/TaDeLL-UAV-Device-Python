@@ -88,6 +88,7 @@ j = 25
 D05_Device_Reward_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
 D05_Device_AoI_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
 D05_Device_CPU_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
+D05_Device_b_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
 for i in range(param['num_Devices']):
     if not logging_timeline[i][j]['intervals']:
         continue  # 跳出J的FOR循环，不执行后续代码，I保持不变
@@ -96,9 +97,11 @@ for i in range(param['num_Devices']):
     D05_Device_Reward_1['All_Devices'].append(sum([-logging_timeline[i][j]['KeyRewards'][x] * KeyInterval[x] for x in range(len(KeyInterval))])/param['nTimeUnits'])
     D05_Device_AoI_1['All_Devices'].append(sum([logging_timeline[i][j]['KeyAoI'][x] * KeyInterval[x] for x in range(len(KeyInterval))])/param['nTimeUnits'])
     D05_Device_CPU_1['All_Devices'].append(sum([logging_timeline[i][j]['KeyCPU'][x] * KeyInterval[x] for x in range(len(KeyInterval))])/param['nTimeUnits'])
+    D05_Device_b_1['All_Devices'].append(sum([logging_timeline[i][j]['Keyb'][x] * KeyInterval[x] for x in range(len(KeyInterval))])/param['nTimeUnits'])
 D05_Device_Reward_1['Best'] = mean(D05_Device_Reward_1['All_Devices'])
 D05_Device_AoI_1['Best'] = mean(D05_Device_AoI_1['All_Devices'])
 D05_Device_CPU_1['Best'] = mean(D05_Device_CPU_1['All_Devices'])
+D05_Device_b_1['Best'] = mean(D05_Device_b_1['All_Devices'])
 
 
 
@@ -172,6 +175,7 @@ j = 17
 D10_Device_Reward_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
 D10_Device_AoI_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
 D10_Device_CPU_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
+D10_Device_b_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
 for i in range(param['num_Devices']):
     if not logging_timeline[i][j]['intervals']:
         continue  # 跳出J的FOR循环，不执行后续代码，I保持不变
@@ -180,9 +184,11 @@ for i in range(param['num_Devices']):
     D10_Device_Reward_1['All_Devices'].append(sum([-logging_timeline[i][j]['KeyRewards'][x] * KeyInterval[x] for x in range(len(KeyInterval))])/param['nTimeUnits'])
     D10_Device_AoI_1['All_Devices'].append(sum([logging_timeline[i][j]['KeyAoI'][x] * KeyInterval[x] for x in range(len(KeyInterval))]) / param['nTimeUnits'])
     D10_Device_CPU_1['All_Devices'].append(sum([logging_timeline[i][j]['KeyCPU'][x] * KeyInterval[x] for x in range(len(KeyInterval))]) / param['nTimeUnits'])
+    D10_Device_b_1['All_Devices'].append(sum([logging_timeline[i][j]['Keyb'][x] * KeyInterval[x] for x in range(len(KeyInterval))]) / param['nTimeUnits'])
 D10_Device_Reward_1['Best'] = mean(D10_Device_Reward_1['All_Devices'])
 D10_Device_AoI_1['Best'] = mean(D10_Device_AoI_1['All_Devices'])
 D10_Device_CPU_1['Best'] = mean(D10_Device_CPU_1['All_Devices'])
+D10_Device_b_1['Best'] = mean(D10_Device_b_1['All_Devices'])
 
 
 
@@ -253,6 +259,7 @@ j = 25
 D15_Device_Reward_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
 D15_Device_AoI_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
 D15_Device_CPU_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
+D15_Device_b_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
 for i in range(param['num_Devices']):
     if not logging_timeline[i][j]['intervals']:
         continue  # 跳出J的FOR循环，不执行后续代码，I保持不变
@@ -261,9 +268,11 @@ for i in range(param['num_Devices']):
     D15_Device_Reward_1['All_Devices'].append(sum([-logging_timeline[i][j]['KeyRewards'][x] * KeyInterval[x] for x in range(len(KeyInterval))])/param['nTimeUnits'])
     D15_Device_AoI_1['All_Devices'].append(sum([logging_timeline[i][j]['KeyAoI'][x] * KeyInterval[x] for x in range(len(KeyInterval))]) / param['nTimeUnits'])
     D15_Device_CPU_1['All_Devices'].append(sum([logging_timeline[i][j]['KeyCPU'][x] * KeyInterval[x] for x in range(len(KeyInterval))]) / param['nTimeUnits'])
+    D15_Device_b_1['All_Devices'].append(sum([logging_timeline[i][j]['Keyb'][x] * KeyInterval[x] for x in range(len(KeyInterval))]) / param['nTimeUnits'])
 D15_Device_Reward_1['Best'] = mean(D15_Device_Reward_1['All_Devices'])
 D15_Device_AoI_1['Best'] = mean(D15_Device_AoI_1['All_Devices'])
 D15_Device_CPU_1['Best'] = mean(D15_Device_CPU_1['All_Devices'])
+D15_Device_b_1['Best'] = mean(D15_Device_b_1['All_Devices'])
 
 
 
@@ -352,10 +361,12 @@ D20_Device_CPU_1['Best'] = mean(D20_Device_CPU_1['All_Devices'])
 ls_rewards = []
 ls_AoI = []
 ls_CPU = []
+ls_b = []
 for j in range(1, param['episodes']+1):
     D20_Device_Reward_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
     D20_Device_AoI_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
     D20_Device_CPU_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
+    D20_Device_b_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
     for i in range(param['num_Devices']):
         if not logging_timeline[i][j]['intervals']:
             continue  # 跳出J的FOR循环，不执行后续代码，I保持不变
@@ -371,15 +382,21 @@ for j in range(1, param['episodes']+1):
         D20_Device_CPU_1['All_Devices'].append(
             sum([logging_timeline[i][j]['KeyCPU'][x] * KeyInterval[x] for x in range(len(KeyInterval))]) / param[
                 'nTimeUnits'])
+        D20_Device_b_1['All_Devices'].append(
+            sum([logging_timeline[i][j]['Keyb'][x] * KeyInterval[x] for x in range(len(KeyInterval))]) / param[
+                'nTimeUnits'])
     D20_Device_Reward_1['Best'] = mean(D20_Device_Reward_1['All_Devices'])
     D20_Device_AoI_1['Best'] = mean(D20_Device_AoI_1['All_Devices'])
     D20_Device_CPU_1['Best'] = mean(D20_Device_CPU_1['All_Devices'])
+    D20_Device_b_1['Best'] = mean(D20_Device_b_1['All_Devices'])
     ls_rewards.append(D20_Device_Reward_1['Best'])
     ls_AoI.append(D20_Device_AoI_1['Best'])
     ls_CPU.append(D20_Device_CPU_1['Best'])
+    ls_b.append(D20_Device_b_1['Best'])
 D20_Device_Reward_1['Best'] = mean([ls_rewards[x] for x in range(12, 23)])
 D20_Device_AoI_1['Best'] = mean([ls_AoI[x] for x in range(12, 23)])
 D20_Device_CPU_1['Best'] = mean([ls_CPU[x] for x in range(12, 23)])
+D20_Device_b_1['Best'] = mean([ls_b[x] for x in range(12, 23)])
 
 # #############################################  25  ###################################################################
 with open('fig_C06.pkl', 'rb') as f:
@@ -445,10 +462,13 @@ D25_Device_b['Best'] = mean(D25_Device_b['All_Devices'])
 
 ls_Reward = []
 ls_AoI = []
+ls_CPU = []
+ls_b = []
 for j in range(1, param['episodes'] + 1):
     D25_Device_Reward_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
     D25_Device_AoI_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
     D25_Device_CPU_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
+    D25_Device_b_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
     for i in range(param['num_Devices']):
         if not logging_timeline[i][j]['intervals']:
             continue  # 跳出J的FOR循环，不执行后续代码，I保持不变
@@ -457,13 +477,19 @@ for j in range(1, param['episodes'] + 1):
         D25_Device_Reward_1['All_Devices'].append(sum([-logging_timeline[i][j]['KeyRewards'][x] * KeyInterval[x] for x in range(len(KeyInterval))])/param['nTimeUnits'])
         D25_Device_AoI_1['All_Devices'].append(sum([logging_timeline[i][j]['KeyAoI'][x] * KeyInterval[x] for x in range(len(KeyInterval))]) / param['nTimeUnits'])
         D25_Device_CPU_1['All_Devices'].append(sum([logging_timeline[i][j]['KeyCPU'][x] * KeyInterval[x] for x in range(len(KeyInterval))]) / param['nTimeUnits'])
+        D25_Device_b_1['All_Devices'].append(sum([logging_timeline[i][j]['Keyb'][x] * KeyInterval[x] for x in range(len(KeyInterval))]) / param['nTimeUnits'])
     D25_Device_Reward_1['Best'] = mean(D25_Device_Reward_1['All_Devices'])
     D25_Device_AoI_1['Best'] = mean(D25_Device_AoI_1['All_Devices'])
     D25_Device_CPU_1['Best'] = mean(D25_Device_CPU_1['All_Devices'])
+    D25_Device_b_1['Best'] = mean(D25_Device_b_1['All_Devices'])
     ls_Reward.append(D25_Device_Reward_1['Best'])
     ls_AoI.append(D25_Device_AoI_1['Best'])
+    ls_CPU.append(D25_Device_CPU_1['Best'])
+    ls_b.append(D25_Device_b_1['Best'])
 D25_Device_Reward_1['Best'] = mean([ls_Reward[x] for x in range(23, 25)])  # 这是比较合适的选择范围
 D25_Device_AoI_1['Best'] = mean([ls_AoI[x] for x in range(23, 25)])  # 这是比较合适的选择范围
+D25_Device_CPU_1['Best'] = mean([ls_CPU[x] for x in range(23, 25)])  # 这是比较合适的选择范围
+D25_Device_b_1['Best'] = mean([ls_b[x] for x in range(23, 25)])  # 这是比较合适的选择范围
 
 
 
@@ -571,6 +597,7 @@ j = 25
 D30_Device_Reward_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
 D30_Device_AoI_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
 D30_Device_CPU_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
+D30_Device_b_1 = {'Best': [], 'All_Devices': [], 'All_Devices_Episodes': []}
 for i in range(param['num_Devices']):
     if not logging_timeline[i][j]['intervals']:
         continue  # 跳出J的FOR循环，不执行后续代码，I保持不变
@@ -579,9 +606,11 @@ for i in range(param['num_Devices']):
     D30_Device_Reward_1['All_Devices'].append(sum([-logging_timeline[i][j]['KeyRewards'][x] * KeyInterval[x] for x in range(len(KeyInterval))])/param['nTimeUnits'])
     D30_Device_AoI_1['All_Devices'].append(sum([logging_timeline[i][j]['KeyAoI'][x] * KeyInterval[x] for x in range(len(KeyInterval))]) / param['nTimeUnits'])
     D30_Device_CPU_1['All_Devices'].append(sum([logging_timeline[i][j]['KeyCPU'][x] * KeyInterval[x] for x in range(len(KeyInterval))]) / param['nTimeUnits'])
+    D30_Device_b_1['All_Devices'].append(sum([logging_timeline[i][j]['Keyb'][x] * KeyInterval[x] for x in range(len(KeyInterval))]) / param['nTimeUnits'])
 D30_Device_Reward_1['Best'] = mean(D30_Device_Reward_1['All_Devices'])
 D30_Device_AoI_1['Best'] = mean(D30_Device_AoI_1['All_Devices'])
 D30_Device_CPU_1['Best'] = mean(D30_Device_CPU_1['All_Devices'])
+D30_Device_b_1['Best'] = mean(D30_Device_b_1['All_Devices'])
 
 
 
@@ -619,6 +648,7 @@ Device_CPU_J = [pow(x * pow(10,8), 3) * 4 * pow(10, -28)  for x in Device_CPU]
 Device_Reward_1 = [D05_Device_Reward_1['Best'], D10_Device_Reward_1['Best'], D15_Device_Reward_1['Best'], D20_Device_Reward_1['Best'], D25_Device_Reward_1['Best'], D30_Device_Reward_1['Best']]
 Device_AoI_1 = [D05_Device_AoI_1['Best'], D10_Device_AoI_1['Best'], D15_Device_AoI_1['Best'], D20_Device_AoI_1['Best'], D25_Device_AoI_1['Best'], D30_Device_AoI_1['Best']]
 Device_CPU_1 = [D05_Device_CPU_1['Best'], D10_Device_CPU_1['Best'], D15_Device_CPU_1['Best'], D20_Device_CPU_1['Best'], D25_Device_CPU_1['Best'], D30_Device_CPU_1['Best']]
+Device_b_1 = [D05_Device_b_1['Best'], D10_Device_b_1['Best'], D15_Device_b_1['Best'], D20_Device_b_1['Best'], D25_Device_b_1['Best'], D30_Device_b_1['Best']]
 
 
 
@@ -660,6 +690,7 @@ axt = ax.twinx()
 ax.plot(numD, Device_Reward_1,  color='C1', marker='o', label='Devices Reward') # , color=bar_colors)
 ax.plot(numD, Device_AoI_1, color='C2', marker='*', label='Devices AoI')# , color=bar_colors)
 axt.plot(numD, [x*1000 for x in Device_CPU_J], color='C3', marker='^', label='Devices CPU')# , color=bar_colors)
+ax.plot(numD, Device_b_1, color='C4', marker='*', label='Devices b')# , color=bar_colors)
 ax.set_xlabel('Number of Devices')
 ax.set_ylabel('AoI and Reward')
 axt.set_ylabel('CPU (mJ)')

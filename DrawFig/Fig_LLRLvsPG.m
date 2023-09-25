@@ -36,7 +36,7 @@ legend('Lifelong RL', 'Regular PG')
 legend('Location','best', 'FontSize', 14, 'interpreter','latex')
 ylabel('Average Reward', 'FontSize', 14, 'interpreter','latex')
 set(gca,'TickLabelInterpreter','latex', 'Fontsize',13);
-title('(a)')
+title('(a)', 'interpreter','latex')
 grid on
 
 % ax = gca; 
@@ -58,7 +58,7 @@ bar(x,y)
 legend('Lifelong RL', 'Regular PG')
 legend('Location','best' ,'FontSize', 14, 'interpreter','latex')
 ylabel('Average AoI' ,'FontSize', 14, 'interpreter','latex')
-title('(b)')
+title('(b)', 'interpreter','latex')
 grid on
 set(gca,'TickLabelInterpreter','latex', 'Fontsize',13);
 % ax = gca; 
@@ -83,7 +83,7 @@ legend('Lifelong RL', 'Regular PG', 'interpreter','latex')
 legend('Location','best' ,'FontSize', 14)
 ylabel('Average CPU Energy ($mJ$)', 'FontSize', 14, 'interpreter','latex')
 set(gca,'TickLabelInterpreter','latex', 'Fontsize',13);
-title('(c)')
+title('(c)', 'interpreter','latex')
 grid on
 
 % ax = gca; 
@@ -105,7 +105,7 @@ legend('Lifelong RL', 'Regular PG')
 legend('Location','best' ,'FontSize', 14, 'interpreter','latex')
 ylabel('Average Queue Length', 'FontSize', 14, 'interpreter','latex')
 set(gca,'TickLabelInterpreter','latex', 'Fontsize',13);
-title('(d)')
+title('(d)', 'interpreter','latex')
 grid on
 % ax = gca; 
 % ax.FontSize = 12; 

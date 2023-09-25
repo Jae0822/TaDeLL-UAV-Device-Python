@@ -76,13 +76,13 @@ yyaxis left
 plot(x_axis, Device_AoI_1, 'bs--','DisplayName','AoI of Devices', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
 ax = gca; 
 ax.FontSize = 20; 
-xlabel('Number of Devices', 'Fontsize',30, 'interpreter','latex')
-ylabel('Average AoI of Devices', 'Fontsize',30, 'interpreter','latex')
+xlabel('Number of Devices', 'Fontsize',28, 'interpreter','latex')
+ylabel('Average AoI of Devices', 'Fontsize',28, 'interpreter','latex')
 xlim([5, 30])
 title('(a)', 'interpreter','latex')
 yyaxis right
 plot(x_axis, Device_CPU_J, 'ro--','DisplayName','CPU of Devices', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(3,:))
-ylabel('CPU Energy ($mJ$)', 'Fontsize',30, 'interpreter','latex')
+ylabel('CPU Energy ($mJ$)', 'Fontsize',28, 'interpreter','latex')
 % hold off
 box on
 grid on
@@ -94,13 +94,13 @@ hold on
 plot(x_axis, Device_Reward_1, 'bs--', 'DisplayName','Reward of Devices', 'LineWidth', 2, 'MarkerSize',15) %'Color', colorMat(7,:)); 
 ax = gca; 
 ax.FontSize = 20; 
-xlabel('Number of Devices', 'Fontsize',30, 'interpreter','latex')
-ylabel('Average Reward of Devices', 'Fontsize',30, 'interpreter','latex')
+xlabel('Number of Devices', 'Fontsize',28, 'interpreter','latex')
+ylabel('Average Reward of Devices', 'Fontsize',28, 'interpreter','latex')
 title('(b)', 'interpreter','latex')
 xlim([5, 30])
 yyaxis right
 plot(x_axis, Device_b_1, 'ro--', 'DisplayName','Queue Length of Devices', 'LineWidth', 2, 'MarkerSize',15) %'Color', colorMat(7,:)); 
-ylabel('Average Queue Length of Devices', 'Fontsize',30, 'interpreter','latex')
+ylabel('Average Queue Length of Devices', 'Fontsize',28, 'interpreter','latex')
 box on
 grid on
 legend('Location','best', 'FontSize',26, 'interpreter','latex')
