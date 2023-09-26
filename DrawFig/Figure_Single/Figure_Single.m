@@ -42,7 +42,7 @@ hold off
 
 xlabel('Number of Time Slots','FontSize', 18,  'interpreter','latex')
 ylabel('Average Reward', 'FontSize', 18,  'interpreter','latex')
-title('(a)')
+title('(a)', 'interpreter','latex', 'FontSize', 18)
 %--------------------------------------------------------------------------
 clear
 load('Case_2_All.mat')
@@ -82,7 +82,7 @@ hold off
 
 xlabel('Number of Time Slots','FontSize', 18,  'interpreter','latex')
 ylabel('Average Reward','FontSize', 18,  'interpreter','latex')
-title('(b)')
+title('(b)', 'interpreter','latex', 'FontSize', 18)
 %--------------------------------------------------------------------------
 clear
 load('Case_3_All.mat')
@@ -123,7 +123,7 @@ hold off
 xlabel('Number of Time Slots','FontSize', 18,  'interpreter','latex')
 ylabel('Average Reward','FontSize', 18,  'interpreter','latex')
 title('Subplot 1: sin(x)')
-title('(c)')
+title('(c)', 'interpreter','latex', 'FontSize', 18)
 %--------------------------------------------------------------------------
 clear
 load('Case_4_All.mat')
@@ -164,4 +164,4 @@ hold off
 
 xlabel('Number of Time Slots','FontSize', 18,  'interpreter','latex')
 ylabel('Average Reward','FontSize', 18, 'interpreter','latex')
-title('(d)')
+title('(d)', 'interpreter','latex', 'FontSize', 18)
