@@ -26,6 +26,7 @@ with open('SourceTask_temp.pkl', 'rb') as f:
 
 
 class TaskCache():
+    # This is to record the learning history of Regular PG and TaDeLL, including policy, value, AoI and CPU.
     def __init__(self, task):
         self.task = copy.deepcopy(task)
         self.task_Regular = copy.deepcopy(task)
