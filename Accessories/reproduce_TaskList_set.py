@@ -16,7 +16,7 @@ with open('../SourceTask_temp.pkl', 'rb') as f:
 
 
 
-def draw_curves(values, i):
+def draw_curves(values, i = 1):
     fig, ax = plt.subplots(1)
     ax.plot(np.arange(1, len(values) + 1), values, label= 'Task ' + str(i))
     ax.set_xlabel('Steps')
