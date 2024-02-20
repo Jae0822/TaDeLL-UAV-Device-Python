@@ -78,9 +78,26 @@ def main():
     #     task = tasks0[i]
     #     task.extract_feature(mu, sig)  # Normalize the plain_feature using mu, sig. self.feature will be updated.
 
-    tasks0 = tasks00[0]   # pick the easy ones
-    tasks = copy.deepcopy(tasks0[0:20])  # Tasks used for training
-    testing_tasks = copy.deepcopy(tasks0[20:40])   # Tasks used for warm start testing
+
+
+    # Type 1: All easy
+    # tasks0 = tasks00[0]   # pick the easy ones
+    # Type 2: All difficult
+    # tasks0 = tasks00[1]   # pick the diffucult ones
+    #  l + g = [0:36]
+    # for difficult ones: l = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 20, 21, 22, 23, 24, 26, 28, 29, 33, 34, 36]
+    # those not good: g = [15, 18, 19, 25, 27, 30, 31, 32, 35]
+    # l = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 20, 21, 22, 23, 24, 26, 28, 29, 33, 34, 36]
+    # tasks0 = [tasks00[1][x] for x in l]
+    # tasks = copy.deepcopy(tasks0[0:20])  # Tasks used for training
+    # testing_tasks = copy.deepcopy(tasks0[20:-1])   # Tasks used for warm start testing
+    # Type 3: Half easy half difficult
+    l = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 20, 21, 22, 23, 24, 26, 28, 29, 33, 34, 36]
+    tasks_easy = tasks00[0]
+    tasks_difficult = [tasks00[1][x] for x in l]
+    tasks0 = tasks_easy[0:10] + tasks_difficult[0:10] + tasks_easy[10:20] + tasks_difficult[10:20]
+    tasks = copy.deepcopy(tasks_easy[0:10] + tasks_difficult[0:10])
+    testing_tasks = copy.deepcopy(tasks_easy[10:20] + tasks_difficult[10:20])
 
     # Step2: Compute \theta for all training tasks
     for i in range(0, len(tasks)):
@@ -121,7 +138,7 @@ def main():
     # with open('TaDeLL_result_k_3.pkl', 'wb') as f:
     #     pickle.dump([means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL], f)
 
-    with open('TaDeLL_model_k_2_easy_temp.pkl', 'wb') as f:
+    with open('TaDeLL_model_k_2_temp.pkl', 'wb') as f:
         pickle.dump([means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL], f)
 
 
