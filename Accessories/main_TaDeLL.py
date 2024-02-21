@@ -227,11 +227,73 @@ def pg_task_generation(nTasks):
 
     print("Tasks generatioin is done")
 
+def eval():
+    # This is a function to run the performance of TaDeLL_Model of different modes (Easy, difficult, mix) on the same task
+    niter = 50
+    # tasks0 = []
+    # rewards_pg = []
+    # values = []
+
+    # Step 1: Load TaDeLL models
+    with open('TaDeLL_model_k_2_easy.pkl', 'rb') as f:
+        means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
+    TM_easy = TaDeLL_Model
+
+    with open('TaDeLL_model_k_2_difficult.pkl', 'rb') as f:
+        means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
+    TM_difficult = TaDeLL_Model
+
+    with open('TaDeLL_model_k_2_mix.pkl', 'rb') as f:
+        means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
+    TM_mix = TaDeLL_Model
+
+    # Step 2: Load task
+    # task = Task(mean_packet_cycles=random.randint(15, 35), variance_packet_cycles=random.randint(3, 8),
+    #             cpu_max=random.randint(30, 50), p=0.4 * np.random.random_sample() + 0.3, d=2, k=2)
+    with open('Tasks.pkl', 'rb') as f:
+        tasks00 = pickle.load(f)  # The task.policy is already the optimal policy
+    task = tasks00[1][34]
+    task_pg = copy.deepcopy(task)
+    task_easy = copy.deepcopy(task)
+    task_difficult = copy.deepcopy(task)
+    task_mix = copy.deepcopy(task)
+
+    # Step 3: Learn with PG and TaDeLL
+    print("start PG test learning")
+    rewards_pg = pg_rl(task_pg, niter)
+
+    print("start TaDeLL test learning")
+    print("testing for TaDeLL easy:")
+    TM_easy.getDictPolicy_Single(task_easy)  # get warm start policy for testing tasks
+    rewards_TaDeLL_easy = pg_rl(task_easy, niter)
+    print("testing for TaDeLL difficult:")
+    TM_difficult.getDictPolicy_Single(task_difficult)  # get warm start policy for testing tasks
+    rewards_TaDeLL_difficult = pg_rl(task_difficult, niter)
+    print("testing for TaDeLL mix:")
+    TM_mix.getDictPolicy_Single(task_mix)  # get warm start policy for testing tasks
+    rewards_TaDeLL_mix = pg_rl(task_mix, niter)
+
+    with open('TaDeLL_result_k_2_eval_Tasks[][]_temp.pkl', 'wb') as f:
+        pickle.dump([rewards_pg, rewards_TaDeLL_easy,rewards_TaDeLL_difficult,rewards_TaDeLL_mix, niter, task, task_pg, task_easy, task_difficult, task_mix], f)
 
 
+    # Step 4: Painting
+    fig, ax = plt.subplots()
+    ax.plot(np.arange(niter), rewards_pg, label='PG')
+    ax.plot(np.arange(niter), rewards_TaDeLL_easy, label='TaDeLL Easy')
+    ax.plot(np.arange(niter), rewards_TaDeLL_difficult, label='TaDeLL Difficult')
+    ax.plot(np.arange(niter), rewards_TaDeLL_mix, label='TaDeLL Mix')
+    ax.legend()  # Add a legend.
+    ax.set_xlabel('Iteration')  # Add an x-label to the axes.
+    ax.set_ylabel('Averaged Reward')  # Add a y-label to the axes.
+    ax.set_title("Comparison between PG and TaDeLL")  # Add a title to the axes.
+    # fig.show()
+    # plt.ioff()
+    print("Hello Baby")
 
 if __name__ == '__main__':
-    main()
+    # main()
     # test_feature_function()
     # pg_task_generation(30)
+    eval()
     d = 1
