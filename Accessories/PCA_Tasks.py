@@ -52,11 +52,12 @@ for x in range(2):
     Tasks[x] = [Tasks0[x][y] for y in index[x]]  # Pick easy or difficult tasks
 
     for task in Tasks[x]:
-        a = list(task.init_policy['theta'].flatten()) + list(task.plain_feature.flatten())  \
-            + list(task.policy_pg[-1].flatten()) + [task.values_pg[0]] + [task.values_pg[-1]] \
-            + list(task.gradients_pg[0].flatten()) \
-            + [task.cos_distance] + [task.distance] \
+        # a = list(task.init_policy['theta'].flatten()) + \
+        a = list(task.plain_feature.flatten()) \
             + [type[x]]
+        # + list(task.gradients_pg[0].flatten()) \
+            # + list(task.policy_pg[-1].flatten()) + [task.values_pg[0]] + [task.values_pg[-1]] \
+        # + [task.cos_distance] + [task.distance] \
             # Initial policy, 2, feature, 5
             # Optimal policy, 2, initial value, 1, optimal value, 2
             # initial gradient, 2
@@ -65,10 +66,11 @@ for x in range(2):
         data.append(a)
 
 
-col = ['policy1', 'policy2', 'feature1', 'feature2', 'feature3', 'feature4', 'feature5',
-       'optpolicy1', 'optpolicy2', 'value1', 'value2',
-       'inigradient1', 'inigradient2',
-       'cosdistance', 'distance',
+# col = ['policy1', 'policy2',
+col = ['feature1', 'feature2', 'feature3', 'feature4', 'feature5',
+       # 'optpolicy1', 'optpolicy2', 'value1', 'value2',
+       # 'inigradient1', 'inigradient2',
+       # 'cosdistance', 'distance',
        'target']
 df = pd.DataFrame(data = np.array(data), index = range(0, len(data)), columns = col)
 
@@ -114,22 +116,22 @@ pca.explained_variance_ratio_
 
 # Step 4: Visualize 2D Projection
 
-# fig = plt.figure(figsize = (8,8))
-# ax = fig.add_subplot(1,1,1)
-# ax.set_xlabel('Principal Component 1', fontsize = 15)
-# ax.set_ylabel('Principal Component 2', fontsize = 15)
-# ax.set_title('2 Component PCA', fontsize = 20)
-#
-#
-# targets = ['easy', 'difficult']
-# colors = ['r', 'g']
-# for target, color in zip(targets,colors):
-#     indicesToKeep = finalDf['target'] == target
-#     ax.scatter(finalDf.loc[indicesToKeep, 'principal component 1']
-#                , finalDf.loc[indicesToKeep, 'principal component 2']
-#                , c = color
-#                , s = 50)
-# ax.legend(targets)
-# ax.grid()
+fig = plt.figure(figsize = (8,8))
+ax = fig.add_subplot(1,1,1)
+ax.set_xlabel('Principal Component 1', fontsize = 15)
+ax.set_ylabel('Principal Component 2', fontsize = 15)
+ax.set_title('2 Component PCA', fontsize = 20)
+
+
+targets = ['easy', 'difficult']
+colors = ['r', 'g']
+for target, color in zip(targets,colors):
+    indicesToKeep = finalDf['target'] == target
+    ax.scatter(finalDf.loc[indicesToKeep, 'principal component 1']
+               , finalDf.loc[indicesToKeep, 'principal component 2']
+               , c = color
+               , s = 50)
+ax.legend(targets)
+ax.grid()
 
 d = 1
