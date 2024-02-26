@@ -52,13 +52,15 @@ for x in range(2):
     Tasks[x] = [Tasks0[x][y] for y in index[x]]  # Pick easy or difficult tasks
 
     for task in Tasks[x]:
-        a = list(task.init_policy['theta'].flatten())  \
-            + list(task.plain_feature.flatten()) \
+        # a = list(task.init_policy['theta'].flatten())  \
+        #     + list(task.plain_feature.flatten()) \
+        #     + list(task.policy_pg[-1].flatten()) + [task.values_pg[0]] + [task.values_pg[-1]] \
+        #     + list(task.gradients_pg[0].flatten()) \
+        #     + [task.cos_distance] + [task.distance] \
+        #     + [type[x]]
+        a = list(task.plain_feature.flatten()) \
             + [type[x]]
-        # + list(task.gradients_pg[0].flatten()) \
-            # + list(task.policy_pg[-1].flatten()) + [task.values_pg[0]] + [task.values_pg[-1]] \
-        # + [task.cos_distance] + [task.distance] \
-            # Initial policy, 2, feature, 5
+        # Initial policy, 2, feature, 5
             # Optimal policy, 2, initial value, 1, optimal value, 2
             # initial gradient, 2
             # cos distance, 1, distance, 1
@@ -66,8 +68,8 @@ for x in range(2):
         data.append(a)
 
 
-col = ['policy1', 'policy2',
-        'feature1', 'feature2', 'feature3', 'feature4', 'feature5',
+# col = ['policy1', 'policy2',
+col = ['feature1', 'feature2', 'feature3', 'feature4', 'feature5',
        # 'optpolicy1', 'optpolicy2', 'value1', 'value2',
        # 'inigradient1', 'inigradient2',
        # 'cosdistance', 'distance',
@@ -112,6 +114,9 @@ finalDf.head(5)
 
 # Explained Variance
 pca.explained_variance_ratio_
+
+with open('PCA_feature_5_dim_3_temp.pkl', 'wb') as f:
+    pickle.dump(finalDf, f)
 
 
 # Step 4: Visualize 2D Projection
