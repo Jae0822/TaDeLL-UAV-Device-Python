@@ -52,8 +52,8 @@ for x in range(2):
     Tasks[x] = [Tasks0[x][y] for y in index[x]]  # Pick easy or difficult tasks
 
     for task in Tasks[x]:
-        # a = list(task.init_policy['theta'].flatten()) + \
-        a = list(task.plain_feature.flatten()) \
+        a = list(task.init_policy['theta'].flatten())  \
+            + list(task.plain_feature.flatten()) \
             + [type[x]]
         # + list(task.gradients_pg[0].flatten()) \
             # + list(task.policy_pg[-1].flatten()) + [task.values_pg[0]] + [task.values_pg[-1]] \
@@ -66,8 +66,8 @@ for x in range(2):
         data.append(a)
 
 
-# col = ['policy1', 'policy2',
-col = ['feature1', 'feature2', 'feature3', 'feature4', 'feature5',
+col = ['policy1', 'policy2',
+        'feature1', 'feature2', 'feature3', 'feature4', 'feature5',
        # 'optpolicy1', 'optpolicy2', 'value1', 'value2',
        # 'inigradient1', 'inigradient2',
        # 'cosdistance', 'distance',
@@ -92,7 +92,7 @@ pd.DataFrame(data = x, columns = features).head()
 
 # Step 3: PCA Projection to 2D or 3D or 4D
 
-dim = 2
+dim = 3
 
 pca = PCA(n_components=dim)
 
@@ -116,22 +116,44 @@ pca.explained_variance_ratio_
 
 # Step 4: Visualize 2D Projection
 
-fig = plt.figure(figsize = (8,8))
-ax = fig.add_subplot(1,1,1)
-ax.set_xlabel('Principal Component 1', fontsize = 15)
-ax.set_ylabel('Principal Component 2', fontsize = 15)
-ax.set_title('2 Component PCA', fontsize = 20)
+if dim == 2:
+    fig = plt.figure(figsize = (8,8))
+    ax = fig.add_subplot(1,1,1)
+    ax.set_xlabel('Principal Component 1', fontsize = 15)
+    ax.set_ylabel('Principal Component 2', fontsize = 15)
+    ax.set_title('2 Component PCA', fontsize = 20)
 
 
-targets = ['easy', 'difficult']
-colors = ['r', 'g']
-for target, color in zip(targets,colors):
-    indicesToKeep = finalDf['target'] == target
-    ax.scatter(finalDf.loc[indicesToKeep, 'principal component 1']
-               , finalDf.loc[indicesToKeep, 'principal component 2']
-               , c = color
-               , s = 50)
-ax.legend(targets)
-ax.grid()
+    targets = ['easy', 'difficult']
+    colors = ['r', 'g']
+    for target, color in zip(targets,colors):
+        indicesToKeep = finalDf['target'] == target
+        ax.scatter(finalDf.loc[indicesToKeep, 'principal component 1']
+                   , finalDf.loc[indicesToKeep, 'principal component 2']
+                   , c = color
+                   , s = 50)
+    ax.legend(targets)
+    ax.grid()
+else:
+    fig = plt.figure(figsize = (8,8))
+    ax = plt.axes(projection ="3d")
+    ax.set_xlabel('Principal Component 1', fontsize = 15)
+    ax.set_ylabel('Principal Component 2', fontsize = 15)
+    ax.set_zlabel('Principal Component 3', fontsize = 15)
+    ax.set_title('3 Component PCA', fontsize = 20)
+
+
+    targets = ['easy', 'difficult']
+    colors = ['r', 'g']
+    for target, color in zip(targets,colors):
+        indicesToKeep = finalDf['target'] == target
+        ax.scatter3D(finalDf.loc[indicesToKeep, 'principal component 1']
+                   , finalDf.loc[indicesToKeep, 'principal component 2']
+                   , finalDf.loc[indicesToKeep, 'principal component 3']
+                   , c = color
+                   , s = 50)
+    ax.legend(targets)
+    ax.grid()
+
 
 d = 1
