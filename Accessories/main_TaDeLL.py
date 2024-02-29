@@ -310,7 +310,8 @@ def eval():
 
     # Step 2: Load task
     with open('Tasks.pkl', 'rb') as f:
-        tasks00 = pickle.load(f)  # The task.policy is already the optimal policy
+        tasks000 = pickle.load(f)  # The task.policy is already the optimal policy
+    tasks00 = copy.deepcopy(tasks000)
     index = [[],[]]
     rewards_pg = [[],[]]
     rewards_easy = [[],[]]
@@ -384,10 +385,97 @@ def eval():
         pickle.dump([rewards_pg, rewards_easy, rewards_difficult, rewards_mix, policies_pg, policies_easy, policies_difficult, policies_mix, niter, index, tasks00, Tasks], f)
 
 
+
+
+
+
+
+
+def TasksCached():
+    with open('Tasks.pkl', 'rb') as f:
+        tasks000 = pickle.load(f)  # The task.policy is already the optimal policy
+
+    niter = 50
+
+    # Step 1: Load TaDeLL models
+    with open('TaDeLL_model_k_2_easy.pkl', 'rb') as f:
+        means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
+    TM_easy = TaDeLL_Model
+
+    with open('TaDeLL_model_k_2_difficult.pkl', 'rb') as f:
+        means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
+    TM_difficult = TaDeLL_Model
+
+    with open('TaDeLL_model_k_2_mix.pkl', 'rb') as f:
+        means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
+    TM_mix = TaDeLL_Model
+
+    TM_models = [None, TM_easy, TM_difficult, TM_mix]
+
+    # Step 2: Load task
+    with open('Tasks.pkl', 'rb') as f:
+        tasks000 = pickle.load(f)  # The task.policy is already the optimal policy
+    tasks00 = copy.deepcopy(tasks000)
+    Tasks = [[],[]]
+
+    for x in range(2):
+        # Iterate over easy and difficult tasks saperately
+        print("@___@___start a new type")
+
+        for idx, task in enumerate(tasks00[x]):
+            print("@___start a new task")
+
+            task.index = idx  # This would record the index of task in Tasks.pkl, for future
+            task.policies = []
+            task.values = []
+            task.AoI_CPU = []
+
+            [task_pg, task_easy, task_difficult, task_mix] = [copy.deepcopy(task)]*4
+
+            for type, task in enumerate([task_pg]): #, task_easy, task_difficult, task_mix]):
+
+                task.policies.append(copy.deepcopy(task.policy))
+                task.values.append(copy.deepcopy(task.get_value(task.policy['theta'])))
+                task.AoI_CPU.append(copy.deepcopy(task.get_AoI_CPU(task.policy['theta'])))
+
+                for j in range(1, 51):
+                    if j == 1 and TM_models[type] != None:
+                        TM_models[type].getDictPolicy_Single(task)
+                        # TaDeLL_Model.getDictPolicy_Single(task)
+                    else:
+                        pg_rl(task, 1)
+                    task.policies.append(copy.deepcopy(task.policy))
+                    task.values.append(copy.deepcopy(task.get_value(task.policy['theta'])))
+                    task.AoI_CPU.append(copy.deepcopy(task.get_AoI_CPU(task.policy['theta'])))
+
+            Tasks[x].append({'original': task, 'regular': task_pg, 'easy': task_easy, 'difficult': task_difficult, 'mix': task_mix})
+
+    with open('TasksCached_pg_easy_diff_mix_temp.pkl', 'wb') as f:
+        pickle.dump([Tasks, niter, tasks00], f)
+
+    d = 1
+
+    # index = [[],[]]
+    # index[0] = [0, 1]#, 18, 25, 28] # Index for easy tasks in Tasks.pkl
+    # index[1] = [14, 20] #, 22, 23, 24, 34]  # Index for difficult tasks
+    # g = [11, 12, 13, 16, 25]  # The ones in easy but not good
+    # index[0] = list(set(list(range(0, 41))) - set(g))
+    # index[1] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 20, 21, 22, 23, 24, 26, 28, 29, 33, 34, 36]  # Index for difficult tasks
+
+    # for x in range(2):
+    #     # Iterate over easy and difficult tasks saperately
+    #     Tasks[x] = [tasks00[x][y] for y in index[x]]  # Pick easy or difficult tasks
+    #
+    #     for idx, task in enumerate(Tasks[x]):
+    #         task.index = index[x][idx]  # This would change the task in Tasks
+
+
+
 if __name__ == '__main__':
     # main()
     # test_feature_function()
     # pg_task_generation(30)
     # eval_single()
-    eval()
+    # eval()
+    TasksCached()
     d = 1
