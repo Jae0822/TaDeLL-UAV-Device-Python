@@ -392,10 +392,6 @@ def eval():
 
 
 def TasksCached():
-    with open('Tasks.pkl', 'rb') as f:
-        tasks000 = pickle.load(f)  # The task.policy is already the optimal policy
-
-    niter = 50
 
     # Step 1: Load TaDeLL models
     with open('TaDeLL_model_k_2_easy.pkl', 'rb') as f:
@@ -418,6 +414,7 @@ def TasksCached():
     tasks00 = copy.deepcopy(tasks000)
     Tasks = [[],[]]
 
+    niter = 50
     for x in range(2):
         # Iterate over easy and difficult tasks saperately
         print("@___@___start a new type")
@@ -425,20 +422,24 @@ def TasksCached():
         for idx, task in enumerate(tasks00[x]):
             print("@___start a new task")
 
-            task.index = idx  # This would record the index of task in Tasks.pkl, for future
+            task.index = [x, idx]  # This would record the index of task in Tasks.pkl, but only when you know it is easy or not.
             task.policies = []
             task.values = []
             task.AoI_CPU = []
 
-            [task_pg, task_easy, task_difficult, task_mix] = [copy.deepcopy(task)]*4
+            temp = {'original': task}
+            task_pg = copy.deepcopy(task)
+            task_easy = copy.deepcopy(task)
+            task_difficult = copy.deepcopy(task)
+            task_mix = copy.deepcopy(task)
 
-            for type, task in enumerate([task_pg]): #, task_easy, task_difficult, task_mix]):
-
+            for type, task in enumerate([task_pg, task_easy, task_difficult, task_mix]):
+                print("@_start a new type")
                 task.policies.append(copy.deepcopy(task.policy))
                 task.values.append(copy.deepcopy(task.get_value(task.policy['theta'])))
                 task.AoI_CPU.append(copy.deepcopy(task.get_AoI_CPU(task.policy['theta'])))
 
-                for j in range(1, 51):
+                for j in range(1, niter):
                     if j == 1 and TM_models[type] != None:
                         TM_models[type].getDictPolicy_Single(task)
                         # TaDeLL_Model.getDictPolicy_Single(task)
@@ -448,26 +449,16 @@ def TasksCached():
                     task.values.append(copy.deepcopy(task.get_value(task.policy['theta'])))
                     task.AoI_CPU.append(copy.deepcopy(task.get_AoI_CPU(task.policy['theta'])))
 
-            Tasks[x].append({'original': task, 'regular': task_pg, 'easy': task_easy, 'difficult': task_difficult, 'mix': task_mix})
+                del task
 
+            temp |= {'regular': task_pg, 'easy': task_easy, 'difficult': task_difficult, 'mix': task_mix}
+            Tasks[x].append(temp)
+
+            d = 1
     with open('TasksCached_pg_easy_diff_mix_temp.pkl', 'wb') as f:
         pickle.dump([Tasks, niter, tasks00], f)
 
     d = 1
-
-    # index = [[],[]]
-    # index[0] = [0, 1]#, 18, 25, 28] # Index for easy tasks in Tasks.pkl
-    # index[1] = [14, 20] #, 22, 23, 24, 34]  # Index for difficult tasks
-    # g = [11, 12, 13, 16, 25]  # The ones in easy but not good
-    # index[0] = list(set(list(range(0, 41))) - set(g))
-    # index[1] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 20, 21, 22, 23, 24, 26, 28, 29, 33, 34, 36]  # Index for difficult tasks
-
-    # for x in range(2):
-    #     # Iterate over easy and difficult tasks saperately
-    #     Tasks[x] = [tasks00[x][y] for y in index[x]]  # Pick easy or difficult tasks
-    #
-    #     for idx, task in enumerate(Tasks[x]):
-    #         task.index = index[x][idx]  # This would change the task in Tasks
 
 
 
@@ -477,5 +468,5 @@ if __name__ == '__main__':
     # pg_task_generation(30)
     # eval_single()
     # eval()
-    TasksCached()
+    TasksCached()  # To cache each task in Tasks with pg, easy, diff, mix details
     d = 1
