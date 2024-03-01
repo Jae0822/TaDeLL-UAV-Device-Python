@@ -227,153 +227,37 @@ def pg_task_generation(nTasks):
 
     print("Tasks generatioin is done")
 
-def eval_single():
-    # This is a function to run the performance of TaDeLL_Model of different modes (Easy, difficult, mix) on the same task
-    niter = 50
-    # tasks0 = []
-    # rewards_pg = []
-    # values = []
+def eval_painting():
+    with open('TasksCached_pg_easy_diff_mix.pkl', 'rb') as f:
+        TasksCached, niter, _ = pickle.load(f)
 
-    # Step 1: Load TaDeLL models
-    with open('TaDeLL_model_k_2_easy.pkl', 'rb') as f:
-        means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
-    TM_easy = TaDeLL_Model
-
-    with open('TaDeLL_model_k_2_difficult.pkl', 'rb') as f:
-        means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
-    TM_difficult = TaDeLL_Model
-
-    with open('TaDeLL_model_k_2_mix.pkl', 'rb') as f:
-        means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
-    TM_mix = TaDeLL_Model
-
-    # Step 2: Load task
-    # task = Task(mean_packet_cycles=random.randint(15, 35), variance_packet_cycles=random.randint(3, 8),
-    #             cpu_max=random.randint(30, 50), p=0.4 * np.random.random_sample() + 0.3, d=2, k=2)
-    with open('Tasks.pkl', 'rb') as f:
-        tasks00 = pickle.load(f)  # The task.policy is already the optimal policy
-    task = tasks00[0][2]
-    task_pg = copy.deepcopy(task)
-    task_easy = copy.deepcopy(task)
-    task_difficult = copy.deepcopy(task)
-    task_mix = copy.deepcopy(task)
-
-    # Step 3: Learn with PG and TaDeLL
-    print("start PG test learning")
-    rewards_pg = pg_rl(task_pg, niter)
-
-    print("start TaDeLL test learning")
-    print("testing for TaDeLL easy:")
-    TM_easy.getDictPolicy_Single(task_easy)  # get warm start policy for testing tasks
-    rewards_TaDeLL_easy = pg_rl(task_easy, niter)
-    print("testing for TaDeLL difficult:")
-    TM_difficult.getDictPolicy_Single(task_difficult)  # get warm start policy for testing tasks
-    rewards_TaDeLL_difficult = pg_rl(task_difficult, niter)
-    print("testing for TaDeLL mix:")
-    TM_mix.getDictPolicy_Single(task_mix)  # get warm start policy for testing tasks
-    rewards_TaDeLL_mix = pg_rl(task_mix, niter)
-
-    with open('TaDeLL_result_k_2_eval_Tasks[][]_temp.pkl', 'wb') as f:
-        pickle.dump([rewards_pg, rewards_TaDeLL_easy,rewards_TaDeLL_difficult,rewards_TaDeLL_mix, niter, task, task_pg, task_easy, task_difficult, task_mix], f)
-
-
-    # Step 4: Painting
-    fig, ax = plt.subplots()
-    ax.plot(np.arange(niter), rewards_pg, label='PG')
-    ax.plot(np.arange(niter), rewards_TaDeLL_easy, label='TaDeLL Easy')
-    ax.plot(np.arange(niter), rewards_TaDeLL_difficult, label='TaDeLL Difficult')
-    ax.plot(np.arange(niter), rewards_TaDeLL_mix, label='TaDeLL Mix')
-    ax.legend()  # Add a legend.
-    ax.set_xlabel('Iteration')  # Add an x-label to the axes.
-    ax.set_ylabel('Averaged Reward')  # Add a y-label to the axes.
-    ax.set_title("Comparison between PG and TaDeLL")  # Add a title to the axes.
-    # fig.show()
-    # plt.ioff()
-    print("Hello Baby")
-
-
-def eval():
-    niter = 50
-
-    # Step 1: Load TaDeLL models
-    with open('TaDeLL_model_k_2_easy.pkl', 'rb') as f:
-        means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
-    TM_easy = TaDeLL_Model
-
-    with open('TaDeLL_model_k_2_difficult.pkl', 'rb') as f:
-        means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
-    TM_difficult = TaDeLL_Model
-
-    with open('TaDeLL_model_k_2_mix.pkl', 'rb') as f:
-        means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
-    TM_mix = TaDeLL_Model
-
-    # Step 2: Load task
-    with open('Tasks.pkl', 'rb') as f:
-        tasks000 = pickle.load(f)  # The task.policy is already the optimal policy
-    tasks00 = copy.deepcopy(tasks000)
-    index = [[],[]]
-    rewards_pg = [[],[]]
-    rewards_easy = [[],[]]
-    rewards_difficult = [[],[]]
-    rewards_mix = [[],[]]
-    policies_pg = [[],[]]
-    policies_easy = [[],[]]
-    policies_difficult = [[],[]]
-    policies_mix = [[],[]]
-    Tasks = [[],[]]
+    # Step: Select tasks from TasksCached
     type = ['easy', 'difficult']
-    # index[0] = [0, 1]#, 18, 25, 28] # Index for easy tasks in Tasks.pkl
-    # index[1] = [14, 20] #, 22, 23, 24, 34]  # Index for difficult tasks
+    index = [[],[]]
     g = [11, 12, 13, 16, 25]  # The ones in easy but not good
     index[0] = list(set(list(range(0, 41))) - set(g))
     index[1] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 20, 21, 22, 23, 24, 26, 28, 29, 33, 34, 36]  # Index for difficult tasks
 
+    Tasks = [[],[]]
+    rewards_pg = [[],[]]
+    rewards_easy = [[],[]]
+    rewards_difficult = [[],[]]
+    rewards_mix = [[],[]]
     for x in range(2):
-        # Iterate over easy and difficult tasks saperately
-        print("@___@___start a new type")
-        Tasks[x] = [tasks00[x][y] for y in index[x]]  # Pick easy or difficult tasks
-
+        Tasks[x] = [TasksCached[x][y] for y in index[x]]  # Pick easy or difficult tasks
         for task in Tasks[x]:
-            print("@___start a new task")
+            rewards_pg[x].append(task['regular'].values)
+            rewards_easy[x].append(task['easy'].values)
+            rewards_difficult[x].append(task['difficult'].values)
+            rewards_mix[x].append(task['mix'].values)
 
-            task_pg = copy.deepcopy(task)
-            task_easy = copy.deepcopy(task)
-            task_difficult = copy.deepcopy(task)
-            task_mix = copy.deepcopy(task)
-
-            # Step 3: Learn with PG and TaDeLL
-            print("start PG test learning")
-            rewards_pg_regular, policies_pg_regular, _ = pg_rl_values_policies_gradients(task_pg, niter)
-
-            # print("start TaDeLL test learning")
-            print("testing for TaDeLL easy:")
-            TM_easy.getDictPolicy_Single(task_easy)  # get warm start policy for testing tasks
-            rewards_TaDeLL_easy, policies_TaDeLL_easy, _ = pg_rl_values_policies_gradients(task_easy, niter)
-            print("testing for TaDeLL difficult:")
-            TM_difficult.getDictPolicy_Single(task_difficult)  # get warm start policy for testing tasks
-            rewards_TaDeLL_difficult, policies_TaDeLL_difficult, _ = pg_rl_values_policies_gradients(task_difficult, niter)
-            print("testing for TaDeLL mix:")
-            TM_mix.getDictPolicy_Single(task_mix)  # get warm start policy for testing tasks
-            rewards_TaDeLL_mix, policies_TaDeLL_mix, _ = pg_rl_values_policies_gradients(task_mix, niter)
-
-            rewards_pg[x].append(rewards_pg_regular)
-            rewards_easy[x].append(rewards_TaDeLL_easy)
-            rewards_difficult[x].append(rewards_TaDeLL_difficult)
-            rewards_mix[x].append(rewards_TaDeLL_mix)
-
-            policies_pg[x].append(policies_pg_regular)
-            policies_easy[x].append(policies_TaDeLL_easy)
-            policies_difficult[x].append(policies_TaDeLL_difficult)
-            policies_mix[x].append(policies_TaDeLL_mix)
-
+    y = 0
     for x in range(2):
-        # Step 4: Painting
         fig, ax = plt.subplots()
-        ax.plot(np.arange(niter+1), np.mean(rewards_pg[x], 0), label='PG')
-        ax.plot(np.arange(niter+1), np.mean(rewards_easy[x], 0), label='TaDeLL Easy')
-        ax.plot(np.arange(niter+1), np.mean(rewards_difficult[x], 0), label='TaDeLL Difficult')
-        ax.plot(np.arange(niter+1), np.mean(rewards_mix[x], 0), label='TaDeLL Mix')
+        ax.plot(np.arange(niter-y), np.mean(rewards_pg[x], 0)[y:], label='PG')
+        ax.plot(np.arange(niter-y), np.mean(rewards_easy[x], 0)[y:], label='TaDeLL Easy')
+        ax.plot(np.arange(niter-y), np.mean(rewards_difficult[x], 0)[y:], label='TaDeLL Difficult')
+        ax.plot(np.arange(niter-y), np.mean(rewards_mix[x], 0)[y:], label='TaDeLL Mix')
         ax.legend()  # Add a legend.
         ax.set_xlabel('Iteration')  # Add an x-label to the axes.
         ax.set_ylabel('Averaged Reward')  # Add a y-label to the axes.
@@ -381,14 +265,10 @@ def eval():
         print("Hello Baby")
 
 
-    with open('TaDeLL_result_k_2_eval_temp.pkl', 'wb') as f:
-        pickle.dump([rewards_pg, rewards_easy, rewards_difficult, rewards_mix, policies_pg, policies_easy, policies_difficult, policies_mix, niter, index, tasks00, Tasks], f)
+    # with open('TaDeLL_result_k_2_eval_temp.pkl', 'wb') as f:
+    #     pickle.dump([rewards_pg, rewards_easy, rewards_difficult, rewards_mix, policies_pg, policies_easy, policies_difficult, policies_mix, niter, index, tasks00, Tasks], f)
 
-
-
-
-
-
+    d = 1
 
 
 def TasksCached():
@@ -466,7 +346,6 @@ if __name__ == '__main__':
     # main()
     # test_feature_function()
     # pg_task_generation(30)
-    # eval_single()
-    # eval()
-    TasksCached()  # To cache each task in Tasks with pg, easy, diff, mix details
+    # TasksCached() # To cache each task in Tasks with pg, easy, diff, mix details
+    eval_painting()
     d = 1
