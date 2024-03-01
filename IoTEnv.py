@@ -17,13 +17,22 @@ with open('mu_sig.pkl', 'rb') as f:
     mu, sig = pickle.load(f)  # Load the mu and sig to extract normalized feature
 
 with open('TaDeLL_result_k_2.pkl', 'rb') as f:
-    means_pg, means_tadell, niter, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
+    means_pg, means_tadell, _, TaDeLL_Model, tasks0, tasks, testing_tasks, testing_tasks_pg, testing_tasks_TaDeLL = pickle.load(f)
 
 with open('SourceTask_temp.pkl', 'rb') as f:
     TaskList_set, Values_array_set = pickle.load(f)
 
+# with open('Accessories/Tasks.pkl', 'rb') as f:
+#     Tasks00 = pickle.load(f)
+
+with open('Accessories/TasksCached_pg_easy_diff_mix.pkl', 'rb') as f:
+    TasksCached0, niter, Tasks00 = pickle.load(f)
 
 
+# TaksCached, each task include ['original', 'regular', 'easy', 'difficult', 'mix'] five tasks
+# original is used for TaskList, regular is for comparison without WarmStart,
+# the rest three should be chosen by model type, here I consider difficult TaDeLL model.
+TasksCached = copy.deepcopy(TasksCached0)
 
 class TaskCache():
     # This is to record the learning history of Regular PG and TaDeLL, including policy, value, AoI and CPU.
@@ -67,23 +76,25 @@ class TaskCache():
 
         print("Building TaskCache DONE, model: PG value {} AoI {}".format(self.value, self.AoI_CPU))
 
-with open('../taskCached.pkl', 'rb') as f:
+
+with open('taskCached.pkl', 'rb') as f:
     [taskBase] = pickle.load(f)
 
 # taskBase = TaskCache(copy.deepcopy(TaskList_set[1]))
 # taskBase.populate()
 
 class Device(object):
-    def __init__(self, frequency, cpu_capacity, field):
+    def __init__(self, frequency, cpu_capacity, param):
 
         # Static Attributes
         self.frequency = frequency
         self.cpu_capacity = cpu_capacity
-        self.field = field
-        self.location = field * np.random.random_sample((2, 1))  # results are from the “continuous uniform” distribution over the stated interval.
+        self.field = param['field']
+        self.location = param['field'] * np.random.random_sample((2, 1))  # results are from the “continuous uniform” distribution over the stated interval.
         self.TimeSinceLastVisit = 0
         # self.flag = False  # if the device is visited, then flag = True
-
+        self.ShuffleType = param['ShuffleType']
+        self.ModelType = param['ModelType']
 
     def gen_TimeTaskList(self, nTimeUnits):
         TimeList = np.zeros(nTimeUnits)
@@ -127,6 +138,47 @@ class Device(object):
             t = t + mean
         return TimeList, TaskList
 
+    def gen_TimeTaskList_Shuffle(self, nTimeUnits):
+        # The indexes for easy and difficult tasks in Tasks.pkl
+        index = [[],[]]
+        g = [11, 12, 13, 16, 25]  # The ones in easy but not good
+        index[0] = list(set(list(range(0, 41))) - set(g))
+        index[1] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 20, 21, 22, 23, 24, 26, 28, 29, 33, 34, 36]  # Index for difficult tasks
+
+        task_type = ['easy', 'difficult', 'easy_difficult', 'difficult_easy']
+        task_type_index = []
+        task_type_index.append(np.zeros(nTimeUnits))   # all 0, easy
+        task_type_index.append(np.ones(nTimeUnits))    # all 1, difficult
+        task_type_index.append(np.concatenate((np.ones(nTimeUnits//2), np.zeros(nTimeUnits//2))))   # 0 and 1, easy_difficult
+        task_type_index.append(np.concatenate((np.zeros(nTimeUnits//2), np.ones(nTimeUnits//2))))   # 1 and 0, difficult_easy
+
+        x = task_type.index(self.ShuffleType)  # determine which type of tasks order should be used
+
+        TimeList = np.zeros(nTimeUnits)
+        TaskList = []
+        y = int(task_type_index[x][0])  # acquire easy or difficult task index, y \in {0, 1}
+        tsk0 = copy.deepcopy(TasksCached[y][random.choice(index[y])])  # initial task
+        for i in ['original', 'regular', 'easy', 'difficult', 'mix']:
+            tsk0[i].idx = 1
+        # tsk0.idx = 1
+        TaskList.append(tsk0)
+        mean = self.frequency
+        t = int(np.random.normal(mean, mean / 10))
+        while t < nTimeUnits:
+            TimeList[t] = 1
+            y = int(task_type_index[x][t])
+            tsk0 = copy.deepcopy(TasksCached[y][random.choice(index[y])])
+            # tsk0.idx = 1
+            for i in ['original', 'regular', 'easy', 'difficult', 'mix']:
+                tsk0[i].idx = 1
+            TaskList.append(tsk0)
+            # t = t + int(np.random.normal(mean, mean / 10))
+            t = t + mean
+
+        return TimeList, TaskList
+
+
+
 class Uav(object):
     def __init__(self, V, Devices):
         # Static Attributes
@@ -147,11 +199,12 @@ class Uav(object):
 
 
 class Env(object):
-    def __init__(self, Devices, UAV, nTimeUnits):
+    def __init__(self, Devices, UAV, param):
         self.Devices = Devices  # 提供多一层方便，不是形参，每一处的变动都会反映在原始的Devices上。
         self.UAV = UAV
-        self.nTimeUnits = nTimeUnits
+        self.nTimeUnits = param['nTimeUnits']
         self.num_Devices = len(Devices)
+        self.ModelType = param['ModelType']
 
     def seed(self):
         pass
@@ -159,7 +212,7 @@ class Env(object):
     def initialization(self, Devices, UAV):
         # initialize for each device
         for i in range(len(Devices)):
-            Devices[i].TimeList, Devices[i].TaskList  = Devices[i].gen_TimeTaskList_set(self.nTimeUnits)   # The list of time that indicates the arrival of a new task
+            Devices[i].TimeList, Devices[i].TaskList  = Devices[i].gen_TimeTaskList_Shuffle(self.nTimeUnits)   # The list of time that indicates the arrival of a new task
             Devices[i].nTasks = len(Devices[i].TaskList)
             Devices[i].NewTaskArrival = np.where(Devices[i].TimeList)[0]  # The list of New task arrival time
 
@@ -189,13 +242,15 @@ class Env(object):
             Devices[i].task_Regular = Devices[i].TaskList_Regular[Devices[i].ta_dex]   # current task for comparison without warm start
 
             Devices[i].KeyTime = [0]  # The list of key time at which the policy changes (1. UAV visits 2. new task arrival)
-            Devices[i].KeyPol = [taskBase.policy_Regular[1]]  # The list of policy at/after key time slot
+
+
+            Devices[i].KeyPol = [Devices[i].TaskList[Devices[i].ta_dex][self.ModelType].policies[0]]  # The list of policy at/after key time slot
             tsk0 = copy.deepcopy(Devices[i].TaskList[0])
             Devices[i].KeyTsk = [tsk0]
-            Devices[i].KeyReward = [taskBase.value_Regular[1]]  # Didn't use pg_rl() cause it has one step of update which I don't need here
-            Devices[i].KeyAoI = [taskBase.AoI_CPU_Regular[1][0]]
-            Devices[i].KeyCPU = [taskBase.AoI_CPU_Regular[1][1]]
-            Devices[i].Keyb = [taskBase.AoI_CPU_Regular[1][2]]
+            Devices[i].KeyReward = [Devices[i].TaskList[Devices[i].ta_dex][self.ModelType].values[0]]  # Didn't use pg_rl() cause it has one step of update which I don't need here
+            Devices[i].KeyAoI = [Devices[i].TaskList[Devices[i].ta_dex][self.ModelType].AoI_CPU[0][0]]
+            Devices[i].KeyCPU = [Devices[i].TaskList[Devices[i].ta_dex][self.ModelType].AoI_CPU[0][1]]
+            Devices[i].Keyb = [Devices[i].TaskList[Devices[i].ta_dex][self.ModelType].AoI_CPU[0][2]]
             Devices[i].nonvisitFlag = True  # To indicate the first visit. This device hasn't been visited.
             Devices[i].rewards = []
             Devices[i].intervals = []
@@ -280,24 +335,27 @@ class Env(object):
             # else:
             #     pg_rl(device.task, 1)  # update the PG policy for one step
             # taskBase.get_policy()[]
-            tsk0 = copy.deepcopy(device.task)
-            device.KeyPol.append(taskBase.policy[tsk0.idx])
+            tsk0 = copy.deepcopy(device.task['original'])
+
+            # device.TaskList[device.ta_dex][self.ModelType].policies[tsk0.idx]
+
+            device.KeyPol.append(device.task[self.ModelType].policies[tsk0.idx])
             device.KeyTsk.append(tsk0)  # tsk0 with the improved policy
-            device.KeyReward.append(taskBase.value[tsk0.idx])
-            device.KeyAoI.append(taskBase.AoI_CPU[tsk0.idx][0])
-            device.KeyCPU.append(taskBase.AoI_CPU[tsk0.idx][1])
-            device.Keyb.append(taskBase.AoI_CPU[tsk0.idx][2])
-            device.task.idx = device.task.idx + 1 if device.task.idx <= 49 else 50
+            device.KeyReward.append(device.task[self.ModelType].values[tsk0.idx])
+            device.KeyAoI.append(device.task[self.ModelType].AoI_CPU[tsk0.idx][0])
+            device.KeyCPU.append(device.task[self.ModelType].AoI_CPU[tsk0.idx][1])
+            device.Keyb.append(device.task[self.ModelType].AoI_CPU[tsk0.idx][2])
+            device.task['original'].idx = device.task['original'].idx + 1 if device.task['original'].idx <= (niter-2) else (niter-1)
             # 2: Regular (Without Warm Start)
             # pg_rl(device.task_Regular, 1)  # update the PG policy for one step
-            tsk0_Regular = copy.deepcopy(device.task_Regular)
-            device.KeyPol_Regular.append(taskBase.policy_Regular[tsk0_Regular.idx])
+            tsk0_Regular = copy.deepcopy(device.task_Regular['original'])
+            device.KeyPol_Regular.append(device.TaskList[device.ta_dex]['regular'].policies[tsk0_Regular.idx])
             device.KeyTsk_Regular.append(tsk0_Regular)
-            device.KeyReward_Regular.append(taskBase.value_Regular[tsk0_Regular.idx])
-            device.KeyAoI_Regular.append(taskBase.AoI_CPU_Regular[tsk0_Regular.idx][0])
-            device.KeyCPU_Regular.append(taskBase.AoI_CPU_Regular[tsk0_Regular.idx][1])
-            device.Keyb_Regular.append(taskBase.AoI_CPU_Regular[tsk0_Regular.idx][2])
-            device.task_Regular.idx =  device.task_Regular.idx + 1 if device.task_Regular.idx <= 49 else 50
+            device.KeyReward_Regular.append(device.TaskList[device.ta_dex]['regular'].values[tsk0_Regular.idx])
+            device.KeyAoI_Regular.append(device.TaskList[device.ta_dex]['regular'].AoI_CPU[tsk0_Regular.idx][0])
+            device.KeyCPU_Regular.append(device.TaskList[device.ta_dex]['regular'].AoI_CPU[tsk0_Regular.idx][1])
+            device.Keyb_Regular.append(device.TaskList[device.ta_dex]['regular'].AoI_CPU[tsk0_Regular.idx][2])
+            device.task_Regular['original'].idx = device.task_Regular['original'].idx + 1 if device.task_Regular['original'].idx <= (niter-2) else (niter-1)
         else:
             "访问间隔里有1出现"
             for i in np.nonzero(VisitTime)[0]:
@@ -309,48 +367,48 @@ class Env(object):
                     print("index out!")                      # FIXED: remember to provide a task for the very beginning, i.e. t=0 in Device.gen_TimeTaskList()
                 # 1: Warm Start
                 device.task = device.TaskList[device.ta_dex]
-                tsk0 = copy.deepcopy(device.task)
-                device.KeyPol.append(taskBase.policy_Regular[tsk0.idx])  # For the policy changes not from UAV's update
+                tsk0 = copy.deepcopy(device.task['original'])
+                device.KeyPol.append(device.TaskList[device.ta_dex]['regular'].policies[tsk0.idx])  # For the policy changes not from UAV's update
                 device.KeyTsk.append(tsk0)  # tsk0 with initial policy
-                device.KeyReward.append(taskBase.value_Regular[tsk0.idx])
-                device.KeyAoI.append(taskBase.AoI_CPU_Regular[tsk0.idx][0])
-                device.KeyCPU.append(taskBase.AoI_CPU_Regular[tsk0.idx][1])
-                device.Keyb.append(taskBase.AoI_CPU_Regular[tsk0.idx][2])
-                device.task.idx = device.task.idx + 1 if device.task.idx <= 49 else 50
+                device.KeyReward.append(device.TaskList[device.ta_dex]['regular'].values[tsk0.idx])
+                device.KeyAoI.append(device.TaskList[device.ta_dex]['regular'].AoI_CPU[tsk0.idx][0])
+                device.KeyCPU.append(device.TaskList[device.ta_dex]['regular'].AoI_CPU[tsk0.idx][1])
+                device.Keyb.append(device.TaskList[device.ta_dex]['regular'].AoI_CPU[tsk0.idx][2])
+                device.task['original'].idx = device.task['original'].idx + 1 if device.task['original'].idx <= (niter-2) else (niter-1)
                 # 2: Regular (Without Warm Start)
                 device.task_Regular = device.TaskList_Regular[device.ta_dex]
-                tsk0_Regular = copy.deepcopy(device.task_Regular)
-                device.KeyPol_Regular.append(taskBase.policy_Regular[tsk0_Regular.idx])
+                tsk0_Regular = copy.deepcopy(device.task_Regular['original'])
+                device.KeyPol_Regular.append(device.TaskList[device.ta_dex]['regular'].policies[tsk0_Regular.idx])
                 device.KeyTsk_Regular.append(tsk0_Regular)
-                device.KeyReward_Regular.append(taskBase.value_Regular[tsk0_Regular.idx])
-                device.KeyAoI_Regular.append(taskBase.AoI_CPU_Regular[tsk0_Regular.idx][0])
-                device.KeyCPU_Regular.append(taskBase.AoI_CPU_Regular[tsk0_Regular.idx][1])
-                device.Keyb_Regular.append(taskBase.AoI_CPU_Regular[tsk0_Regular.idx][2])
-                device.task_Regular.idx = device.task_Regular.idx + 1 if device.task_Regular.idx <= 49 else 50
+                device.KeyReward_Regular.append(device.TaskList[device.ta_dex]['regular'].values[tsk0_Regular.idx])
+                device.KeyAoI_Regular.append(device.TaskList[device.ta_dex]['regular'].AoI_CPU[tsk0_Regular.idx][0])
+                device.KeyCPU_Regular.append(device.TaskList[device.ta_dex]['regular'].AoI_CPU[tsk0_Regular.idx][1])
+                device.Keyb_Regular.append(device.TaskList[device.ta_dex]['regular'].AoI_CPU[tsk0_Regular.idx][2])
+                device.task_Regular['original'].idx = device.task_Regular['original'].idx + 1 if device.task_Regular['original'].idx <= (niter-2) else (niter-1)
                 state[action] = t - device.KeyTime[-1]
                 # state[action] = 0
             if VisitTime[-1] == 0:    # 需要再对t做一个TaDeLL的更新
                 device.KeyTime.append(t)
                 # 1: Warm Start
-                TaDeLL_Model.getDictPolicy_Single(device.task)
-                tsk0 = copy.deepcopy(device.task)
-                device.KeyPol.append(taskBase.policy[tsk0.idx])
+                TaDeLL_Model.getDictPolicy_Single(device.task['original'])
+                tsk0 = copy.deepcopy(device.task['original'])
+                device.KeyPol.append(device.TaskList[device.ta_dex][self.ModelType].policies[tsk0.idx])
                 device.KeyTsk.append(tsk0)  # tsk0 with the improved policy
-                device.KeyReward.append(taskBase.value[tsk0.idx])
-                device.KeyAoI.append(taskBase.AoI_CPU[tsk0.idx][0])
-                device.KeyCPU.append(taskBase.AoI_CPU[tsk0.idx][1])
-                device.Keyb.append(taskBase.AoI_CPU[tsk0.idx][2])
-                device.task.idx = device.task.idx + 1 if device.task.idx <= 49 else 50
+                device.KeyReward.append(device.TaskList[device.ta_dex][self.ModelType].values[tsk0.idx])
+                device.KeyAoI.append(device.TaskList[device.ta_dex][self.ModelType].AoI_CPU[tsk0.idx][0])
+                device.KeyCPU.append(device.TaskList[device.ta_dex][self.ModelType].AoI_CPU[tsk0.idx][1])
+                device.Keyb.append(device.TaskList[device.ta_dex][self.ModelType].AoI_CPU[tsk0.idx][2])
+                device.task['original'].idx = device.task['original'].idx + 1 if device.task['original'].idx <= (niter-2) else (niter-1)
                 # 2: Regular (Without Warm Start)
-                pg_rl(device.task_Regular, 1)  # update the PG policy for one step
-                tsk0_Regular = copy.deepcopy(device.task_Regular)
+                pg_rl(device.task_Regular['original'], 1)  # update the PG policy for one step
+                tsk0_Regular = copy.deepcopy(device.task_Regular['original'])
                 device.KeyTsk_Regular.append(tsk0_Regular)
-                device.KeyPol_Regular.append(taskBase.policy_Regular[tsk0_Regular.idx])
-                device.KeyReward_Regular.append(taskBase.value_Regular[tsk0_Regular.idx])
-                device.KeyAoI_Regular.append(taskBase.AoI_CPU_Regular[tsk0_Regular.idx][0])
-                device.KeyCPU_Regular.append(taskBase.AoI_CPU_Regular[tsk0_Regular.idx][1])
-                device.Keyb_Regular.append(taskBase.AoI_CPU_Regular[tsk0_Regular.idx][2])
-                device.task_Regular.idx = device.task_Regular.idx + 1 if device.task_Regular.idx <= 49 else 50
+                device.KeyPol_Regular.append(device.TaskList[device.ta_dex]['regular'].policies[tsk0_Regular.idx])
+                device.KeyReward_Regular.append(device.TaskList[device.ta_dex]['regular'].values[tsk0_Regular.idx])
+                device.KeyAoI_Regular.append(device.TaskList[device.ta_dex]['regular'].AoI_CPU[tsk0_Regular.idx][0])
+                device.KeyCPU_Regular.append(device.TaskList[device.ta_dex]['regular'].AoI_CPU[tsk0_Regular.idx][1])
+                device.Keyb_Regular.append(device.TaskList[device.ta_dex]['regular'].AoI_CPU[tsk0_Regular.idx][2])
+                device.task_Regular['original'].idx = device.task_Regular['original'].idx + 1 if device.task_Regular['original'].idx <= (niter-2) else (niter-1)
 
         # FIXME: 不加这个REWARD_REST会不会收敛
         reward_rest = 0

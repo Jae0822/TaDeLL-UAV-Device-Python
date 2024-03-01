@@ -34,63 +34,34 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value', 'velocity'])
 length = 2000
 param = {'episodes':25, 'nTimeUnits': length, 'nTimeUnits_random': length, 'nTimeUnits_force': length,
          'gamma': 0.99, 'learning_rate': 0.07, 'log_interval': 1, 'seed': 0, 'alpha': 2, 'mu': 0.5, 'beta': 0.5,
-         'num_Devices': 25, 'V': 25, 'V_Lim': 40, 'field': 500, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16}
+         'num_Devices': 25, 'V': 25, 'V_Lim': 40, 'field': 500, 'dist': 0.040, 'freq_low': 8, 'freq_high': 16,
+         'ModelType': 'difficult', 'ShuffleType': 'difficult'}
+# ModelType = ['easy', 'difficult', 'mix'] This is the TaDeLL model I consider, which is reflected in TasksCached as ['original', 'regular', 'easy', 'difficult', 'mix']
+# ShuffleType = ['easy', 'difficult', 'easy_difficult', 'difficult_easy']  This is the order of environments shuffle for devices
 np.random.seed(param['seed'])
 torch.manual_seed(param['seed'])
 #torch.device("mps")
 torch.set_num_interop_threads(8)
 torch.set_num_threads(8)
 
+intervals = [530, 510, 500, 485, 470, 450, 430, 400, 380, 370, 350, 340, 330, 315, 300, 275, 250, 230, 215, 200, 180, 150, 130, 115, 100]
+
 Devices = []
+for interval in intervals:
+    Devices.append(Device(interval, 50, param))
 
-# Devices.append(Device(500, 50, param['field']))
-# Devices.append(Device(450, 50, param['field']))
-# Devices.append(Device(400, 50, param['field']))
-# Devices.append(Device(350, 50, param['field']))
-# Devices.append(Device(300, 50, param['field']))
-# Devices.append(Device(300, 50, param['field']))
-# Devices.append(Device(250, 50, param['field']))
-# Devices.append(Device(230, 50, param['field']))
-# Devices.append(Device(200, 50, param['field']))
-# Devices.append(Device(150, 50, param['field']))
-
-Devices.append(Device(530, 50, param['field']))
-Devices.append(Device(510, 50, param['field']))
-Devices.append(Device(500, 50, param['field']))
-Devices.append(Device(485, 50, param['field']))
-Devices.append(Device(470, 50, param['field']))
-Devices.append(Device(450, 50, param['field']))
-Devices.append(Device(430, 50, param['field']))
-Devices.append(Device(400, 50, param['field']))
-Devices.append(Device(380, 50, param['field']))
-Devices.append(Device(350, 50, param['field']))
-Devices.append(Device(370, 50, param['field']))
-Devices.append(Device(340, 50, param['field']))
-Devices.append(Device(330, 50, param['field']))
-Devices.append(Device(315, 50, param['field']))
-Devices.append(Device(300, 50, param['field']))
-Devices.append(Device(275, 50, param['field']))
-Devices.append(Device(250, 50, param['field']))
-Devices.append(Device(230, 50, param['field']))
-Devices.append(Device(215, 50, param['field']))
-Devices.append(Device(200, 50, param['field']))
-Devices.append(Device(180, 50, param['field']))
-Devices.append(Device(150, 50, param['field']))
-Devices.append(Device(130, 50, param['field']))
-Devices.append(Device(115, 50, param['field']))
-Devices.append(Device(100, 50, param['field']))
 
 UAV = Uav(param['V'], Devices)
-env = Env(Devices, UAV, param['nTimeUnits'])
+env = Env(Devices, UAV, param)
 env.initialization(Devices, UAV)
 
 Devices_random = copy.deepcopy(Devices)
 UAV_random = copy.deepcopy(UAV)
-env_random = Env(Devices_random, UAV_random, param['nTimeUnits_random'])
+env_random = Env(Devices_random, UAV_random, param)
 
 Devices_force = copy.deepcopy(Devices)
 UAV_force = copy.deepcopy(UAV)
-env_force = Env(Devices_force, UAV_force, param['nTimeUnits_force'])
+env_force = Env(Devices_force, UAV_force, param)
 
 model = Policy(param['num_Devices'], param['num_Devices'], param['V_Lim'])
 optimizer = optim.Adam(model.parameters(), lr=param['learning_rate'])  # lr=3e-2
