@@ -15,7 +15,7 @@ from statistics import mean
 
 def painting_model_single_task():
     # This is the function to draw the figure of performance of diff,easy,mix models on single task
-    with open('Accessories/TasksCached_pg_easy_diff_mix.pkl', 'rb') as f:
+    with open('../Accessories/TasksCached_pg_easy_diff_mix.pkl', 'rb') as f:
         TasksCached, niter, _ = pickle.load(f)
 
     # Step: Select tasks from TasksCached
@@ -67,13 +67,13 @@ def painting_shuffle_envs():
     ModelLine = {"Diff": [], "Easy": [], "Diff_Easy": [], "Easy_Diff": []}
     ModelKeyWord = ["Diff", "Easy", "Easy_Diff", "Diff_Easy"]
 
-    filename = ['Model_Diff_Shuffle_Diff_2.pkl', 'Model_Diff_Shuffle_Easy_4.pkl', 'Model_Diff_Shuffle_Easy_Diff_7.pkl', 'Model_Diff_Shuffle_Diff_Easy_10.pkl']
+    filename = ['../DrawFig/Model_Diff_Shuffle_Diff_2.pkl', '../DrawFig/Model_Diff_Shuffle_Easy_4.pkl', '../DrawFig/Model_Diff_Shuffle_Easy_Diff_7.pkl', '../DrawFig/Model_Diff_Shuffle_Diff_Easy_10.pkl']
     J = [22, 25, 25, 23]  # Choose an episode
     KeyValue = ['KeyRewards', 'KeyAoI', 'KeyCPU', 'Keyb']
 
     for idx, file in enumerate(filename):
         print("@_____Model: " + str(idx))
-        with open(file, 'rb') as f:
+        with open("Model_Diff_Shuffle_Diff_2.pkl", 'rb') as f:
             model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
         ModelLine[ModelKeyWord[idx]] = avg['Ave_Reward']
