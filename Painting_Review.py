@@ -1,14 +1,7 @@
 import matplotlib.pyplot as plt
-import matplotlib
 
 import numpy as np
-from env import Task
-import copy
-import random
 import pickle
-import time
-from TaDeLL import TaDeLL
-
 from statistics import mean
 
 
@@ -38,7 +31,7 @@ def painting_model_single_task():
             rewards_difficult[x].append(task['difficult'].values)
             rewards_mix[x].append(task['mix'].values)
 
-    y = 0
+    y = 1  # y = 1
     for x in range(2):
         fig, ax = plt.subplots()
         ax.plot(np.arange(niter-y), np.mean(rewards_pg[x], 0)[y:], label='PG')
@@ -67,13 +60,14 @@ def painting_shuffle_envs():
     ModelLine = {"Diff": [], "Easy": [], "Diff_Easy": [], "Easy_Diff": []}
     ModelKeyWord = ["Diff", "Easy", "Easy_Diff", "Diff_Easy"]
 
-    filename = ['../DrawFig/Model_Diff_Shuffle_Diff_2.pkl', '../DrawFig/Model_Diff_Shuffle_Easy_4.pkl', '../DrawFig/Model_Diff_Shuffle_Easy_Diff_7.pkl', '../DrawFig/Model_Diff_Shuffle_Diff_Easy_10.pkl']
+    # filename = ['DrawFig/Model_Diff_Shuffle_Diff_2.pkl', 'DrawFig/Model_Diff_Shuffle_Easy_4.pkl', 'DrawFig/Model_Diff_Shuffle_Easy_Diff_7.pkl', 'DrawFig/Model_Diff_Shuffle_Diff_Easy_10.pkl']
+    filename = ['Model_Diff_Shuffle_Diff_2.pkl', 'Model_Diff_Shuffle_Easy_4.pkl', 'Model_Diff_Shuffle_Easy_Diff_7.pkl', 'Model_Diff_Shuffle_Diff_Easy_10.pkl']
     J = [22, 25, 25, 23]  # Choose an episode
     KeyValue = ['KeyRewards', 'KeyAoI', 'KeyCPU', 'Keyb']
 
     for idx, file in enumerate(filename):
         print("@_____Model: " + str(idx))
-        with open("Model_Diff_Shuffle_Diff_2.pkl", 'rb') as f:
+        with open('DrawFig/' + file, 'rb') as f:
             model, env, env_random, env_force, param, avg, logging_timeline = pickle.load(f)
 
         ModelLine[ModelKeyWord[idx]] = avg['Ave_Reward']
@@ -155,6 +149,6 @@ def painting_shuffle_envs():
 
 
 if __name__ == '__main__':
-    painting_model_single_task()
+    # painting_model_single_task()
     painting_shuffle_envs()
     d = 1

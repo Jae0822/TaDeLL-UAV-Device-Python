@@ -8,7 +8,7 @@
 
 - cleanup是Bruno的版本
 
-（画图, fig9，数据为output中的：[150923-2101-6_devices-tadell_model_FullRun](https://github.com/Jae0822/TaDeLL-UAV-Device-Python/tree/cleanup/output/150923-2101-6_devices-tadell_model_FullRun)）（其余数据太大，保存在夸克网盘中）
+（画图, fig9就在这个branch中，数据为output中的：[150923-2101-6_devices-tadell_model_FullRun](https://github.com/Jae0822/TaDeLL-UAV-Device-Python/tree/cleanup/output/150923-2101-6_devices-tadell_model_FullRun)）（其余数据太大，保存在夸克网盘中）
 
 ​	我用夸克网盘分享了「Data」，点击链接即可保存。打开「夸克APP」，无需下载在线播放视频，畅享原画5倍速，支持电视投屏。
 链接：https://pan.quark.cn/s/aa191d21a821
