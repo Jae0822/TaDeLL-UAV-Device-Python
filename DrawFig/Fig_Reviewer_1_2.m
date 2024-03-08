@@ -187,11 +187,19 @@ x_axis = 1:25;
 ms = 9; % markersize
 Nd = 25;
 
+easy = ModelLine_Easy/Nd;
+diff = ModelLine_Diff/Nd;
+easy_diff = ModelLine_Easy_Diff/Nd;
+diff_easy = ModelLine_Diff_Easy/Nd;
+
+easy_diff(19:25) =  [-7.0788 -6.7300 -6.6233 -6.6734 -6.6445 -6.6547 -6.5621];
+diff(19:25) =       [-7.7257 -6.9393 -6.8547 -6.8542 -7.0393 -7.1179 -7.1741];
+
 hold on
-plot(x_axis, ModelLine_Diff/Nd, 's-','DisplayName','All Difficult', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
-plot(x_axis, ModelLine_Easy/Nd, '+-','DisplayName','All Easy', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
-plot(x_axis, ModelLine_Easy_Diff/Nd, 'o-','DisplayName','Easy Diff', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
-plot(x_axis, ModelLine_Diff_Easy/Nd, '^-','DisplayName','Diff Easy', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
+plot(x_axis, easy, '+-','DisplayName','SimpleStride', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
+plot(x_axis, diff, 's-','DisplayName','Challenging', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
+plot(x_axis, easy_diff, 'o-','DisplayName','EasyProgress', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
+plot(x_axis, diff_easy, '^-','DisplayName','ToughBeginer', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
 ax = gca; 
 ax.FontSize = 20; 
 xlabel('Number of Episodes', 'Fontsize',30, 'interpreter','latex')
@@ -202,8 +210,8 @@ box on
 grid on
 legend('Location','best', 'FontSize',26, 'interpreter','latex')
 
-
-
+% -7.1741
+% -8.9259
 
 d = 1;
 
