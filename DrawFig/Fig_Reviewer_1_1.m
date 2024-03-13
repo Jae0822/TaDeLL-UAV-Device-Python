@@ -2,6 +2,8 @@
 % on easy/difficult tasks
 % Orgin data: Painting_Review.py
 
+% 一共三种不同的画法，最终采取了第三种
+
 clear all;
 close all;
 %% Color Map

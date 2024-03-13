@@ -196,10 +196,10 @@ easy_diff(19:25) =  [-7.0788 -6.7300 -6.6233 -6.6734 -6.6445 -6.6547 -6.5621];
 diff(19:25) =       [-7.7257 -6.9393 -6.8547 -6.8542 -7.0393 -7.1179 -7.1741];
 
 hold on
-plot(x_axis, easy, '+-','DisplayName','SimpleStride', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
-plot(x_axis, diff, 's-','DisplayName','Challenging', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
-plot(x_axis, easy_diff, 'o-','DisplayName','EasyProgress', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
-plot(x_axis, diff_easy, '^-','DisplayName','ToughBeginer', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
+plot(x_axis, easy, '+-','DisplayName','Scenario 1', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
+plot(x_axis, diff, 's-','DisplayName','Scenario 2', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
+plot(x_axis, easy_diff, 'o-','DisplayName','Scenario 3', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
+plot(x_axis, diff_easy, '^-','DisplayName','Scenario 4', 'LineWidth', 2, 'MarkerSize',15) % 'Color', colorMat(1,:));
 ax = gca; 
 ax.FontSize = 20; 
 xlabel('Number of Episodes', 'Fontsize',30, 'interpreter','latex')
