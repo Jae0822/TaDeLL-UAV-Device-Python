@@ -170,7 +170,7 @@ legend(LH, L);
 ax = gca; 
 ax.FontSize = 20; 
 xlabel('Number of Time Slots', 'Fontsize',30, 'interpreter','latex')
-ylabel('Average Reward on Easy Environments', 'Fontsize',30, 'interpreter','latex')
+ylabel('Average Reward on Basic Environments', 'Fontsize',30, 'interpreter','latex')
 xlim([1, 50])
 title('(a)', 'interpreter','latex')
 % hold off
@@ -220,7 +220,7 @@ legend(LH, L);
 ax = gca; 
 ax.FontSize = 20; 
 xlabel('Number of Time Slots', 'Fontsize',30, 'interpreter','latex')
-ylabel('Average Reward on Difficult Environments', 'Fontsize',30, 'interpreter','latex')
+ylabel('Average Reward on Complex Environments', 'Fontsize',30, 'interpreter','latex')
 title('(b)', 'interpreter','latex')
 xlim([1, 50])
 box on
